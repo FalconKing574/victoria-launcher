@@ -47,8 +47,15 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
 
   try {
     const settings = loadSettings()
+
+    // Exactly one identity must be supplied. Without this guard an empty request
+    // would pass `undefined` into Authenticator.getAuth and fail opaquely.
+    if (!request.mclcUser && !request.offlineUsername) {
+      throw new Error('No hay ninguna sesión con la que iniciar el juego.')
+    }
+
     const authorization: IUser =
-      request.mclcUser ?? (await Authenticator.getAuth(request.offlineUsername!))
+      request.mclcUser ?? (await Authenticator.getAuth(request.offlineUsername as string))
 
     const forgePath = await ensureForgeInstaller()
     const client = new Client()
@@ -88,7 +95,16 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     }
 
     send('launch:status', { stage: 'starting', message: 'Iniciando Minecraft...' })
-    await client.launch(options)
+    const child = await client.launch(options)
+
+    // MCLC resolves null when it fails to spawn the process without throwing.
+    // No 'close' event follows, so `running` must be cleared here or every later
+    // launch attempt is rejected with "el juego ya se está iniciando".
+    if (!child) {
+      running = false
+      throw new Error('No se pudo iniciar Minecraft. Revisa la ruta de Java en Ajustes.')
+    }
+
     send('launch:status', { stage: 'running', message: 'Minecraft en ejecución' })
 
     if (settings.closeOnLaunch) {

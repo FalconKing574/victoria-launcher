@@ -4346,7 +4346,7 @@ Complete `SETUP.md` first (real Discord app and Supabase project), then verify e
 6. A user absent from `whitelist` sees the denial screen.
 7. Adding that user's `discord_id` to `whitelist` and clicking "Volver a comprobar" grants access.
 8. Setting `active = false` on that row and retrying denies access again.
-9. The Mods screen lists 113 enabled mods; toggling one moves its jar between `mods/` and `disabled_mods/`.
+9. The Mods screen lists every jar in the instance (114 enabled + 1 disabled at time of writing); toggling one moves its jar between `mods/` and `disabled_mods/`.
 10. PLAY downloads Forge on first run, shows progress, and launches Minecraft 1.20.1 with the Victoria mods loaded.
 
 - [ ] **Step 3: Commit any fixes**
