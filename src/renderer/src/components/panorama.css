@@ -1,0 +1,50 @@
+.panorama-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.panorama-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 60vmax;
+  transform-style: preserve-3d;
+}
+
+.panorama-cube {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vmax;
+  height: 100vmax;
+  margin: -50vmax 0 0 -50vmax;
+  transform-style: preserve-3d;
+  animation: panorama-spin 140s linear infinite;
+}
+
+.panorama-face {
+  position: absolute;
+  width: 100vmax;
+  height: 100vmax;
+  background-size: cover;
+  background-position: center;
+  backface-visibility: hidden;
+}
+
+@keyframes panorama-spin {
+  from {
+    transform: rotateX(-6deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(-6deg) rotateY(360deg);
+  }
+}
+
+.panorama-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(7, 7, 11, 0.25), rgba(7, 7, 11, 0.9) 78%),
+    linear-gradient(180deg, rgba(30, 58, 138, 0.12), rgba(7, 7, 11, 0.7));
+}

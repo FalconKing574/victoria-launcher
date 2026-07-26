@@ -1,0 +1,9 @@
+/// <reference types="vite/client" />
+
+declare module 'react' {
+  interface CSSProperties {
+    WebkitAppRegion?: 'drag' | 'no-drag'
+  }
+}
+
+export {}
