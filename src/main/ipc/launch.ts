@@ -1,0 +1,107 @@
+import { ipcMain, BrowserWindow } from 'electron'
+import { existsSync, mkdirSync, createWriteStream } from 'fs'
+import { join } from 'path'
+import { pipeline } from 'stream/promises'
+import { Readable } from 'stream'
+import { Client, Authenticator } from 'minecraft-launcher-core'
+import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
+import { INSTANCE_DIR, MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
+import { launcherRoot } from '../lib/paths'
+import { detectJava } from '../lib/java'
+import { loadSettings } from '../lib/settings'
+
+export interface LaunchRequest {
+  /** Premium sessions pass the MCLC user object produced by msmc. */
+  mclcUser?: IUser
+  /** Custom accounts pass their nick; MCLC builds an offline user from it. */
+  offlineUsername?: string
+}
+
+let running = false
+
+function send(channel: string, payload: unknown): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(channel, payload)
+  }
+}
+
+/** Downloads the Forge installer once; MCLC handles installation from there. */
+async function ensureForgeInstaller(): Promise<string> {
+  const dir = join(launcherRoot(), 'forge')
+  mkdirSync(dir, { recursive: true })
+  const target = join(dir, `forge-${MC_VERSION}-${FORGE_VERSION}-installer.jar`)
+  if (existsSync(target)) return target
+
+  send('launch:status', { stage: 'forge', message: 'Descargando Forge...' })
+  const response = await fetch(FORGE_INSTALLER_URL)
+  if (!response.ok || !response.body) {
+    throw new Error(`No se pudo descargar Forge (HTTP ${response.status}).`)
+  }
+  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(target))
+  return target
+}
+
+export async function launchGame(request: LaunchRequest): Promise<void> {
+  if (running) throw new Error('El juego ya se está iniciando.')
+  running = true
+
+  try {
+    const settings = loadSettings()
+    const authorization: IUser =
+      request.mclcUser ?? (await Authenticator.getAuth(request.offlineUsername!))
+
+    const forgePath = await ensureForgeInstaller()
+    const client = new Client()
+
+    client.on('progress', (event: { type: string; task: number; total: number }) => {
+      send('launch:progress', {
+        type: event.type,
+        percent: event.total > 0 ? Math.round((event.task / event.total) * 100) : 0
+      })
+    })
+    client.on('download-status', (event: { name: string }) => {
+      send('launch:status', { stage: 'download', message: `Descargando ${event.name}` })
+    })
+    client.on('data', (line: string) => send('launch:log', String(line)))
+    client.on('close', (code: number) => {
+      running = false
+      // Bring the launcher back when the game exits, even if it was hidden.
+      for (const win of BrowserWindow.getAllWindows()) win.show()
+      send('launch:closed', { code })
+    })
+
+    const options: ILauncherOptions = {
+      authorization,
+      root: launcherRoot(),
+      forge: forgePath,
+      javaPath: detectJava(settings.javaPath),
+      version: { number: MC_VERSION, type: 'release' },
+      memory: {
+        max: `${settings.maxMemoryMb}M`,
+        min: `${settings.minMemoryMb}M`
+      },
+      overrides: {
+        // Reuse the CurseForge instance so its mods, config and saves apply.
+        gameDirectory: INSTANCE_DIR,
+        maxSockets: 8
+      }
+    }
+
+    send('launch:status', { stage: 'starting', message: 'Iniciando Minecraft...' })
+    await client.launch(options)
+    send('launch:status', { stage: 'running', message: 'Minecraft en ejecución' })
+
+    if (settings.closeOnLaunch) {
+      for (const win of BrowserWindow.getAllWindows()) win.hide()
+    }
+  } catch (error) {
+    running = false
+    send('launch:error', { message: (error as Error).message })
+    throw error
+  }
+}
+
+export function registerLaunchHandlers(): void {
+  ipcMain.handle('launch:start', (_event, request: LaunchRequest) => launchGame(request))
+  ipcMain.handle('launch:is-running', () => running)
+}
