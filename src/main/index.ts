@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
-import { validateEnv } from './config'
+import { validateEnv, runtimeEnv } from './config'
 import { registerWindowHandlers } from './ipc/window'
 import { registerAuthHandlers } from './ipc/auth'
 import { registerSupabaseHandlers } from './ipc/supabase'
@@ -45,7 +45,7 @@ function registerSettingsHandlers(): void {
 }
 
 app.whenReady().then(() => {
-  const validation = validateEnv(process.env as Record<string, string | undefined>)
+  const validation = validateEnv(runtimeEnv())
   if (!validation.ok) {
     dialog.showErrorBox(
       'Configuración incompleta',
