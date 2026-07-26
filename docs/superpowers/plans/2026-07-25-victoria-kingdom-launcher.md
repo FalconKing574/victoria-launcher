@@ -652,14 +652,13 @@ Deno.serve(async (req: Request) => {
     uuid = dashUuid(profile.id)
     username = profile.name
 
-    // If this Minecraft account is also linked to a launcher profile, allow the
-    // Discord link to satisfy the whitelist too.
-    const { data } = await admin
-      .from('profiles')
-      .select('discord_id')
-      .eq('minecraft_username', profile.name)
-      .maybeSingle()
-    discordId = data?.discord_id ?? null
+    // Premium identity is the Mojang-proven UUID and nothing else. We must NOT
+    // look up a launcher profile by minecraft_username to inherit its discord_id:
+    // Minecraft names are mutable and launcher nicks are free text, so anyone who
+    // renamed a premium account to a whitelisted player's nick would inherit that
+    // player's Discord identity and pass the check. Whitelist premium players by
+    // UUID (see SETUP.md).
+    discordId = null
   } else {
     // Custom account: identity comes from the session, never the request body.
     const authHeader = req.headers.get('Authorization') ?? ''

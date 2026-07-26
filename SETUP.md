@@ -56,11 +56,15 @@ Azure por defecto y funciona sin configurar nada.
 En Supabase → **Table Editor → whitelist**, añade una fila por jugador:
 
 - Para una cuenta **premium**: rellena `minecraft_uuid` con el UUID real del
-  jugador (lo puedes sacar de https://mcuuid.net).
+  jugador (lo puedes sacar de https://mcuuid.net). **El `discord_id` no sirve
+  para el login premium**: el launcher solo acepta el UUID que Mojang verifica.
+  Los nombres de Minecraft se pueden cambiar, así que dar acceso por nombre
+  permitiría que alguien se renombrara al nick de un jugador autorizado y
+  entrara en su lugar.
 - Para una cuenta **propia del launcher**: rellena `discord_id` con el ID de
   Discord del jugador (Discord → Ajustes → Avanzado → Modo desarrollador, luego
-  clic derecho sobre el usuario → Copiar ID).
-- Puedes rellenar los dos. Basta con que uno coincida.
+  clic derecho sobre el usuario → Copiar ID). También vale su UUID offline si lo
+  prefieres.
 - `active` en `false` revoca el acceso sin borrar la fila.
 
 Los cambios son inmediatos: el launcher consulta la base de datos en cada inicio

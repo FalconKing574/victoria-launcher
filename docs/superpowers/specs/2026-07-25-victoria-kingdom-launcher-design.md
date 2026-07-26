@@ -63,7 +63,7 @@ Table `whitelist`:
 
 **Validation (server-side, edge function `check-access`). The client never asserts its own identity — the function derives it:**
 
-- **Premium mode:** client sends `{ mode: 'premium', mc_token }`. The function calls `GET https://api.minecraftservices.com/minecraft/profile` with that bearer token. Mojang returns the real `id` + `name`. A forged token fails there, so the UUID is proven, not claimed.
+- **Premium mode:** client sends `{ mode: 'premium', mc_token }`. The function calls `GET https://api.minecraftservices.com/minecraft/profile` with that bearer token. Mojang returns the real `id` + `name`. A forged token fails there, so the UUID is proven, not claimed. The derived `discord_id` is always null on this path — premium players must be whitelisted by UUID. Resolving a Discord link from the Minecraft *name* would be a bypass, since names are mutable and launcher nicks are free text: anyone who renamed a premium account to a whitelisted player's nick would inherit that player's Discord identity.
 - **Custom mode:** client sends `{ mode: 'custom' }` plus its Supabase JWT in the `Authorization` header. The function resolves the user via `auth.getUser(jwt)`, reads their `profiles` row, and derives the offline UUID server-side from the stored `minecraft_username`. Identity comes from the session, never from the request body.
 - Allowed if an `active` whitelist row matches the derived `minecraft_uuid` OR the derived `discord_id`.
 - Returns `{ allowed: bool, reason, minecraft_uuid, minecraft_username }`.
