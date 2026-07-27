@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { spring } from '../theme/motion'
 
-type Variant = 'primary' | 'ghost' | 'discord' | 'microsoft'
+type Variant = 'primary' | 'ghost' | 'microsoft'
 
 const STYLES: Record<Variant, React.CSSProperties> = {
   primary: {
@@ -16,7 +16,6 @@ const STYLES: Record<Variant, React.CSSProperties> = {
     color: 'var(--text)',
     border: '1px solid var(--stroke-strong)'
   },
-  discord: { background: '#5865f2', color: '#fff', fontWeight: 600 },
   microsoft: { background: '#107c10', color: '#fff', fontWeight: 600 }
 }
 

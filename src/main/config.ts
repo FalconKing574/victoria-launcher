@@ -3,20 +3,14 @@
  *
  * The main process cannot read `.env` at runtime: Vite only loads that file
  * while building, and electron-vite leaves `process.env` as a live lookup into
- * the real OS environment rather than injecting anything into it. So the four
- * required values are baked into the bundle instead. All of them are
- * public-safe by design — the Supabase anon key, the Discord client ID and its
- * redirect URI are meant to be visible to clients. The Discord client SECRET is
- * never here; only the Supabase edge function holds it.
+ * the real OS environment rather than injecting anything into it. So the values
+ * are baked into the bundle instead. Both are public-safe by design: the
+ * Supabase anon key is meant to be visible to clients, and the whitelist it
+ * reaches is guarded by RLS plus the service-role edge function.
  */
 declare const __VICTORIA_ENV__: Record<string, string> | undefined
 
-export const REQUIRED_ENV_KEYS = [
-  'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY',
-  'VITE_DISCORD_CLIENT_ID',
-  'VITE_DISCORD_REDIRECT_URI'
-] as const
+export const REQUIRED_ENV_KEYS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'] as const
 
 export interface EnvValidation {
   ok: boolean
@@ -36,8 +30,6 @@ export const INSTANCE_DIR =
 export const MC_VERSION = '1.20.1'
 export const FORGE_VERSION = '47.4.0'
 export const FORGE_INSTALLER_URL = `https://maven.minecraftforge.net/net/minecraftforge/forge/${MC_VERSION}-${FORGE_VERSION}/forge-${MC_VERSION}-${FORGE_VERSION}-installer.jar`
-
-export const DISCORD_CALLBACK_PORT = 53682
 
 /**
  * The effective configuration: build-time values, overridden by any matching
@@ -62,7 +54,5 @@ const source = runtimeEnv()
 export const env = {
   supabaseUrl: source.VITE_SUPABASE_URL ?? '',
   supabaseAnonKey: source.VITE_SUPABASE_ANON_KEY ?? '',
-  discordClientId: source.VITE_DISCORD_CLIENT_ID ?? '',
-  discordRedirectUri: source.VITE_DISCORD_REDIRECT_URI ?? '',
   azureClientId: source.VITE_AZURE_CLIENT_ID ?? ''
 }

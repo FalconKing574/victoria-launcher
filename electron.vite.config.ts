@@ -2,13 +2,7 @@ import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin, loadEnv } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 
-const ENV_KEYS = [
-  'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY',
-  'VITE_DISCORD_CLIENT_ID',
-  'VITE_DISCORD_REDIRECT_URI',
-  'VITE_AZURE_CLIENT_ID'
-] as const
+const ENV_KEYS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_AZURE_CLIENT_ID'] as const
 
 export default defineConfig(({ mode }) => {
   // electron-vite's loadEnv reads .env but does NOT populate process.env, and the

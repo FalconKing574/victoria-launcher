@@ -7,14 +7,6 @@ export interface PremiumSession {
   mclc: IUser
 }
 
-export interface LauncherProfile {
-  id: string
-  email: string | null
-  minecraft_username: string
-  discord_id: string | null
-  discord_username: string | null
-}
-
 export interface AccessResult {
   allowed: boolean
   reason: string
@@ -59,15 +51,9 @@ export interface VictoriaApi {
     microsoftRestore(): Promise<PremiumSession | null>
     microsoftLogout(): Promise<boolean>
   }
-  account: {
-    register(email: string, password: string, nick: string): Promise<LauncherProfile>
-    login(email: string, password: string): Promise<LauncherProfile>
-    linkDiscord(): Promise<LauncherProfile>
-    logout(): Promise<boolean>
-  }
   access: {
     checkPremium(mcToken: string): Promise<AccessResult>
-    checkCustom(): Promise<AccessResult>
+    checkOffline(username: string): Promise<AccessResult>
   }
   mods: {
     list(): Promise<ModEntry[]>

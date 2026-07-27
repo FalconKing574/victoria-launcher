@@ -4,9 +4,7 @@ import { validateEnv } from '../src/main/config'
 
 const complete = {
   VITE_SUPABASE_URL: 'https://x.supabase.co',
-  VITE_SUPABASE_ANON_KEY: 'anon',
-  VITE_DISCORD_CLIENT_ID: '123',
-  VITE_DISCORD_REDIRECT_URI: 'http://localhost:53682/discord/callback'
+  VITE_SUPABASE_ANON_KEY: 'anon'
 }
 
 describe('validateEnv', () => {
@@ -17,11 +15,14 @@ describe('validateEnv', () => {
   it('reports every missing key', () => {
     const result = validateEnv({ VITE_SUPABASE_URL: 'https://x.supabase.co' })
     expect(result.ok).toBe(false)
-    expect(result.missing).toEqual([
-      'VITE_SUPABASE_ANON_KEY',
-      'VITE_DISCORD_CLIENT_ID',
-      'VITE_DISCORD_REDIRECT_URI'
-    ])
+    expect(result.missing).toEqual(['VITE_SUPABASE_ANON_KEY'])
+  })
+
+  it('no longer requires the removed Discord keys', () => {
+    // Discord OAuth was dropped: the launcher signs players in with Microsoft
+    // or lets them pick a name, so those variables must not gate startup.
+    expect(validateEnv(complete).missing).not.toContain('VITE_DISCORD_CLIENT_ID')
+    expect(validateEnv(complete).missing).not.toContain('VITE_DISCORD_REDIRECT_URI')
   })
 
   it('treats empty strings as missing', () => {

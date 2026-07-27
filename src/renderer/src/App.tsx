@@ -6,20 +6,18 @@ import PanoramaBg from './components/PanoramaBg'
 import SideNav, { type NavKey } from './components/SideNav'
 import Splash from './screens/Splash'
 import Login from './screens/Login'
-import Register from './screens/Register'
 import WhitelistGate from './screens/WhitelistGate'
 import Home from './screens/Home'
 import Mods from './screens/Mods'
 import Settings from './screens/Settings'
-import type { LauncherProfile, PremiumSession } from '@shared/api'
+import type { PremiumSession } from '@shared/api'
 
-type Stage = 'splash' | 'login' | 'register' | 'checking' | 'denied' | 'app'
+type Stage = 'splash' | 'login' | 'checking' | 'denied' | 'app'
 
 interface Account {
-  type: 'premium' | 'custom'
+  type: 'premium' | 'offline'
   username: string
   premium?: PremiumSession
-  profile?: LauncherProfile
 }
 
 export default function App(): JSX.Element {
@@ -39,7 +37,7 @@ export default function App(): JSX.Element {
       const result =
         next.type === 'premium'
           ? await window.api.access.checkPremium(next.premium!.mcToken)
-          : await window.api.access.checkCustom()
+          : await window.api.access.checkOffline(next.username)
 
       if (result.allowed) {
         setStage('app')
@@ -65,7 +63,6 @@ export default function App(): JSX.Element {
 
   const handleLogout = useCallback(async (): Promise<void> => {
     await window.api.auth.microsoftLogout()
-    await window.api.account.logout()
     setAccount(null)
     setNav('play')
     setStage('login')
@@ -102,28 +99,7 @@ export default function App(): JSX.Element {
                 onPremium={(session) =>
                   runAccessCheck({ type: 'premium', username: session.name, premium: session })
                 }
-                onCustom={(profile) =>
-                  runAccessCheck({
-                    type: 'custom',
-                    username: profile.minecraft_username,
-                    profile
-                  })
-                }
-                onGoRegister={() => setStage('register')}
-              />
-            )}
-
-            {stage === 'register' && (
-              <Register
-                key="register"
-                onBack={() => setStage('login')}
-                onComplete={(profile) =>
-                  runAccessCheck({
-                    type: 'custom',
-                    username: profile.minecraft_username,
-                    profile
-                  })
-                }
+                onOffline={(username) => runAccessCheck({ type: 'offline', username })}
               />
             )}
 
@@ -147,13 +123,6 @@ export default function App(): JSX.Element {
                 reason={denyReason}
                 onRetry={handleRetry}
                 onLogout={handleLogout}
-                onLinkDiscord={(profile) =>
-                  runAccessCheck({
-                    type: 'custom',
-                    username: profile.minecraft_username,
-                    profile
-                  })
-                }
               />
             )}
 
@@ -174,7 +143,7 @@ export default function App(): JSX.Element {
                         username={account.username}
                         mclcUser={account.premium?.mclc}
                         offlineUsername={
-                          account.type === 'custom' ? account.username : undefined
+                          account.type === 'offline' ? account.username : undefined
                         }
                       />
                     )}

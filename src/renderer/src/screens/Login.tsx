@@ -5,19 +5,19 @@ import Button from '../components/Button'
 import Field from '../components/Field'
 import logo from '../assets/logo.png'
 import { screenVariants } from '../theme/motion'
-import type { LauncherProfile, PremiumSession } from '@shared/api'
+import type { PremiumSession } from '@shared/api'
 
 export interface LoginProps {
   onPremium: (session: PremiumSession) => void
-  onCustom: (profile: LauncherProfile) => void
-  onGoRegister: () => void
+  onOffline: (username: string) => void
 }
 
-export default function Login({ onPremium, onCustom, onGoRegister }: LoginProps): JSX.Element {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [busy, setBusy] = useState<'ms' | 'custom' | null>(null)
+export default function Login({ onPremium, onOffline }: LoginProps): JSX.Element {
+  const [username, setUsername] = useState('')
+  const [busy, setBusy] = useState<'ms' | 'offline' | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const nickValid = /^[A-Za-z0-9_]{3,16}$/.test(username.trim())
 
   async function handleMicrosoft(): Promise<void> {
     setError(null)
@@ -31,16 +31,10 @@ export default function Login({ onPremium, onCustom, onGoRegister }: LoginProps)
     }
   }
 
-  async function handleCustom(): Promise<void> {
+  function handleOffline(): void {
     setError(null)
-    setBusy('custom')
-    try {
-      onCustom(await window.api.account.login(email, password))
-    } catch (caught) {
-      setError((caught as Error).message)
-    } finally {
-      setBusy(null)
-    }
+    setBusy('offline')
+    onOffline(username.trim())
   }
 
   return (
@@ -62,17 +56,22 @@ export default function Login({ onPremium, onCustom, onGoRegister }: LoginProps)
           Iniciar sesión con Microsoft
         </Button>
 
-        <Divider label="o con tu cuenta del launcher" />
+        <Divider label="o juega sin cuenta premium" />
 
-        <Field label="Correo" type="email" value={email} onChange={setEmail} />
-        <Field label="Contraseña" type="password" value={password} onChange={setPassword} />
+        <Field
+          label="Nombre de usuario"
+          value={username}
+          onChange={setUsername}
+          placeholder="Tu nick en el servidor"
+        />
 
-        <Button
-          full
-          loading={busy === 'custom'}
-          disabled={!email || !password}
-          onClick={handleCustom}
-        >
+        {username.length > 0 && !nickValid && (
+          <p style={{ color: 'var(--err)', fontSize: 12, margin: 0 }}>
+            3-16 caracteres: letras, números o guion bajo.
+          </p>
+        )}
+
+        <Button full loading={busy === 'offline'} disabled={!nickValid} onClick={handleOffline}>
           Entrar
         </Button>
 
@@ -85,19 +84,6 @@ export default function Login({ onPremium, onCustom, onGoRegister }: LoginProps)
             {error}
           </motion.p>
         )}
-
-        <button
-          onClick={onGoRegister}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-dim)',
-            fontSize: 13,
-            textDecoration: 'underline'
-          }}
-        >
-          ¿No tienes cuenta? Crear una
-        </button>
       </GlassCard>
     </motion.div>
   )

@@ -12,10 +12,11 @@ interface PremiumRequest {
   mode: 'premium'
   mc_token: string
 }
-interface CustomRequest {
-  mode: 'custom'
+interface OfflineRequest {
+  mode: 'offline'
+  username: string
 }
-type AccessRequest = PremiumRequest | CustomRequest
+type AccessRequest = PremiumRequest | OfflineRequest
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -27,9 +28,8 @@ Deno.serve(async (req: Request) => {
     return json({ allowed: false, reason: 'bad_request' }, 400)
   }
 
-  let uuid: string | null = null
-  let username: string | null = null
-  let discordId: string | null = null
+  let uuid: string
+  let username: string
 
   if (body.mode === 'premium') {
     // Verify the token with Mojang. A forged token fails here, so the UUID we
@@ -37,51 +37,41 @@ Deno.serve(async (req: Request) => {
     const profileRes = await fetch('https://api.minecraftservices.com/minecraft/profile', {
       headers: { Authorization: `Bearer ${body.mc_token}` }
     })
-    if (!profileRes.ok) {
+
+    if (profileRes.status === 401 || profileRes.status === 403) {
       return json({ allowed: false, reason: 'invalid_minecraft_token' }, 401)
     }
-    const profile = (await profileRes.json()) as { id: string; name: string }
-    // Mojang returns an undashed UUID; the whitelist stores the dashed form.
-    uuid = dashUuid(profile.id)
-    username = profile.name
-
-    // Premium identity is the Mojang-proven UUID and nothing else. We must NOT
-    // look up a launcher profile by minecraft_username to inherit its discord_id:
-    // Minecraft names are mutable and launcher nicks are free text, so anyone who
-    // renamed a premium account to a whitelisted player's nick would inherit that
-    // player's Discord identity and pass the check. Whitelist premium players by
-    // UUID (see SETUP.md).
-    discordId = null
-  } else {
-    // Custom account: identity comes from the session, never the request body.
-    const authHeader = req.headers.get('Authorization') ?? ''
-    const jwt = authHeader.replace('Bearer ', '')
-    const { data: userData, error: userError } = await admin.auth.getUser(jwt)
-    if (userError || !userData.user) {
-      return json({ allowed: false, reason: 'unauthenticated' }, 401)
+    if (!profileRes.ok) {
+      // Mojang is down or rate limiting: not the player's fault, and telling
+      // them to log in again would be wrong advice.
+      return json({ allowed: false, reason: 'mojang_unavailable' }, 503)
     }
 
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('minecraft_username, discord_id')
-      .eq('id', userData.user.id)
-      .maybeSingle()
-
-    if (!profile) return json({ allowed: false, reason: 'no_profile' }, 403)
-    if (!profile.discord_id) return json({ allowed: false, reason: 'discord_not_linked' }, 403)
-
-    username = profile.minecraft_username
-    uuid = offlineUuid(profile.minecraft_username)
-    discordId = profile.discord_id
+    const profile = (await profileRes.json()) as { id: string; name: string }
+    uuid = dashUuid(profile.id)
+    username = profile.name
+  } else {
+    // Offline mode has no identity proof by definition — anyone can claim any
+    // name on an offline-mode server. Deriving the UUID here rather than
+    // trusting a client-sent one at least guarantees it matches the name the
+    // game will actually join with.
+    const name = (body.username ?? '').trim()
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) {
+      return json({ allowed: false, reason: 'invalid_username' }, 400)
+    }
+    username = name
+    uuid = offlineUuid(name)
   }
 
   const { data: rows, error } = await admin
     .from('whitelist')
     .select('minecraft_uuid, discord_id, active')
+    .eq('active', true)
+    .eq('minecraft_uuid', uuid)
 
   if (error) return json({ allowed: false, reason: 'server_error' }, 500)
 
-  const decision = decideAccess((rows ?? []) as WhitelistRow[], { uuid, discordId })
+  const decision = decideAccess((rows ?? []) as WhitelistRow[], { uuid, discordId: null })
 
   return json({
     allowed: decision.allowed,

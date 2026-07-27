@@ -1,16 +1,13 @@
 import { motion } from 'framer-motion'
 import GlassCard from '../components/GlassCard'
 import Button from '../components/Button'
-import DiscordLinkStep from '../components/DiscordLinkStep'
 import { screenVariants } from '../theme/motion'
-import type { LauncherProfile } from '@shared/api'
 
 const MESSAGES: Record<string, string> = {
   not_whitelisted: 'Tu cuenta no está en la whitelist del servidor.',
-  discord_not_linked: 'Tienes que vincular tu cuenta de Discord antes de entrar.',
   invalid_minecraft_token: 'La sesión de Minecraft no es válida. Vuelve a iniciar sesión.',
-  no_profile: 'No encontramos tu perfil. Vuelve a iniciar sesión.',
-  unauthenticated: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
+  invalid_username: 'Ese nombre de usuario no es válido.',
+  mojang_unavailable: 'Los servidores de Mojang no responden. Inténtalo en unos minutos.',
   server_error: 'Hubo un problema al comprobar tu acceso. Inténtalo más tarde.'
 }
 
@@ -18,19 +15,13 @@ export interface WhitelistGateProps {
   reason: string
   onRetry: () => void
   onLogout: () => void
-  /** Rendered when the account exists but never finished linking Discord. */
-  onLinkDiscord?: (profile: LauncherProfile) => void
 }
 
 export default function WhitelistGate({
   reason,
   onRetry,
-  onLogout,
-  onLinkDiscord
+  onLogout
 }: WhitelistGateProps): JSX.Element {
-  // Registration creates the account before the Discord step, so a user who
-  // closed that window is stuck: this is the only place they can finish it.
-  const needsDiscord = reason === 'discord_not_linked' && onLinkDiscord !== undefined
   return (
     <motion.div
       variants={screenVariants}
@@ -66,22 +57,16 @@ export default function WhitelistGate({
           </p>
         </div>
 
-        {needsDiscord ? (
-          <DiscordLinkStep onLinked={onLinkDiscord!} />
-        ) : (
-          <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 13 }}>
-            Si crees que es un error, abre un ticket en el Discord de Victoria Kingdom.
-          </p>
-        )}
+        <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 13 }}>
+          Si crees que es un error, abre un ticket en el Discord de Victoria Kingdom.
+        </p>
 
         <div style={{ display: 'grid', gap: 10 }}>
-          {!needsDiscord && (
-            <Button full onClick={onRetry}>
-              Volver a comprobar
-            </Button>
-          )}
+          <Button full onClick={onRetry}>
+            Volver a comprobar
+          </Button>
           <Button variant="ghost" full onClick={onLogout}>
-            Cerrar sesión
+            Volver
           </Button>
         </div>
       </GlassCard>

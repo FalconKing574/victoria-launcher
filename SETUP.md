@@ -1,85 +1,79 @@
 # Configuración del Victoria Kingdom Launcher
 
-Estos pasos los tienes que hacer tú una sola vez, porque requieren iniciar sesión
-con tus cuentas.
+El launcher no tiene cuentas propias. Se entra de dos formas:
 
-## 1. Crear la aplicación de Discord
+- **Con cuenta Microsoft** (premium): sesión real de Minecraft, verificada contra Mojang.
+- **Sin cuenta premium**: el jugador escribe su nick y juega.
 
-1. Entra en https://discord.com/developers/applications y pulsa **New Application**.
-2. Ponle el nombre `Victoria Kingdom Launcher` y acepta.
-3. En **OAuth2 → General**:
-   - Copia el **Client ID**.
-   - Pulsa **Reset Secret** y copia el **Client Secret**. No lo pegues nunca en el
-     código del launcher — solo va en Supabase (paso 2.4).
-   - En **Redirects**, añade exactamente: `http://localhost:53682/discord/callback`
-   - Guarda los cambios.
+En ambos casos el launcher comprueba el UUID contra una tabla de Supabase antes
+de dejar entrar. Así puedes dar y quitar acceso en remoto sin tocar el launcher.
 
-## 2. Crear el proyecto de Supabase
+Solo hace falta configurar Supabase. No hay Discord, ni registro, ni contraseñas.
 
-1. Entra en https://supabase.com y crea un proyecto nuevo.
-2. Cuando termine, ve a **SQL Editor**, pega el contenido de `supabase/schema.sql`
-   y ejecútalo.
-3. Ve a **Project Settings → API** y copia:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public key** → `VITE_SUPABASE_ANON_KEY`
-4. Instala la CLI y despliega las funciones:
+---
 
-   ```bash
-   npm install -g supabase
-   supabase login
-   supabase link --project-ref TU_PROJECT_REF
-   supabase secrets set DISCORD_CLIENT_ID=tu_client_id DISCORD_CLIENT_SECRET=tu_secret DISCORD_REDIRECT_URI=http://localhost:53682/discord/callback
-   supabase functions deploy check-access
-   supabase functions deploy discord-oauth
-   ```
+## 1. Crear el proyecto de Supabase
 
-   `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ya existen automáticamente dentro
-   de las funciones; no hace falta configurarlas.
+1. Entra en https://supabase.com y crea un proyecto.
+2. Ve a **SQL Editor** → **New query**, pega el contenido de `supabase/schema.sql`
+   y pulsa **Run**. Debe decir *Success*.
+3. Ve a **Project Settings** → **API** y copia:
+   - **Project URL** → algo como `https://xxxx.supabase.co` (sin `/rest/v1/`)
+   - **anon public** → la clave pública. **No** la `service_role` ni la `secret`.
 
-## 3. Configurar el launcher
+La clave secreta nunca va en el launcher: la whitelist solo se lee desde la edge
+function, que usa el service role internamente y sí lo tiene.
 
-### Opción rápida (recomendada)
+---
+
+## 2. Configurar el launcher
+
+### Opción rápida
 
 ```bash
 node scripts/setup.mjs
 ```
 
-Te pide cuatro valores y hace todo lo demás: escribe el `.env`, enlaza el
-proyecto, sube los secretos y despliega las dos funciones.
-
-El Client Secret se lee directamente de tu terminal hacia la CLI de Supabase:
-no se muestra al escribirlo, no se guarda en el `.env` y no queda en ningún log.
+Te pide los dos valores del paso anterior, escribe el `.env`, enlaza el proyecto
+y despliega la función.
 
 ### Opción manual
 
-Copia `.env.example` a `.env` y rellena los valores:
+Copia `.env.example` a `.env`:
 
 ```
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
-VITE_DISCORD_CLIENT_ID=000000000000000000
-VITE_DISCORD_REDIRECT_URI=http://localhost:53682/discord/callback
 VITE_AZURE_CLIENT_ID=
+```
+
+Y despliega la función:
+
+```bash
+npm install -g supabase
+supabase login
+supabase link --project-ref TU_PROJECT_REF
+supabase functions deploy check-access
 ```
 
 `VITE_AZURE_CLIENT_ID` puede quedarse vacío: msmc usa su propia aplicación de
 Azure por defecto y funciona sin configurar nada.
 
-## 4. Dar acceso a jugadores (whitelist)
+---
 
-En Supabase → **Table Editor → whitelist**, añade una fila por jugador:
+## 3. Dar acceso a jugadores
 
-- Para una cuenta **premium**: rellena `minecraft_uuid` con el UUID real del
-  jugador (lo puedes sacar de https://mcuuid.net). **El `discord_id` no sirve
-  para el login premium**: el launcher solo acepta el UUID que Mojang verifica.
-  Los nombres de Minecraft se pueden cambiar, así que dar acceso por nombre
-  permitiría que alguien se renombrara al nick de un jugador autorizado y
-  entrara en su lugar.
-- Para una cuenta **propia del launcher**: rellena `discord_id` con el ID de
-  Discord del jugador (Discord → Ajustes → Avanzado → Modo desarrollador, luego
-  clic derecho sobre el usuario → Copiar ID). También vale su UUID offline si lo
-  prefieres.
-- `active` en `false` revoca el acceso sin borrar la fila.
+En Supabase → **Table Editor** → **whitelist** → **Insert row**, una fila por
+jugador, rellenando `minecraft_uuid`:
+
+- **Cuenta premium**: su UUID real. Lo sacas en https://mcuuid.net poniendo su nick.
+- **Sin premium**: el UUID *offline*, que se deriva del nombre. Lo calculas con:
+
+  ```bash
+  node -e "const{createHash}=require('crypto');const n=process.argv[1];const d=createHash('md5').update('OfflinePlayer:'+n,'utf8').digest();d[6]=(d[6]&0x0f)|0x30;d[8]=(d[8]&0x3f)|0x80;const h=d.toString('hex');console.log([h.slice(0,8),h.slice(8,12),h.slice(12,16),h.slice(16,20),h.slice(20)].join('-'))" NOMBRE
+  ```
+
+Deja `active` en `true`. Ponerlo en `false` revoca el acceso sin borrar la fila.
 
 Los cambios son inmediatos: el launcher consulta la base de datos en cada inicio
 de sesión.
@@ -87,21 +81,25 @@ de sesión.
 ### Importante: el launcher no es la seguridad del servidor
 
 Esta whitelist se comprueba en el **cliente**. Impide entrar desde el launcher,
-pero nada evita que alguien abra el mismo modpack con MultiMC o Prism y se conecte
-directo a la IP del servidor.
+pero nada evita que alguien abra el mismo modpack con MultiMC o Prism y se
+conecte directo a la IP del servidor.
 
 El servidor de Minecraft tiene que llevar su propia lista de acceso: usa el
 `whitelist.json` de vanilla, o un plugin que lea esta misma tabla de Supabase.
 Trata este launcher como comodidad y experiencia de usuario, no como la barrera
 de seguridad.
 
-## 5. Probar
+---
+
+## 4. Probar
 
 ```bash
 npm run dev
 ```
 
-## 6. Generar el instalador
+---
+
+## 5. Generar el instalador
 
 ```bash
 npm run dist
@@ -124,5 +122,3 @@ node scripts/fix-wincodesign.mjs
 ```
 
 Después vuelve a lanzar `npm run dist`. Solo hace falta una vez por máquina.
-Las alternativas son activar el Modo Desarrollador de Windows o compilar desde
-una terminal como Administrador; el script evita ambas.

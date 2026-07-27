@@ -13,7 +13,7 @@ export interface SideNavProps {
   active: NavKey
   onSelect: (key: NavKey) => void
   username: string
-  accountType: 'premium' | 'custom'
+  accountType: 'premium' | 'offline'
   onLogout: () => void
 }
 
@@ -102,7 +102,7 @@ export default function SideNav({
               {username}
             </div>
             <div style={{ fontSize: 10, color: accountType === 'premium' ? 'var(--ok)' : 'var(--text-faint)' }}>
-              {accountType === 'premium' ? 'PREMIUM' : 'LAUNCHER'}
+              {accountType === 'premium' ? 'PREMIUM' : 'SIN PREMIUM'}
             </div>
           </div>
         </div>

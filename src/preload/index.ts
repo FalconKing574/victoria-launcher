@@ -20,16 +20,9 @@ const api: VictoriaApi = {
     microsoftRestore: () => ipcRenderer.invoke('auth:microsoft-restore'),
     microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout')
   },
-  account: {
-    register: (email, password, nick) =>
-      ipcRenderer.invoke('supabase:register', email, password, nick),
-    login: (email, password) => ipcRenderer.invoke('supabase:login', email, password),
-    linkDiscord: () => ipcRenderer.invoke('supabase:link-discord'),
-    logout: () => ipcRenderer.invoke('supabase:logout')
-  },
   access: {
     checkPremium: (mcToken) => ipcRenderer.invoke('supabase:check-access-premium', mcToken),
-    checkCustom: () => ipcRenderer.invoke('supabase:check-access-custom')
+    checkOffline: (username) => ipcRenderer.invoke('supabase:check-access-offline', username)
   },
   mods: {
     list: () => ipcRenderer.invoke('mods:list'),
