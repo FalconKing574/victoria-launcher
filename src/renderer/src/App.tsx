@@ -49,7 +49,7 @@ export default function App(): JSX.Element {
   return (
     <>
       <AmbientMusic />
-      <PanoramaBg blur={stage === 'app' ? 14 : 6} />
+      <PanoramaBg dim={stage === 'app' ? 0.86 : 0.66} />
 
       <div
         style={{

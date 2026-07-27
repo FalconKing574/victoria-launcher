@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import GlassCard from '../components/GlassCard'
+import Panel from '../components/Panel'
 import { screenVariants } from '../theme/motion'
 import type { Settings as SettingsType } from '@shared/api'
 
@@ -47,7 +47,7 @@ export default function Settings(): JSX.Element {
         <p style={{ margin: '0 0 16px', color: 'var(--err)', fontSize: 13 }}>{error}</p>
       )}
 
-      <GlassCard style={{ maxWidth: 520, display: 'grid', gap: 22 }}>
+      <Panel style={{ maxWidth: 520, display: 'grid', gap: 22 }}>
         <div style={{ display: 'grid', gap: 9 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
             <span>Memoria máxima</span>
@@ -65,7 +65,7 @@ export default function Settings(): JSX.Element {
             style={{ accentColor: 'var(--gold)' }}
           />
           <p style={{ margin: 0, fontSize: 12, color: 'var(--text-faint)' }}>
-            Con 113 mods, 8 GB es un buen punto de partida.
+            Con este modpack, 8 GB es un buen punto de partida.
           </p>
         </div>
 
@@ -87,18 +87,22 @@ export default function Settings(): JSX.Element {
             value={settings.javaPath ?? ''}
             placeholder="Automático (detectado del sistema)"
             onChange={(event) => patch({ javaPath: event.target.value || null })}
+            spellCheck={false}
             style={{
-              background: 'rgba(255,255,255,0.05)',
+              background: 'var(--surface-2)',
               border: '1px solid var(--stroke)',
-              borderRadius: 11,
+              borderRadius: 10,
               padding: '11px 14px',
               color: 'var(--text)',
               fontSize: 13,
-              outline: 'none'
+              outline: 'none',
+              transition: 'border-color 0.16s'
             }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--gold)')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--stroke)')}
           />
         </div>
-      </GlassCard>
+      </Panel>
     </motion.div>
   )
 }

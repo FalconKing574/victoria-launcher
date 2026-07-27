@@ -13,3 +13,8 @@ export function settingsPath(): string {
 export function msTokenPath(): string {
   return join(app.getPath('userData'), 'ms-token.bin')
 }
+
+/** Where startup failures are recorded; a packaged app has no console. */
+export function crashLogPath(): string {
+  return join(app.getPath('userData'), 'crash.log')
+}

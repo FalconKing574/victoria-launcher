@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import type { ReactNode, CSSProperties } from 'react'
 import { smooth } from '../theme/motion'
 
-export default function GlassCard({
+export default function Panel({
   children,
   style,
   delay = 0
@@ -13,11 +13,11 @@ export default function GlassCard({
 }): JSX.Element {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...smooth, delay }}
-      className="glass"
-      style={{ padding: 26, ...style }}
+      className="panel"
+      style={{ padding: 20, ...style }}
     >
       {children}
     </motion.div>

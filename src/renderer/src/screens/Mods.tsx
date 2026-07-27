@@ -58,16 +58,20 @@ export default function Mods(): JSX.Element {
       <input
         value={query}
         placeholder="Buscar mod..."
+        spellCheck={false}
         onChange={(event) => setQuery(event.target.value)}
         style={{
-          background: 'rgba(255,255,255,0.05)',
+          background: 'var(--surface-2)',
           border: '1px solid var(--stroke)',
-          borderRadius: 11,
+          borderRadius: 10,
           padding: '11px 14px',
           color: 'var(--text)',
           fontSize: 14,
-          outline: 'none'
+          outline: 'none',
+          transition: 'border-color 0.16s'
         }}
+        onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--gold)')}
+        onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--stroke)')}
       />
 
       <div style={{ overflowY: 'auto', display: 'grid', gap: 7, alignContent: 'start' }}>
@@ -75,19 +79,26 @@ export default function Mods(): JSX.Element {
           <motion.div
             key={mod.filename}
             layout
+            className="row"
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '12px 15px',
-              borderRadius: 12,
-              background: 'rgba(255,255,255,0.035)',
-              border: '1px solid var(--stroke)'
+              gap: 14,
+              padding: '11px 14px'
             }}
           >
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: 14 }}>{mod.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+            <div style={{ overflow: 'hidden', minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{mod.name}</div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'var(--text-faint)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
                 {mod.filename} · {(mod.sizeBytes / 1024 / 1024).toFixed(1)} MB
               </div>
             </div>

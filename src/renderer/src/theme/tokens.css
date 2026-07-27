@@ -16,22 +16,27 @@
   --text-dim: #a1a1b5;
   --text-faint: #6b6b80;
 
-  --glass: rgba(20, 20, 29, 0.55);
-  --glass-strong: rgba(13, 13, 20, 0.82);
-  --stroke: rgba(255, 255, 255, 0.08);
-  --stroke-strong: rgba(255, 255, 255, 0.16);
+  /* Opaque surfaces, not frosted glass. Translucent panels over the rotating
+     panorama meant every card re-blurred its backdrop each frame, and the look
+     reads as generic. */
+  --surface: #12121a;
+  --surface-2: #181822;
+  --surface-3: #1f1f2b;
+  --stroke: rgba(255, 255, 255, 0.07);
+  --stroke-strong: rgba(255, 255, 255, 0.14);
 
-  --ok: #2ecc71;
+  --ok: #3ddc84;
   --err: #ff5c6c;
 
   --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 22px;
+  --r-md: 12px;
+  --r-lg: 16px;
 
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --shadow-gold: 0 8px 32px rgba(230, 180, 34, 0.28);
+  --shadow-gold: 0 6px 20px rgba(230, 180, 34, 0.22);
 
   --titlebar-h: 38px;
+  --sidebar-w: 208px;
 }
 
 * {
@@ -73,12 +78,32 @@ input {
   background: rgba(230, 180, 34, 0.4);
 }
 
-.glass {
-  background: var(--glass);
+.panel {
+  background: var(--surface);
   border: 1px solid var(--stroke);
   border-radius: var(--r-lg);
-  backdrop-filter: blur(22px) saturate(140%);
-  box-shadow: var(--shadow-lg);
+}
+
+.row {
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.row:hover {
+  background: var(--surface-3);
+  border-color: var(--stroke-strong);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {

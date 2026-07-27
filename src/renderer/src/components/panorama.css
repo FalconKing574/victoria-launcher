@@ -41,10 +41,18 @@
   }
 }
 
+/* Plain gradients only. The blur is baked into the images, so nothing here
+   forces a per-frame backdrop readback. */
 .panorama-veil {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(120% 90% at 50% 0%, rgba(7, 7, 11, 0.25), rgba(7, 7, 11, 0.9) 78%),
-    linear-gradient(180deg, rgba(30, 58, 138, 0.12), rgba(7, 7, 11, 0.7));
+}
+
+/* A permanently rotating background is a real problem for motion sensitivity,
+   and the still frame looks fine. */
+@media (prefers-reduced-motion: reduce) {
+  .panorama-cube {
+    animation: none;
+    transform: rotateX(-6deg) rotateY(20deg);
+  }
 }

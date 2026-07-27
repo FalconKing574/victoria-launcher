@@ -1,4 +1,4 @@
-import logo from '../assets/logo.png'
+import Icon, { type IconName } from './Icon'
 
 export default function TitleBar(): JSX.Element {
   return (
@@ -8,53 +8,58 @@ export default function TitleBar(): JSX.Element {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 0 0 14px',
+        padding: '0 0 0 16px',
+        background: 'var(--bg-1)',
+        borderBottom: '1px solid var(--stroke)',
         WebkitAppRegion: 'drag',
         position: 'relative',
         zIndex: 50
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <img src={logo} alt="" style={{ height: 16, imageRendering: 'pixelated' }} />
-        <span style={{ fontSize: 11, letterSpacing: 1.4, color: 'var(--text-faint)' }}>
-          VICTORIA KINGDOM LAUNCHER
-        </span>
-      </div>
+      <span
+        style={{
+          fontSize: 10.5,
+          fontWeight: 600,
+          letterSpacing: 1.6,
+          color: 'var(--text-faint)'
+        }}
+      >
+        VICTORIA KINGDOM
+      </span>
 
       <div style={{ display: 'flex', WebkitAppRegion: 'no-drag' }}>
-        <WindowButton label="—" onClick={() => window.api.window.minimize()} />
-        <WindowButton label="▢" onClick={() => window.api.window.maximize()} />
-        <WindowButton label="✕" danger onClick={() => window.api.window.close()} />
+        <WindowButton icon="minimize" onClick={() => window.api.window.minimize()} />
+        <WindowButton icon="maximize" onClick={() => window.api.window.maximize()} />
+        <WindowButton icon="close" danger onClick={() => window.api.window.close()} />
       </div>
     </div>
   )
 }
 
 function WindowButton({
-  label,
+  icon,
   onClick,
   danger
 }: {
-  label: string
+  icon: IconName
   onClick: () => void
   danger?: boolean
 }): JSX.Element {
   return (
     <button
       onClick={onClick}
-      className="win-btn"
-      data-danger={danger ? 'true' : undefined}
       style={{
         width: 44,
         height: 'var(--titlebar-h)',
         border: 'none',
         background: 'transparent',
         color: 'var(--text-dim)',
-        fontSize: 12,
-        transition: 'background 0.18s, color 0.18s'
+        display: 'grid',
+        placeItems: 'center',
+        transition: 'background 0.16s, color 0.16s'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = danger ? 'var(--err)' : 'rgba(255,255,255,0.08)'
+        e.currentTarget.style.background = danger ? 'var(--err)' : 'rgba(255,255,255,0.07)'
         e.currentTarget.style.color = '#fff'
       }}
       onMouseLeave={(e) => {
@@ -62,7 +67,7 @@ function WindowButton({
         e.currentTarget.style.color = 'var(--text-dim)'
       }}
     >
-      {label}
+      <Icon name={icon} size={icon === 'maximize' ? 12 : 14} />
     </button>
   )
 }

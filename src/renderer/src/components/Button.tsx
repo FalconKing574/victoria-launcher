@@ -26,6 +26,8 @@ export interface ButtonProps {
   disabled?: boolean
   loading?: boolean
   full?: boolean
+  /** Use "submit" inside a form so Enter works as well as the click. */
+  type?: 'button' | 'submit'
 }
 
 export default function Button({
@@ -34,13 +36,15 @@ export default function Button({
   variant = 'primary',
   disabled,
   loading,
-  full
+  full,
+  type = 'button'
 }: ButtonProps): JSX.Element {
   const inactive = disabled || loading
   return (
     <motion.button
-      whileHover={inactive ? undefined : { scale: 1.025, y: -1 }}
-      whileTap={inactive ? undefined : { scale: 0.975 }}
+      type={type}
+      whileHover={inactive ? undefined : { scale: 1.02, y: -1 }}
+      whileTap={inactive ? undefined : { scale: 0.98 }}
       transition={spring}
       onClick={inactive ? undefined : onClick}
       disabled={inactive}
