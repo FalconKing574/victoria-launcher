@@ -20,10 +20,6 @@ const api: VictoriaApi = {
     microsoftRestore: () => ipcRenderer.invoke('auth:microsoft-restore'),
     microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout')
   },
-  access: {
-    checkPremium: (mcToken) => ipcRenderer.invoke('supabase:check-access-premium', mcToken),
-    checkOffline: (username) => ipcRenderer.invoke('supabase:check-access-offline', username)
-  },
   mods: {
     list: () => ipcRenderer.invoke('mods:list'),
     toggle: (filename, enable) => ipcRenderer.invoke('mods:toggle', filename, enable)

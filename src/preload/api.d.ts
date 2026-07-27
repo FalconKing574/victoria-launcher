@@ -7,13 +7,6 @@ export interface PremiumSession {
   mclc: IUser
 }
 
-export interface AccessResult {
-  allowed: boolean
-  reason: string
-  minecraft_uuid: string | null
-  minecraft_username: string | null
-}
-
 export interface ModEntry {
   filename: string
   name: string
@@ -50,10 +43,6 @@ export interface VictoriaApi {
     microsoftLogin(): Promise<PremiumSession>
     microsoftRestore(): Promise<PremiumSession | null>
     microsoftLogout(): Promise<boolean>
-  }
-  access: {
-    checkPremium(mcToken: string): Promise<AccessResult>
-    checkOffline(username: string): Promise<AccessResult>
   }
   mods: {
     list(): Promise<ModEntry[]>

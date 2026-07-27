@@ -1,6 +1,6 @@
 // tests/offline-uuid.test.ts
 import { describe, it, expect } from 'vitest'
-import { offlineUuid } from '../supabase/functions/_shared/offline-uuid'
+import { offlineUuid } from '../src/main/lib/offline-uuid'
 
 describe('offlineUuid', () => {
   it('matches Minecraft offline UUIDs for known names', () => {

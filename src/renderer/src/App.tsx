@@ -6,13 +6,12 @@ import PanoramaBg from './components/PanoramaBg'
 import SideNav, { type NavKey } from './components/SideNav'
 import Splash from './screens/Splash'
 import Login from './screens/Login'
-import WhitelistGate from './screens/WhitelistGate'
 import Home from './screens/Home'
 import Mods from './screens/Mods'
 import Settings from './screens/Settings'
 import type { PremiumSession } from '@shared/api'
 
-type Stage = 'splash' | 'login' | 'checking' | 'denied' | 'app'
+type Stage = 'splash' | 'login' | 'app'
 
 interface Account {
   type: 'premium' | 'offline'
@@ -23,43 +22,22 @@ interface Account {
 export default function App(): JSX.Element {
   const [stage, setStage] = useState<Stage>('splash')
   const [account, setAccount] = useState<Account | null>(null)
-  const [denyReason, setDenyReason] = useState('not_whitelisted')
   const [nav, setNav] = useState<NavKey>('play')
 
-  const runAccessCheck = useCallback(async (next: Account): Promise<void> => {
-    setStage('checking')
-    // Remember who is being checked BEFORE the result. Storing it only on
-    // success meant a first-time denial left `account` null, so "Volver a
-    // comprobar" fell through to the login screen and the player had to
-    // re-authenticate after staff whitelisted them.
+  const signIn = useCallback((next: Account): void => {
     setAccount(next)
-    try {
-      const result =
-        next.type === 'premium'
-          ? await window.api.access.checkPremium(next.premium!.mcToken)
-          : await window.api.access.checkOffline(next.username)
-
-      if (result.allowed) {
-        setStage('app')
-      } else {
-        setDenyReason(result.reason)
-        setStage('denied')
-      }
-    } catch {
-      setDenyReason('server_error')
-      setStage('denied')
-    }
+    setStage('app')
   }, [])
 
   // Try a silent Microsoft re-login once the splash finishes.
   const handleSplashDone = useCallback(async (): Promise<void> => {
     const restored = await window.api.auth.microsoftRestore().catch(() => null)
     if (restored) {
-      await runAccessCheck({ type: 'premium', username: restored.name, premium: restored })
+      signIn({ type: 'premium', username: restored.name, premium: restored })
     } else {
       setStage('login')
     }
-  }, [runAccessCheck])
+  }, [signIn])
 
   const handleLogout = useCallback(async (): Promise<void> => {
     await window.api.auth.microsoftLogout()
@@ -67,11 +45,6 @@ export default function App(): JSX.Element {
     setNav('play')
     setStage('login')
   }, [])
-
-  const handleRetry = useCallback(() => {
-    if (account) void runAccessCheck(account)
-    else setStage('login')
-  }, [account, runAccessCheck])
 
   return (
     <>
@@ -97,32 +70,9 @@ export default function App(): JSX.Element {
               <Login
                 key="login"
                 onPremium={(session) =>
-                  runAccessCheck({ type: 'premium', username: session.name, premium: session })
+                  signIn({ type: 'premium', username: session.name, premium: session })
                 }
-                onOffline={(username) => runAccessCheck({ type: 'offline', username })}
-              />
-            )}
-
-            {stage === 'checking' && (
-              <div
-                key="checking"
-                style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  height: '100%',
-                  color: 'var(--text-dim)'
-                }}
-              >
-                Comprobando acceso al servidor...
-              </div>
-            )}
-
-            {stage === 'denied' && (
-              <WhitelistGate
-                key="denied"
-                reason={denyReason}
-                onRetry={handleRetry}
-                onLogout={handleLogout}
+                onOffline={(username) => signIn({ type: 'offline', username })}
               />
             )}
 

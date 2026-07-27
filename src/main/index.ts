@@ -1,9 +1,7 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import { validateEnv, runtimeEnv } from './config'
 import { registerWindowHandlers } from './ipc/window'
 import { registerAuthHandlers } from './ipc/auth'
-import { registerSupabaseHandlers } from './ipc/supabase'
 import { registerModHandlers } from './ipc/mods'
 import { registerLaunchHandlers } from './ipc/launch'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
@@ -45,20 +43,8 @@ function registerSettingsHandlers(): void {
 }
 
 app.whenReady().then(() => {
-  const validation = validateEnv(runtimeEnv())
-  if (!validation.ok) {
-    dialog.showErrorBox(
-      'Configuración incompleta',
-      `Faltan estas variables en tu archivo .env:\n\n${validation.missing.join('\n')}\n\n` +
-        'Consulta SETUP.md para saber cómo obtenerlas.'
-    )
-    app.quit()
-    return
-  }
-
   registerWindowHandlers()
   registerAuthHandlers()
-  registerSupabaseHandlers()
   registerModHandlers()
   registerLaunchHandlers()
   registerSettingsHandlers()

@@ -9,6 +9,7 @@ import { INSTANCE_DIR, MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '..
 import { launcherRoot } from '../lib/paths'
 import { detectJava } from '../lib/java'
 import { loadSettings } from '../lib/settings'
+import { offlineUuid } from '../lib/offline-uuid'
 
 export interface LaunchRequest {
   /** Premium sessions pass the MCLC user object produced by msmc. */
@@ -65,8 +66,16 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       throw new Error('No hay ninguna sesión con la que iniciar el juego.')
     }
 
-    const authorization: IUser =
-      request.mclcUser ?? (await Authenticator.getAuth(request.offlineUsername as string))
+    let authorization: IUser
+    if (request.mclcUser) {
+      authorization = request.mclcUser
+    } else {
+      const name = request.offlineUsername as string
+      // MCLC invents a random UUID for offline users. An offline-mode server
+      // derives it from the name instead, so override it to keep the client and
+      // the server agreeing on who this player is.
+      authorization = { ...(await Authenticator.getAuth(name)), uuid: offlineUuid(name) }
+    }
 
     const forgePath = await ensureForgeInstaller()
     const client = new Client()

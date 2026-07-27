@@ -14,7 +14,6 @@
     "dist": "electron-vite build && electron-builder"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.8",
     "minecraft-launcher-core": "^3.18.2",
     "msmc": "^5.0.5"
   },
