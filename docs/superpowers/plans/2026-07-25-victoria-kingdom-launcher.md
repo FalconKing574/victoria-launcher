@@ -4358,6 +4358,31 @@ git commit -m "fix: address issues found in end-to-end verification"
 
 ---
 
+## Amendments Made During Execution
+
+Two defects in this plan were found and fixed while executing it. The committed
+code is the source of truth where it differs from the task text above.
+
+1. **Whitelist bypass via mutable Minecraft name (Task 6).** The premium branch of
+   `check-access` resolved a launcher profile by `minecraft_username` and adopted its
+   `discord_id`. Minecraft names are mutable and launcher nicks are free text, so a
+   premium account renamed to a whitelisted player's nick inherited that player's
+   Discord identity and passed the check. Premium identity is now the Mojang-verified
+   UUID only; `discordId` stays null on that path.
+
+2. **The launcher could never start (Tasks 1, 9, 17).** Nothing loaded `.env` into
+   `process.env` — Vite reads that file only at build time, and electron-vite leaves
+   `process.env` in the main bundle as a live OS lookup — so `validateEnv` always
+   failed and the app quit on every boot. `electron.vite.config.ts` now calls
+   `loadEnv` and inlines the five `VITE_` values via `define: { __VICTORIA_ENV__ }`;
+   `config.ts` exposes `runtimeEnv()`, which merges those with any OS override, and
+   `main/index.ts` validates that instead of `process.env`.
+
+Also fixed in `launch.ts`: MCLC's `launch()` resolves `null` on a spawn failure
+without emitting `close`, which latched the `running` flag true and blocked every
+later launch; and a request with neither identity field is now rejected explicitly
+rather than passing `undefined` into `Authenticator.getAuth`.
+
 ## Notes for the Implementer
 
 - **Never put the Discord client secret in the launcher.** It belongs only in Supabase function secrets. Anything shipped in the Electron bundle is readable by any user.
