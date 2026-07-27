@@ -70,6 +70,17 @@ En Supabase → **Table Editor → whitelist**, añade una fila por jugador:
 Los cambios son inmediatos: el launcher consulta la base de datos en cada inicio
 de sesión.
 
+### Importante: el launcher no es la seguridad del servidor
+
+Esta whitelist se comprueba en el **cliente**. Impide entrar desde el launcher,
+pero nada evita que alguien abra el mismo modpack con MultiMC o Prism y se conecte
+directo a la IP del servidor.
+
+El servidor de Minecraft tiene que llevar su propia lista de acceso: usa el
+`whitelist.json` de vanilla, o un plugin que lea esta misma tabla de Supabase.
+Trata este launcher como comodidad y experiencia de usuario, no como la barrera
+de seguridad.
+
 ## 5. Probar
 
 ```bash
