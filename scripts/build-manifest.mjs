@@ -34,25 +34,40 @@ const OUT = 'dist-modpack'
 const RELEASE_BASE = `https://github.com/${REPO}/releases/download/v${VERSION}`
 
 /**
- * Required mods that are not installed in the instance yet. Performance mods go
- * here rather than in OPTIONAL — everyone should get them.
+ * Required mods that are not installed in the instance yet.
  *
- * Nvidium needs an Nvidia GPU and Embeddium (already in the pack). On other
- * GPUs it disables itself, so shipping it to everyone is safe; if it ever
- * misbehaves, move this entry into OPTIONAL and it becomes opt-in instead.
+ * The whole performance stack (Embeddium, ModernFix, FerriteCore, EntityCulling,
+ * ImmediatelyFast, MemoryLeakFix, Clumps, SmoothBoot) is already in the instance
+ * and therefore already required — nobody has to opt into a smoother game.
  */
-const EXTRA_REQUIRED = [{ filename: 'nvidium-0.5.5.jar' }]
+const EXTRA_REQUIRED = []
 
-// Optional mods are opt-in: quality of life and looks, never performance.
+/**
+ * Mods the player chooses. Deliberately a short list: the launcher must not let
+ * anyone toggle the pack's required mods, because disabling one desyncs them
+ * from the server and produces a connection failure nobody can diagnose.
+ *
+ * Nvidium is here rather than required because it only works on Nvidia GPUs and
+ * needs Embeddium. Moving it into EXTRA_REQUIRED ships it to everyone instead.
+ */
 const OPTIONAL = [
   {
     id: 'xaeros-minimap',
     name: "Xaero's Minimap",
     summary:
-      'Minimapa en la esquina con marcadores y cuevas. El pack ya trae el mapa completo, esto añade el minimapa.',
+      'Minimapa en la esquina con marcadores y cuevas. El pack ya trae el mapa completo; esto añade el minimapa.',
     category: 'calidad-de-vida',
     filename: 'Xaeros_Minimap_25.2.10_Forge_1.20.jar',
     image: 'https://media.forgecdn.net/avatars/thumbnails/168/652/64/64/636588047824059724.png'
+  },
+  {
+    id: 'nvidium',
+    name: 'Nvidium',
+    summary:
+      'Renderizador para GPUs Nvidia. Sube mucho los FPS, sobre todo con Distant Horizons activo. Requiere Nvidia; en otras tarjetas se desactiva solo.',
+    category: 'rendimiento',
+    filename: 'nvidium-0.5.5.jar',
+    image: 'https://media.forgecdn.net/avatars/thumbnails/857/878/64/64/638301896040706094.png'
   }
 ]
 

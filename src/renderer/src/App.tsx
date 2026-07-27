@@ -8,8 +8,6 @@ import Splash from './screens/Splash'
 import Login from './screens/Login'
 import Home from './screens/Home'
 import Modpack from './screens/Modpack'
-import Mods from './screens/Mods'
-import Rules from './screens/Rules'
 import Settings from './screens/Settings'
 import type { PremiumSession } from '@shared/api'
 
@@ -109,9 +107,7 @@ export default function App(): JSX.Element {
                         }
                       />
                     )}
-                    {nav === 'modpack' && <Modpack key="modpack" />}
-                    {nav === 'mods' && <Mods key="mods" />}
-                    {nav === 'rules' && <Rules key="rules" />}
+                    {nav === 'mods' && <Modpack key="mods" />}
                     {nav === 'settings' && (
                       <Settings
                         key="settings"
