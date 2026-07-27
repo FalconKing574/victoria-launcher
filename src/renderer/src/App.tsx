@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import AmbientMusic from './components/AmbientMusic'
 import TitleBar from './components/TitleBar'
 import PanoramaBg from './components/PanoramaBg'
 import SideNav, { type NavKey } from './components/SideNav'
@@ -73,6 +74,7 @@ export default function App(): JSX.Element {
 
   return (
     <>
+      <AmbientMusic />
       <PanoramaBg blur={stage === 'app' ? 14 : 6} />
 
       <div
