@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import AmbientMusic from './components/AmbientMusic'
 import TitleBar from './components/TitleBar'
 import PanoramaBg from './components/PanoramaBg'
@@ -79,7 +79,17 @@ export default function App(): JSX.Element {
             )}
 
             {stage === 'app' && account && (
-              <div key="app" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', height: '100%' }}>
+              // A motion element, not a plain div: AnimatePresence can only hold
+              // "wait" ordering for children it can track. With a plain div the
+              // outgoing screen and this shell can be mounted at the same moment,
+              // which shows up as the sidebar appearing twice mid-transition.
+              <motion.div
+                key="app"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.25 } }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', height: '100%' }}
+              >
                 <SideNav
                   active={nav}
                   onSelect={setNav}
@@ -112,7 +122,7 @@ export default function App(): JSX.Element {
                     )}
                   </AnimatePresence>
                 </div>
-              </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
