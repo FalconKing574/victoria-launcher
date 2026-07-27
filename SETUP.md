@@ -38,6 +38,20 @@ con tus cuentas.
 
 ## 3. Configurar el launcher
 
+### Opción rápida (recomendada)
+
+```bash
+node scripts/setup.mjs
+```
+
+Te pide cuatro valores y hace todo lo demás: escribe el `.env`, enlaza el
+proyecto, sube los secretos y despliega las dos funciones.
+
+El Client Secret se lee directamente de tu terminal hacia la CLI de Supabase:
+no se muestra al escribirlo, no se guarda en el `.env` y no queda en ningún log.
+
+### Opción manual
+
 Copia `.env.example` a `.env` y rellena los valores:
 
 ```
