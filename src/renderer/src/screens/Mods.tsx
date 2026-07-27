@@ -7,9 +7,15 @@ export default function Mods(): JSX.Element {
   const [mods, setMods] = useState<ModEntry[]>([])
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.api.mods.list().then(setMods)
+    // Without the catch, a failed scan silently shows an empty list as if the
+    // instance simply had no mods.
+    window.api.mods
+      .list()
+      .then(setMods)
+      .catch(() => setError('No se pudieron leer los mods de la instancia.'))
   }, [])
 
   const filtered = useMemo(
@@ -23,6 +29,9 @@ export default function Mods(): JSX.Element {
     setBusy(mod.filename)
     try {
       setMods(await window.api.mods.toggle(mod.filename, !mod.enabled))
+      setError(null)
+    } catch {
+      setError(`No se pudo cambiar el estado de ${mod.name}.`)
     } finally {
       setBusy(null)
     }
@@ -41,6 +50,9 @@ export default function Mods(): JSX.Element {
         <p style={{ margin: '5px 0 0', color: 'var(--text-dim)', fontSize: 13 }}>
           {enabledCount} activos de {mods.length} instalados
         </p>
+        {error && (
+          <p style={{ margin: '8px 0 0', color: 'var(--err)', fontSize: 13 }}>{error}</p>
+        )}
       </div>
 
       <input

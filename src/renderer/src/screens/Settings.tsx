@@ -6,17 +6,31 @@ import type { Settings as SettingsType } from '@shared/api'
 
 export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<SettingsType | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.api.settings.get().then(setSettings)
+    // Without the catch, a failed read leaves this screen on "Cargando..." forever
+    // with nothing logged and no way for the user to know why.
+    window.api.settings
+      .get()
+      .then(setSettings)
+      .catch(() => setError('No se pudieron cargar los ajustes.'))
   }, [])
 
   async function patch(update: Partial<SettingsType>): Promise<void> {
-    setSettings(await window.api.settings.save(update))
-    // Lets AmbientMusic pick up a music toggle without a restart.
-    window.dispatchEvent(new CustomEvent('settings-changed'))
+    try {
+      setSettings(await window.api.settings.save(update))
+      setError(null)
+      // Lets AmbientMusic pick up a music toggle without a restart.
+      window.dispatchEvent(new CustomEvent('settings-changed'))
+    } catch {
+      setError('No se pudieron guardar los ajustes.')
+    }
   }
 
+  if (error && !settings) {
+    return <div style={{ padding: 34, color: 'var(--err)' }}>{error}</div>
+  }
   if (!settings) return <div style={{ padding: 34 }}>Cargando...</div>
 
   return (
@@ -28,6 +42,10 @@ export default function Settings(): JSX.Element {
       style={{ padding: 34, height: '100%', overflowY: 'auto' }}
     >
       <h1 style={{ margin: '0 0 22px', fontSize: 30, fontWeight: 800 }}>Ajustes</h1>
+
+      {error && (
+        <p style={{ margin: '0 0 16px', color: 'var(--err)', fontSize: 13 }}>{error}</p>
+      )}
 
       <GlassCard style={{ maxWidth: 520, display: 'grid', gap: 22 }}>
         <div style={{ display: 'grid', gap: 9 }}>
