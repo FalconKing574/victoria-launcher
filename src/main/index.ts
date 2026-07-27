@@ -5,6 +5,7 @@ import { registerWindowHandlers } from './ipc/window'
 import { registerAuthHandlers } from './ipc/auth'
 import { registerModHandlers } from './ipc/mods'
 import { registerLaunchHandlers } from './ipc/launch'
+import { registerSyncHandlers } from './ipc/sync'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
 import { crashLogPath } from './lib/paths'
 
@@ -104,6 +105,7 @@ if (!app.requestSingleInstanceLock()) {
     registerAuthHandlers()
     registerModHandlers()
     registerLaunchHandlers()
+    registerSyncHandlers()
     registerSettingsHandlers()
 
     const win = createWindow()

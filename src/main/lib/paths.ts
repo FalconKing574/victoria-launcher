@@ -18,3 +18,8 @@ export function msTokenPath(): string {
 export function crashLogPath(): string {
   return join(app.getPath('userData'), 'crash.log')
 }
+
+/** Tracks which mod jars the launcher installed, so it never deletes the player's own. */
+export function syncStatePath(): string {
+  return join(app.getPath('userData'), 'modpack-state.json')
+}

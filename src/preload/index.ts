@@ -24,6 +24,14 @@ const api: VictoriaApi = {
     list: () => ipcRenderer.invoke('mods:list'),
     toggle: (filename, enable) => ipcRenderer.invoke('mods:toggle', filename, enable)
   },
+  modpack: {
+    sync: () => ipcRenderer.invoke('sync:run'),
+    manifest: () => ipcRenderer.invoke('sync:manifest'),
+    state: () => ipcRenderer.invoke('sync:state'),
+    setOptional: (id, enabled) => ipcRenderer.invoke('sync:set-optional', id, enabled),
+    onStatus: (cb) => on('sync:status', cb),
+    onProgress: (cb) => on('sync:progress', cb)
+  },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     save: (patch) => ipcRenderer.invoke('settings:save', patch)

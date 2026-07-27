@@ -9,6 +9,7 @@ import { INSTANCE_DIR, MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '..
 import { launcherRoot } from '../lib/paths'
 import { detectJava } from '../lib/java'
 import { loadSettings } from '../lib/settings'
+import { jvmPerformanceArgs } from '../lib/settings-core'
 import { offlineUuid } from '../lib/offline-uuid'
 
 export interface LaunchRequest {
@@ -107,6 +108,10 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
         max: `${settings.maxMemoryMb}M`,
         min: `${settings.minMemoryMb}M`
       },
+      // The instance was launching with no JVM arguments, leaving G1 on its
+      // defaults. That is the usual cause of periodic stutter in a pack this
+      // size, and costs nothing to fix.
+      customArgs: settings.optimizedJvm ? jvmPerformanceArgs(settings.maxMemoryMb) : undefined,
       overrides: {
         // Reuse the CurseForge instance so its mods, config and saves apply.
         gameDirectory: INSTANCE_DIR,

@@ -7,6 +7,38 @@ export interface PremiumSession {
   mclc: IUser
 }
 
+export interface OptionalMod {
+  id: string
+  name: string
+  summary: string
+  category: 'rendimiento' | 'calidad-de-vida' | 'visual'
+  filename: string
+  sizeBytes: number
+  image?: string
+}
+
+export interface Manifest {
+  packVersion: string
+  minecraft: string
+  forge: string
+  mods: Array<{ filename: string; sizeBytes: number }>
+  optional: OptionalMod[]
+}
+
+export interface SyncState {
+  managed: string[]
+  enabledOptional: string[]
+  packVersion: string | null
+}
+
+export interface SyncReport {
+  upToDate: boolean
+  downloaded: number
+  removed: number
+  keptOwn: string[]
+  packVersion: string
+}
+
 export interface ModEntry {
   filename: string
   name: string
@@ -47,6 +79,14 @@ export interface VictoriaApi {
   mods: {
     list(): Promise<ModEntry[]>
     toggle(filename: string, enable: boolean): Promise<ModEntry[]>
+  }
+  modpack: {
+    sync(): Promise<SyncReport>
+    manifest(): Promise<Manifest>
+    state(): Promise<SyncState>
+    setOptional(id: string, enabled: boolean): Promise<SyncState>
+    onStatus(cb: (status: { message: string }) => void): () => void
+    onProgress(cb: (p: { percent: number; done: number; total: number }) => void): () => void
   }
   settings: {
     get(): Promise<Settings>
