@@ -30,6 +30,11 @@ export default function App(): JSX.Element {
 
   const runAccessCheck = useCallback(async (next: Account): Promise<void> => {
     setStage('checking')
+    // Remember who is being checked BEFORE the result. Storing it only on
+    // success meant a first-time denial left `account` null, so "Volver a
+    // comprobar" fell through to the login screen and the player had to
+    // re-authenticate after staff whitelisted them.
+    setAccount(next)
     try {
       const result =
         next.type === 'premium'
@@ -37,7 +42,6 @@ export default function App(): JSX.Element {
           : await window.api.access.checkCustom()
 
       if (result.allowed) {
-        setAccount(next)
         setStage('app')
       } else {
         setDenyReason(result.reason)
@@ -143,6 +147,13 @@ export default function App(): JSX.Element {
                 reason={denyReason}
                 onRetry={handleRetry}
                 onLogout={handleLogout}
+                onLinkDiscord={(profile) =>
+                  runAccessCheck({
+                    type: 'custom',
+                    username: profile.minecraft_username,
+                    profile
+                  })
+                }
               />
             )}
 

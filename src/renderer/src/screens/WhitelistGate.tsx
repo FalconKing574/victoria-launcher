@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion'
 import GlassCard from '../components/GlassCard'
 import Button from '../components/Button'
+import DiscordLinkStep from '../components/DiscordLinkStep'
 import { screenVariants } from '../theme/motion'
+import type { LauncherProfile } from '@shared/api'
 
 const MESSAGES: Record<string, string> = {
   not_whitelisted: 'Tu cuenta no está en la whitelist del servidor.',
@@ -16,13 +18,19 @@ export interface WhitelistGateProps {
   reason: string
   onRetry: () => void
   onLogout: () => void
+  /** Rendered when the account exists but never finished linking Discord. */
+  onLinkDiscord?: (profile: LauncherProfile) => void
 }
 
 export default function WhitelistGate({
   reason,
   onRetry,
-  onLogout
+  onLogout,
+  onLinkDiscord
 }: WhitelistGateProps): JSX.Element {
+  // Registration creates the account before the Discord step, so a user who
+  // closed that window is stuck: this is the only place they can finish it.
+  const needsDiscord = reason === 'discord_not_linked' && onLinkDiscord !== undefined
   return (
     <motion.div
       variants={screenVariants}
@@ -58,14 +66,20 @@ export default function WhitelistGate({
           </p>
         </div>
 
-        <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 13 }}>
-          Si crees que es un error, abre un ticket en el Discord de Victoria Kingdom.
-        </p>
+        {needsDiscord ? (
+          <DiscordLinkStep onLinked={onLinkDiscord!} />
+        ) : (
+          <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 13 }}>
+            Si crees que es un error, abre un ticket en el Discord de Victoria Kingdom.
+          </p>
+        )}
 
         <div style={{ display: 'grid', gap: 10 }}>
-          <Button full onClick={onRetry}>
-            Volver a comprobar
-          </Button>
+          {!needsDiscord && (
+            <Button full onClick={onRetry}>
+              Volver a comprobar
+            </Button>
+          )}
           <Button variant="ghost" full onClick={onLogout}>
             Cerrar sesión
           </Button>

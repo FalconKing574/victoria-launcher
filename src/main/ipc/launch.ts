@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { existsSync, mkdirSync, createWriteStream } from 'fs'
+import { existsSync, mkdirSync, createWriteStream, renameSync, rmSync } from 'fs'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
@@ -37,7 +37,18 @@ async function ensureForgeInstaller(): Promise<string> {
   if (!response.ok || !response.body) {
     throw new Error(`No se pudo descargar Forge (HTTP ${response.status}).`)
   }
-  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(target))
+
+  // Download to a temp name and only publish it once complete. Writing straight
+  // to `target` meant a dropped connection left a truncated jar that existsSync
+  // then treated as valid on every later launch, breaking the launcher for good.
+  const partial = `${target}.part`
+  try {
+    await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
+    renameSync(partial, target)
+  } catch (error) {
+    rmSync(partial, { force: true })
+    throw error
+  }
   return target
 }
 

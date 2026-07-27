@@ -19,4 +19,11 @@ describe('mergeSettings', () => {
     expect(mergeSettings({ maxMemoryMb: 100 }).maxMemoryMb).toBe(1024)
     expect(mergeSettings({ maxMemoryMb: 999999 }).maxMemoryMb).toBe(32768)
   })
+
+  it('never lets the minimum exceed the maximum', () => {
+    // -Xms above -Xmx makes the JVM refuse to start.
+    const result = mergeSettings({ maxMemoryMb: 1024, minMemoryMb: 2048 })
+    expect(result.minMemoryMb).toBeLessThanOrEqual(result.maxMemoryMb)
+    expect(result.minMemoryMb).toBe(1024)
+  })
 })
