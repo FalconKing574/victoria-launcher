@@ -86,3 +86,29 @@ de seguridad.
 ```bash
 npm run dev
 ```
+
+## 6. Generar el instalador
+
+```bash
+npm run dist
+```
+
+Produce `release/Victoria Kingdom Setup 1.0.0.exe`.
+
+### Si falla con "Cannot create symbolic link"
+
+electron-builder descarga un paquete de firma que contiene dos symlinks de macOS
+(`libcrypto.dylib`, `libssl.dylib`). Crear symlinks en Windows requiere un
+privilegio que las cuentas normales no tienen, así que 7-Zip aborta y tumba todo
+el build — aunque esos dos archivos no sirvan para nada en Windows.
+
+Se arregla extrayendo la caché a mano, sin `darwin` y sin permisos de
+administrador:
+
+```bash
+node scripts/fix-wincodesign.mjs
+```
+
+Después vuelve a lanzar `npm run dist`. Solo hace falta una vez por máquina.
+Las alternativas son activar el Modo Desarrollador de Windows o compilar desde
+una terminal como Administrador; el script evita ambas.
