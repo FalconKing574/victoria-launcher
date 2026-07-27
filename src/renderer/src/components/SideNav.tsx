@@ -2,11 +2,13 @@ import { motion } from 'framer-motion'
 import Icon, { type IconName } from './Icon'
 import logo from '../assets/logo.png'
 
-export type NavKey = 'play' | 'mods' | 'settings'
+export type NavKey = 'play' | 'modpack' | 'mods' | 'rules' | 'settings'
 
 const ITEMS: Array<{ key: NavKey; label: string; icon: IconName }> = [
   { key: 'play', label: 'Jugar', icon: 'play' },
+  { key: 'modpack', label: 'Modpack', icon: 'package' },
   { key: 'mods', label: 'Mods', icon: 'mods' },
+  { key: 'rules', label: 'Reglas', icon: 'book' },
   { key: 'settings', label: 'Ajustes', icon: 'settings' }
 ]
 
@@ -108,12 +110,17 @@ export default function SideNav({
           <img
             src={`https://mc-heads.net/avatar/${encodeURIComponent(username)}/32`}
             alt=""
+            onError={(event) => {
+              // Sin conexión el avatar no carga; el hueco vale más que el icono roto.
+              event.currentTarget.style.visibility = 'hidden'
+            }}
             style={{
               width: 30,
               height: 30,
               borderRadius: 7,
               imageRendering: 'pixelated',
-              flexShrink: 0
+              flexShrink: 0,
+              background: 'var(--surface-3)'
             }}
           />
           <div style={{ overflow: 'hidden', minWidth: 0 }}>

@@ -7,7 +7,9 @@ import SideNav, { type NavKey } from './components/SideNav'
 import Splash from './screens/Splash'
 import Login from './screens/Login'
 import Home from './screens/Home'
+import Modpack from './screens/Modpack'
 import Mods from './screens/Mods'
+import Rules from './screens/Rules'
 import Settings from './screens/Settings'
 import type { PremiumSession } from '@shared/api'
 
@@ -97,8 +99,17 @@ export default function App(): JSX.Element {
                         }
                       />
                     )}
+                    {nav === 'modpack' && <Modpack key="modpack" />}
                     {nav === 'mods' && <Mods key="mods" />}
-                    {nav === 'settings' && <Settings key="settings" />}
+                    {nav === 'rules' && <Rules key="rules" />}
+                    {nav === 'settings' && (
+                      <Settings
+                        key="settings"
+                        username={account.username}
+                        accountType={account.type}
+                        onLogout={handleLogout}
+                      />
+                    )}
                   </AnimatePresence>
                 </div>
               </div>

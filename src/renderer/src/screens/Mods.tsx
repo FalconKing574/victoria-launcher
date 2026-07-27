@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { Switch } from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
 import type { ModEntry } from '@shared/api'
 
@@ -103,28 +104,12 @@ export default function Mods(): JSX.Element {
               </div>
             </div>
 
-            <button
-              onClick={() => handleToggle(mod)}
+            <Switch
+              checked={mod.enabled}
               disabled={busy === mod.filename}
-              style={{
-                width: 46,
-                height: 25,
-                borderRadius: 99,
-                border: 'none',
-                padding: 3,
-                background: mod.enabled ? 'var(--gold)' : 'rgba(255,255,255,0.14)',
-                display: 'flex',
-                justifyContent: mod.enabled ? 'flex-end' : 'flex-start',
-                transition: 'background 0.22s',
-                flexShrink: 0
-              }}
-            >
-              <motion.span
-                layout
-                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                style={{ width: 19, height: 19, borderRadius: '50%', background: '#fff' }}
-              />
-            </button>
+              onChange={() => handleToggle(mod)}
+              ariaLabel={mod.name}
+            />
           </motion.div>
         ))}
       </div>
