@@ -1,0 +1,19 @@
+# electron-builder.yml
+appId: com.victoriakingdom.launcher
+productName: Victoria Kingdom
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Victoria Kingdom
