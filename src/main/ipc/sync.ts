@@ -253,8 +253,15 @@ export async function checkForUpdates(): Promise<SyncCheck> {
       manifest.overrides !== undefined &&
       overridesFingerprint(manifest.overrides) !== state.overridesSha1
 
+    // A version we have not recorded yet still needs a sync even when every
+    // file already matches. Running it writes modpack-state.json, which is what
+    // marks these jars as the pack's rather than the player's — and until that
+    // exists the launcher can never remove a mod dropped from a later manifest,
+    // because the deletion rule only ever touches files it installed itself.
+    const versionUnrecorded = state.packVersion !== manifest.packVersion
+
     return {
-      needsUpdate: !plan.upToDate || overridesStale,
+      needsUpdate: !plan.upToDate || overridesStale || versionUnrecorded,
       unavailable: false,
       toDownload: plan.download.length,
       toRemove: plan.remove.length,

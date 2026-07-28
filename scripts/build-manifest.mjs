@@ -44,6 +44,16 @@ const RELEASE_BASE = `https://github.com/${REPO}/releases/download/v${VERSION}`
 const EXTRA_REQUIRED = []
 
 /**
+ * Mods present in the instance that the pack should NOT ship.
+ *
+ * Matched as a substring of the filename so version bumps do not silently
+ * un-exclude something. Removing an entry here and republishing puts the mod
+ * back; the launcher deletes it from players on the next sync because it is
+ * one of the files the launcher installed.
+ */
+const EXCLUDED = ['Essential_']
+
+/**
  * Mods the player chooses. Deliberately a short list: the launcher must not let
  * anyone toggle the pack's required mods, because disabling one desyncs them
  * from the server and produces a connection failure nobody can diagnose.
@@ -95,6 +105,11 @@ const OPTIONAL_FILENAMES = new Set(OPTIONAL.map((m) => m.filename))
 const jars = readdirSync(modsDir)
   .filter((f) => f.toLowerCase().endsWith('.jar'))
   .filter((f) => !OPTIONAL_FILENAMES.has(f))
+  .filter((f) => {
+    const excluded = EXCLUDED.find((pattern) => f.includes(pattern))
+    if (excluded) console.log(`Excluido del pack: ${f}`)
+    return !excluded
+  })
 const mods = []
 
 for (const filename of jars) {

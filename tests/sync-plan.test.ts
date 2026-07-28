@@ -141,6 +141,34 @@ describe('nextManagedList', () => {
     expect(nextManagedList(plan, manifest, [])).toEqual(['embeddium.jar', 'jei.jar'])
   })
 
+  it('adopts every required mod so a later manifest can drop it', () => {
+    // Without this a first sync leaves managed empty, and the deletion rule --
+    // which only touches files the launcher installed -- could never remove a
+    // mod the pack later drops.
+    const plan = planSync({
+      manifest,
+      local: [
+        { filename: 'jei.jar', sha1: 'aaa' },
+        { filename: 'embeddium.jar', sha1: 'bbb' }
+      ],
+      managed: [],
+      enabledOptional: []
+    })
+    const adopted = nextManagedList(plan, manifest, [])
+
+    const dropped: Manifest = { ...manifest, mods: [manifest.mods[0]] }
+    const second = planSync({
+      manifest: dropped,
+      local: [
+        { filename: 'jei.jar', sha1: 'aaa' },
+        { filename: 'embeddium.jar', sha1: 'bbb' }
+      ],
+      managed: adopted,
+      enabledOptional: []
+    })
+    expect(second.remove).toEqual(['embeddium.jar'])
+  })
+
   it('does not adopt a player-added jar as managed', () => {
     const plan = planSync({
       manifest,
