@@ -28,5 +28,5 @@ nsis:
 # GitHub release or auto-update cannot see the new version.
 publish:
   provider: github
-  owner: FalconKingman
+  owner: FalconKing574
   repo: victoria-launcher
