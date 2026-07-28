@@ -12,12 +12,15 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.ico
-  # An executable with no publisher, description or version block is a large
-  # part of what heuristic antivirus scoring reacts to. It does not replace a
-  # signature, but it removes the "completely anonymous binary" signal.
-  publisherName: Victoria Kingdom
   legalTrademarks: Victoria Kingdom
   requestedExecutionLevel: asInvoker
+  # The build is not code-signed, so the updater must not demand a signature on
+  # what it downloads. This defaulted to on because `publisherName` was set --
+  # added to soften antivirus heuristics -- and electron-updater then refused
+  # every update it had already downloaded: "not signed by the application
+  # owner". Auto-update reaching players matters more than that heuristic nudge.
+  # Set this back to true the day the installer is genuinely signed.
+  verifyUpdateCodeSignature: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
