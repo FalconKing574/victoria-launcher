@@ -75,6 +75,8 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   const [pending, setPending] = useState<SyncCheck | null>(null)
   const [updating, setUpdating] = useState(false)
   const [updateNote, setUpdateNote] = useState<string | null>(null)
+  // How many files are still queued, so the label is a real count.
+  const [remaining, setRemaining] = useState<number | null>(null)
 
   const refreshPending = useCallback((): void => {
     window.api.modpack
@@ -83,21 +85,33 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
       .catch(() => undefined)
   }, [])
 
-  async function handleUpdate(): Promise<void> {
+  /**
+   * One button. It installs or repairs whatever the pack needs and then starts
+   * the game, so nobody has to know a modpack screen exists or understand what
+   * "sincronizar" means — they press play and it works.
+   */
+  async function handlePlay(): Promise<void> {
     setError(null)
     setUpdateNote(null)
-    setUpdating(true)
+    setLaunching(true)
+
     try {
-      const report = await window.api.modpack.sync()
-      setUpdateNote(
-        report.downloaded === 0 && report.removed === 0
-          ? 'El modpack ya estaba al día.'
-          : `Modpack actualizado: ${report.downloaded} descargados, ${report.removed} retirados.`
-      )
-      refreshPending()
+      if (shouldBlockPlay(pending)) {
+        setUpdating(true)
+        const report = await window.api.modpack.sync()
+        setUpdating(false)
+        setUpdateNote(
+          report.downloaded === 0 && report.removed === 0
+            ? null
+            : `Modpack listo: ${report.downloaded} archivos instalados.`
+        )
+        refreshPending()
+      }
+
+      await window.api.launch.start({ mclcUser, offlineUsername })
     } catch (caught) {
       setError((caught as Error).message)
-    } finally {
+      setLaunching(false)
       setUpdating(false)
     }
   }
@@ -105,10 +119,13 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   useEffect(() => {
     refreshPending()
 
-    const offSyncStatus = window.api.modpack.onStatus((s) => setStatus({ stage: 'download', message: s.message }))
-    const offSyncProgress = window.api.modpack.onProgress((p) =>
-      setProgress({ type: 'modpack', percent: p.percent })
+    const offSyncStatus = window.api.modpack.onStatus((s) =>
+      setStatus({ stage: 'download', message: s.message })
     )
+    const offSyncProgress = window.api.modpack.onProgress((p) => {
+      setProgress({ type: 'modpack', percent: p.percent })
+      setRemaining(Math.max(0, p.total - p.done))
+    })
     return () => {
       offSyncStatus()
       offSyncProgress()
@@ -162,20 +179,9 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
     }
   }, [])
 
-  // Only a confirmed pending update blocks play. `unavailable` means we could
-  // not reach the manifest, and nobody should be locked out by a network fault.
-  const mustUpdate = shouldBlockPlay(pending)
-
-  async function handlePlay(): Promise<void> {
-    setError(null)
-    setLaunching(true)
-    try {
-      await window.api.launch.start({ mclcUser, offlineUsername })
-    } catch (caught) {
-      setError((caught as Error).message)
-      setLaunching(false)
-    }
-  }
+  // Whether play will install something first. Not a block any more — the
+  // button does the work — but the label should say what is about to happen.
+  const willInstall = shouldBlockPlay(pending)
 
   return (
     <motion.div
@@ -260,20 +266,25 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
             }}
           >
             <div style={{ width: 208, flexShrink: 0 }}>
-              {mustUpdate ? (
-                <Button full loading={updating} onClick={handleUpdate}>
-                  {updating ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}
-                </Button>
-              ) : (
-                <Button full loading={launching} onClick={handlePlay}>
-                  {launching ? 'INICIANDO...' : 'JUGAR'}
-                </Button>
-              )}
+              <Button full loading={launching} onClick={handlePlay}>
+                {updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
+              </Button>
             </div>
 
             <div style={{ flex: 1, minWidth: 220 }}>
-              {(launching || updating) && progress ? (
-                <ProgressBar percent={progress.percent} label={status?.message ?? 'Preparando...'} />
+              {/* Concrete counts rather than a vague "cargando": what is being
+                  fetched and how much of it is left. */}
+              {updating && progress ? (
+                <ProgressBar
+                  percent={progress.percent}
+                  label={
+                    remaining !== null
+                      ? `Descargando el modpack · faltan ${remaining}`
+                      : (status?.message ?? 'Descargando el modpack')
+                  }
+                />
+              ) : launching && progress ? (
+                <ProgressBar percent={progress.percent} label={status?.message ?? 'Preparando Forge'} />
               ) : (launching || updating) && status ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-dim)' }}>
                   {status.message}
@@ -282,11 +293,11 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--err)', lineHeight: 1.5 }}>
                   {error}
                 </p>
-              ) : mustUpdate ? (
+              ) : willInstall ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--gold-bright)', lineHeight: 1.5 }}>
-                  Hay una versión nueva del modpack
-                  {pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}. Tienes que
-                  actualizar antes de jugar, o el servidor te rechazará al conectar.
+                  Hay {pending?.toDownload ?? 0} archivos por descargar
+                  {pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}. Se instalan solos
+                  al pulsar JUGAR.
                 </p>
               ) : updateNote ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ok)', lineHeight: 1.5 }}>

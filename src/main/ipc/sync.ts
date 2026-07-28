@@ -11,32 +11,52 @@ import {
   writeFileSync
 } from 'fs'
 import { join } from 'path'
+import AdmZip from 'adm-zip'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
 import { INSTANCE_DIR, MANIFEST_URL } from '../config'
+import { launcherRoot } from '../lib/paths'
 import { syncStatePath } from '../lib/paths'
 import {
   planSync,
   nextManagedList,
   type Manifest,
   type LocalMod,
-  type ManifestMod
+  type ManifestMod,
+  type ManifestOverrides
 } from '../lib/sync-plan'
 
 interface SyncState {
   managed: string[]
   enabledOptional: string[]
   packVersion: string | null
+  /** sha1 of the overrides archive already extracted into the instance. */
+  overridesSha1: string | null
 }
 
-const EMPTY_STATE: SyncState = { managed: [], enabledOptional: [], packVersion: null }
+const EMPTY_STATE: SyncState = {
+  managed: [],
+  enabledOptional: [],
+  packVersion: null,
+  overridesSha1: null
+}
+
+/**
+ * Optional mods that start switched on. A player can still turn them off; this
+ * only decides what a fresh install gets.
+ */
+const DEFAULT_OPTIONAL = ['distant-horizons']
 
 function modsDir(): string {
   return join(INSTANCE_DIR, 'mods')
 }
 
 function loadState(): SyncState {
-  if (!existsSync(syncStatePath())) return EMPTY_STATE
+  // A first run has no state file, so seed the defaults-on optional mods here
+  // rather than leaving a fresh install without them.
+  if (!existsSync(syncStatePath())) {
+    return { ...EMPTY_STATE, enabledOptional: [...DEFAULT_OPTIONAL] }
+  }
   try {
     return { ...EMPTY_STATE, ...JSON.parse(readFileSync(syncStatePath(), 'utf8')) }
   } catch {
@@ -101,6 +121,83 @@ async function downloadMod(mod: ManifestMod): Promise<void> {
   renameSync(partial, target)
 }
 
+/**
+ * Downloads and unpacks config/, resourcepacks/ and shaderpacks/ over the
+ * instance. Skipped when the archive already on disk matches, so it costs
+ * nothing on a launch where nothing changed.
+ *
+ * The archive deliberately does NOT contain options.txt: that holds the
+ * player's keybinds, video settings and volume, and replacing it on every
+ * update would wipe their setup. The resource pack is enabled separately.
+ */
+async function applyOverrides(overrides: ManifestOverrides, state: SyncState): Promise<boolean> {
+  if (state.overridesSha1 === overrides.sha1) return false
+
+  send('sync:status', { message: 'Descargando configuración del modpack...' })
+
+  const dir = join(launcherRoot(), 'overrides')
+  mkdirSync(dir, { recursive: true })
+  const archive = join(dir, `overrides-${overrides.sha1.slice(0, 12)}.zip`)
+  const partial = `${archive}.part`
+
+  const response = await fetch(overrides.url)
+  if (!response.ok || !response.body) {
+    throw new Error(`No se pudo descargar la configuración (HTTP ${response.status}).`)
+  }
+
+  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
+
+  const actual = sha1(partial)
+  if (actual !== overrides.sha1) {
+    rmSync(partial, { force: true })
+    throw new Error('La configuración se descargó corrupta. Inténtalo de nuevo.')
+  }
+  rmSync(archive, { force: true })
+  renameSync(partial, archive)
+
+  send('sync:status', { message: 'Aplicando configuración...' })
+  const zip = new AdmZip(archive)
+  // overwrite: the pack's settings are the source of truth for these folders.
+  zip.extractAllTo(INSTANCE_DIR, true)
+
+  rmSync(archive, { force: true })
+  return true
+}
+
+/** Resource pack that carries the Victoria menu and textures. */
+const VICTORIA_RESOURCE_PACK = 'file/Victoria - RP.zip'
+
+/**
+ * Turns the Victoria resource pack on without touching anything else in
+ * options.txt.
+ *
+ * options.txt is the player's own file — keybinds, video settings, volumes —
+ * so it is edited surgically rather than shipped in the overrides archive. If
+ * they deliberately removed the pack this puts it back, which is the point:
+ * the server's menu and textures are meant to be on.
+ */
+function ensureResourcePack(): void {
+  const path = join(INSTANCE_DIR, 'options.txt')
+  if (!existsSync(path)) return
+
+  try {
+    const lines = readFileSync(path, 'utf8').split(/\r?\n/)
+    const index = lines.findIndex((line) => line.startsWith('resourcePacks:'))
+    if (index === -1) return
+
+    const raw = lines[index].slice('resourcePacks:'.length)
+    const packs = JSON.parse(raw) as string[]
+    if (packs.includes(VICTORIA_RESOURCE_PACK)) return
+
+    packs.push(VICTORIA_RESOURCE_PACK)
+    lines[index] = `resourcePacks:${JSON.stringify(packs)}`
+    writeFileSync(path, lines.join('\n'), 'utf8')
+  } catch {
+    // A malformed options.txt is the game's problem, not something to crash the
+    // install over. The pack simply stays off until the player enables it.
+  }
+}
+
 export interface SyncCheck {
   /** True only when we know an update is pending. */
   needsUpdate: boolean
@@ -143,8 +240,11 @@ export async function checkForUpdates(): Promise<SyncCheck> {
       enabledOptional: state.enabledOptional
     })
 
+    const overridesStale =
+      manifest.overrides !== undefined && manifest.overrides.sha1 !== state.overridesSha1
+
     return {
-      needsUpdate: !plan.upToDate,
+      needsUpdate: !plan.upToDate || overridesStale,
       unavailable: false,
       toDownload: plan.download.length,
       toRemove: plan.remove.length,
@@ -190,10 +290,17 @@ export async function runSync(): Promise<SyncReport> {
     rmSync(join(modsDir(), filename), { force: true })
   }
 
+  let overridesApplied = false
+  if (manifest.overrides) {
+    overridesApplied = await applyOverrides(manifest.overrides, state)
+    if (overridesApplied) ensureResourcePack()
+  }
+
   saveState({
     managed: nextManagedList(plan, manifest, state.managed),
     enabledOptional: state.enabledOptional,
-    packVersion: manifest.packVersion
+    packVersion: manifest.packVersion,
+    overridesSha1: manifest.overrides?.sha1 ?? state.overridesSha1
   })
 
   const report: SyncReport = {

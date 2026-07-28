@@ -119,103 +119,13 @@ export default function Modpack(): JSX.Element {
         gap: 16
       }}
     >
-      <div style={{ display: 'grid', gap: 12 }}>
-        <Panel style={{ padding: 16, display: 'grid', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <span
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 11,
-                background: 'rgba(230,180,34,0.12)',
-                color: 'var(--gold-bright)',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0
-              }}
-            >
-              <Icon name="package" size={19} />
-            </span>
-
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <p className="eyebrow" style={{ margin: '0 0 3px' }}>
-                Modpack instalado
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.3 }}>
-                  {state?.packVersion ?? 'Sin instalar'}
-                </span>
-                {manifest && state?.packVersion === manifest.packVersion && (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: 0.6,
-                      padding: '4px 8px',
-                      borderRadius: 6,
-                      background: 'rgba(61,220,132,0.12)',
-                      color: 'var(--ok)'
-                    }}
-                  >
-                    <Icon name="check" size={11} />
-                    AL DÍA
-                  </span>
-                )}
-                {manifest && state?.packVersion !== manifest.packVersion && (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: 0.6,
-                      padding: '4px 8px',
-                      borderRadius: 6,
-                      background: 'rgba(230,180,34,0.14)',
-                      color: 'var(--gold-bright)'
-                    }}
-                  >
-                    <Icon name="download" size={11} />
-                    {manifest.packVersion} DISPONIBLE
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 3 }}>
-                {manifest
-                  ? `Minecraft ${manifest.minecraft} · Forge ${manifest.forge} · ${manifest.mods.length} mods base`
-                  : 'Minecraft 1.20.1 · Forge 47.4.0'}
-              </div>
-            </div>
-
-            <Button onClick={handleSync} loading={syncing} disabled={syncing}>
-              {syncing ? 'COMPROBANDO...' : 'Buscar actualizaciones'}
-            </Button>
-          </div>
-
-          {syncing && (
-            <div style={{ display: 'grid', gap: 8 }}>
-              {percent === null ? (
-                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-dim)' }}>
-                  {statusMessage ?? 'Comprobando...'}
-                </p>
-              ) : (
-                <ProgressBar percent={percent} label={statusMessage ?? 'Descargando mods...'} />
-              )}
-            </div>
-          )}
-
-          {error && (
-            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--err)', lineHeight: 1.5 }}>
-              {error}
-            </p>
-          )}
-
-          {report && !syncing && <SyncSummary report={report} />}
-        </Panel>
+      {/* No pack version, no update button: installing and updating the modpack
+          is the play button's job now, so this screen is only the choices. */}
+      <div>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>Mods</h1>
+        <p style={{ margin: '5px 0 0', fontSize: 13, color: 'var(--text-dim)' }}>
+          Extras opcionales. El resto del modpack se instala solo al jugar.
+        </p>
       </div>
 
       <div style={{ overflowY: 'auto', display: 'grid', gap: 12, alignContent: 'start' }}>

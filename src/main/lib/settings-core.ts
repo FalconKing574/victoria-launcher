@@ -6,6 +6,12 @@ export interface Settings {
   closeOnLaunch: boolean
   /** Tuned G1GC flags. On by default — the pack stutters badly without them. */
   optimizedJvm: boolean
+  /**
+   * Last non-premium nick. Microsoft sessions restore through their own
+   * encrypted token; without this an offline player was asked to retype their
+   * name on every single launch.
+   */
+  offlineUsername: string | null
 }
 
 /**
@@ -28,7 +34,8 @@ export const DEFAULT_SETTINGS: Settings = {
   javaPath: null,
   musicEnabled: false,
   closeOnLaunch: false,
-  optimizedJvm: true
+  optimizedJvm: true,
+  offlineUsername: null
 }
 
 const MIN_MB = 1024
@@ -56,7 +63,8 @@ export function mergeSettings(stored: Partial<Settings>): Settings {
     javaPath: stored.javaPath ?? DEFAULT_SETTINGS.javaPath,
     musicEnabled: stored.musicEnabled ?? DEFAULT_SETTINGS.musicEnabled,
     closeOnLaunch: stored.closeOnLaunch ?? DEFAULT_SETTINGS.closeOnLaunch,
-    optimizedJvm: stored.optimizedJvm ?? DEFAULT_SETTINGS.optimizedJvm
+    optimizedJvm: stored.optimizedJvm ?? DEFAULT_SETTINGS.optimizedJvm,
+    offlineUsername: stored.offlineUsername ?? DEFAULT_SETTINGS.offlineUsername
   }
 }
 

@@ -29,18 +29,31 @@ export default function App(): JSX.Element {
     setStage('app')
   }, [])
 
-  // Try a silent Microsoft re-login once the splash finishes.
+  // Restore whichever session the player last used, so nobody has to sign in
+  // again on every launch. Microsoft comes first because it is a real session;
+  // a saved nick is only a preference, and it is the fallback.
   const handleSplashDone = useCallback(async (): Promise<void> => {
     const restored = await window.api.auth.microsoftRestore().catch(() => null)
     if (restored) {
       signIn({ type: 'premium', username: restored.name, premium: restored })
-    } else {
-      setStage('login')
+      return
     }
+
+    const saved = await window.api.settings
+      .get()
+      .then((settings) => settings.offlineUsername)
+      .catch(() => null)
+
+    if (saved) signIn({ type: 'offline', username: saved })
+    else setStage('login')
   }, [signIn])
 
   const handleLogout = useCallback(async (): Promise<void> => {
-    await window.api.auth.microsoftLogout()
+    await window.api.auth.microsoftLogout().catch(() => undefined)
+    // Clearing the saved nick matters: leaving it would make the splash sign
+    // the player straight back in, so "cerrar sesión" would appear to do
+    // nothing at all.
+    await window.api.settings.save({ offlineUsername: null }).catch(() => undefined)
     setAccount(null)
     setNav('play')
     setStage('login')
@@ -72,7 +85,11 @@ export default function App(): JSX.Element {
                 onPremium={(session) =>
                   signIn({ type: 'premium', username: session.name, premium: session })
                 }
-                onOffline={(username) => signIn({ type: 'offline', username })}
+                onOffline={(username) => {
+                  // Remember it so the next launch skips this screen entirely.
+                  void window.api.settings.save({ offlineUsername: username }).catch(() => undefined)
+                  signIn({ type: 'offline', username })
+                }}
               />
             )}
 

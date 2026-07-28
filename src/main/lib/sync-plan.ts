@@ -19,12 +19,27 @@ export interface OptionalMod extends ManifestMod {
   image?: string
 }
 
+/**
+ * config/, resourcepacks/ and shaderpacks/ shipped as one archive.
+ *
+ * Those are ~520 files and the launcher needs all of them for the FancyMenu
+ * menu, the Victoria resource pack and every mod's settings to be right. Listing
+ * them individually would mean hundreds of round trips; one archive with one
+ * hash is both faster and atomically verifiable.
+ */
+export interface ManifestOverrides {
+  sha1: string
+  sizeBytes: number
+  url: string
+}
+
 export interface Manifest {
   packVersion: string
   minecraft: string
   forge: string
   mods: ManifestMod[]
   optional: OptionalMod[]
+  overrides?: ManifestOverrides
 }
 
 /** A jar currently sitting in the instance's mods folder. */

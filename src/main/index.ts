@@ -40,6 +40,31 @@ process.on('unhandledRejection', (reason) => {
   logCrash('Promesa rechazada sin gestionar.', String(reason))
 })
 
+/**
+ * Electron grants several permissions to renderer content by default. The
+ * launcher never needs the camera, the microphone, the user's location or
+ * notifications, and a request for any of them can only come from something
+ * that has no business asking — so deny the lot rather than let Windows show
+ * the user a prompt the launcher cannot justify.
+ */
+function lockDownPermissions(win: BrowserWindow): void {
+  const ALLOWED = new Set(['fullscreen'])
+
+  win.webContents.session.setPermissionRequestHandler((_contents, permission, callback) => {
+    callback(ALLOWED.has(permission))
+  })
+
+  win.webContents.session.setPermissionCheckHandler((_contents, permission) =>
+    ALLOWED.has(permission)
+  )
+
+  // Blocks getUserMedia outright, which is what triggers the camera and
+  // microphone prompts, without relying on the permission handler alone.
+  win.webContents.session.setDisplayMediaRequestHandler?.((_request, callback) => {
+    callback({})
+  })
+}
+
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1180,
@@ -78,6 +103,8 @@ function createWindow(): BrowserWindow {
   })
 
   win.on('closed', () => clearTimeout(showTimer))
+
+  lockDownPermissions(win)
 
   // A renderer crash destroys the window, which fires window-all-closed, which
   // quits the app. Without this the launcher just vanishes mid-startup with no

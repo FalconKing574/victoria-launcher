@@ -71,6 +71,8 @@ export interface Settings {
   javaPath: string | null
   musicEnabled: boolean
   closeOnLaunch: boolean
+  optimizedJvm: boolean
+  offlineUsername: string | null
 }
 
 export interface LaunchProgress {

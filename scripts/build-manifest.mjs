@@ -15,6 +15,7 @@
  *   node scripts/build-manifest.mjs --repo usuario/repo --version 1.1.0
  */
 import { createHash } from 'crypto'
+import AdmZip from 'adm-zip'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
@@ -52,6 +53,15 @@ const EXTRA_REQUIRED = []
  */
 const OPTIONAL = [
   {
+    id: 'distant-horizons',
+    name: 'Distant Horizons',
+    summary:
+      'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.',
+    category: 'visual',
+    filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar',
+    image: 'https://media.forgecdn.net/avatars/thumbnails/508/677/64/64/637868261444007926.png'
+  },
+  {
     id: 'xaeros-minimap',
     name: "Xaero's Minimap",
     summary:
@@ -79,7 +89,12 @@ if (!existsSync(modsDir)) {
 
 mkdirSync(join(OUT, 'mods'), { recursive: true })
 
-const jars = readdirSync(modsDir).filter((f) => f.toLowerCase().endsWith('.jar'))
+// A mod that is opt-in must not also be required, or everyone gets it anyway.
+const OPTIONAL_FILENAMES = new Set(OPTIONAL.map((m) => m.filename))
+
+const jars = readdirSync(modsDir)
+  .filter((f) => f.toLowerCase().endsWith('.jar'))
+  .filter((f) => !OPTIONAL_FILENAMES.has(f))
 const mods = []
 
 for (const filename of jars) {
@@ -114,6 +129,13 @@ for (const extra of EXTRA_REQUIRED) {
   })
 }
 
+// Optional mods that are already in the instance get staged from there.
+for (const mod of OPTIONAL) {
+  const inInstance = join(modsDir, mod.filename)
+  const staged = join(OUT, 'mods', mod.filename)
+  if (existsSync(inInstance) && !existsSync(staged)) cpSync(inInstance, staged)
+}
+
 const optional = OPTIONAL.map((mod) => {
   const staged = join(OUT, 'mods', mod.filename)
   if (!existsSync(staged)) {
@@ -132,12 +154,39 @@ const optional = OPTIONAL.map((mod) => {
   }
 })
 
+// config/, resourcepacks/ and shaderpacks/ as one archive. options.txt is
+// deliberately excluded: it holds the player's keybinds and video settings, and
+// overwriting it on every update would wipe their setup.
+const OVERRIDE_DIRS = ['config', 'resourcepacks', 'shaderpacks']
+let overrides
+if (args['skip-overrides'] === undefined) {
+  console.log('Empaquetando configuración... (puede tardar, son cientos de MB)')
+  const zip = new AdmZip()
+  for (const folder of OVERRIDE_DIRS) {
+    const source = join(INSTANCE, folder)
+    if (existsSync(source)) zip.addLocalFolder(source, folder)
+    else console.warn(`AVISO: no existe ${folder}/ en la instancia, se omite.`)
+  }
+  const overridesPath = join(OUT, 'overrides.zip')
+  zip.writeZip(overridesPath)
+  const buffer = readFileSync(overridesPath)
+  overrides = {
+    sha1: createHash('sha1').update(buffer).digest('hex'),
+    sizeBytes: statSync(overridesPath).size,
+    url: `${RELEASE_BASE}/overrides.zip`
+  }
+  console.log(`  overrides.zip: ${(overrides.sizeBytes / 1048576).toFixed(0)} MB`)
+} else {
+  console.log('Saltando overrides (--skip-overrides).')
+}
+
 const manifest = {
   packVersion: VERSION,
   minecraft: '1.20.1',
   forge: '47.4.0',
   mods,
-  optional
+  optional,
+  ...(overrides ? { overrides } : {})
 }
 
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8')
@@ -155,6 +204,7 @@ Manifiesto generado: ${OUT}/manifest.json
 Siguiente paso — crea una release en GitHub con la etiqueta v${VERSION} y sube:
   - ${OUT}/manifest.json
   - todos los .jar de ${OUT}/mods/
+  - ${OUT}/overrides.zip (configs, resourcepacks y shaders)
 
 Luego apunta el launcher a:
   https://github.com/${REPO}/releases/latest/download/manifest.json
