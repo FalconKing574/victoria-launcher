@@ -12,6 +12,12 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.ico
+  # An executable with no publisher, description or version block is a large
+  # part of what heuristic antivirus scoring reacts to. It does not replace a
+  # signature, but it removes the "completely anonymous binary" signal.
+  publisherName: Victoria Kingdom
+  legalTrademarks: Victoria Kingdom
+  requestedExecutionLevel: asInvoker
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

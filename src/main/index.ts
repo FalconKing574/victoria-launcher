@@ -57,7 +57,27 @@ function createWindow(): BrowserWindow {
     }
   })
 
-  win.on('ready-to-show', () => win.show())
+  // A window created with show:false that never receives ready-to-show becomes
+  // an invisible process holding the single-instance lock: window-all-closed
+  // never fires because the window is hidden, not closed, so the app never
+  // quits, and every later launch dies instantly against the lock. Showing it
+  // regardless after a timeout means the launcher can always be seen and closed.
+  const showTimer = setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) {
+      logCrash(
+        'La ventana tardó demasiado en estar lista.',
+        'ready-to-show no llegó en 12s; se muestra igualmente.'
+      )
+      win.show()
+    }
+  }, 12000)
+
+  win.on('ready-to-show', () => {
+    clearTimeout(showTimer)
+    win.show()
+  })
+
+  win.on('closed', () => clearTimeout(showTimer))
 
   // A renderer crash destroys the window, which fires window-all-closed, which
   // quits the app. Without this the launcher just vanishes mid-startup with no
@@ -113,7 +133,13 @@ if (!app.requestSingleInstanceLock()) {
     const win = createWindow()
 
     app.on('second-instance', () => {
+      // show() must come first and unconditionally: a window hidden by
+      // closeOnLaunch, or one that never reached ready-to-show, is NOT
+      // minimised, so restore() alone left the launcher permanently invisible
+      // while its process kept the lock and killed every new launch.
+      if (win.isDestroyed()) return
       if (win.isMinimized()) win.restore()
+      win.show()
       win.focus()
     })
   })

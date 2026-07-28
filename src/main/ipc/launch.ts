@@ -137,6 +137,12 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     }
   } catch (error) {
     running = false
+    // If closeOnLaunch already hid the launcher, a failure here would leave an
+    // invisible process holding the single-instance lock, so the user could
+    // never reopen it. Always bring it back before reporting.
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) win.show()
+    }
     send('launch:error', { message: (error as Error).message })
     throw error
   }

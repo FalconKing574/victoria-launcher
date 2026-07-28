@@ -1,9 +1,11 @@
 {
   "name": "victoria-launcher",
   "version": "1.0.0",
-  "description": "Launcher oficial de Victoria Kingdom",
+  "description": "Launcher oficial del servidor de Minecraft Victoria Kingdom",
   "main": "./out/main/index.js",
-  "author": "Victoria Kingdom",
+  "author": {
+    "name": "Victoria Kingdom"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -35,5 +37,6 @@
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
     "vitest": "^2.1.8"
-  }
+  },
+  "homepage": "https://discord.gg/HFvsGaxc7G"
 }
