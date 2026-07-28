@@ -6,6 +6,7 @@ import Panel from '../components/Panel'
 import ProgressBar from '../components/ProgressBar'
 import RemoteImage from '../components/RemoteImage'
 import { screenVariants } from '../theme/motion'
+import heroBandera from '../assets/hero-bandera.png'
 import type { LaunchProgress, LaunchStatus, SyncCheck } from '@shared/api'
 import { shouldBlockPlay } from '../lib/play-gate'
 import type { IUser } from 'minecraft-launcher-core'
@@ -18,8 +19,9 @@ import type { IUser } from 'minecraft-launcher-core'
  * está sin conexión, el launcher dibuja un fondo dorado en su lugar en vez de
  * un icono de imagen rota.
  * ------------------------------------------------------------------------- */
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1600&q=70'
+// La bandera de Victoria Kingdom, local: no depende de internet ni de que un
+// servicio externo siga sirviendo la imagen.
+const HERO_IMAGE = heroBandera
 
 const NEWS_IMAGES = {
   servidor:
@@ -203,7 +205,7 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
         <RemoteImage
           src={HERO_IMAGE}
           style={{ position: 'absolute', inset: 0 }}
-          position="center 55%"
+          position="center center"
         />
         <div
           style={{

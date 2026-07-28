@@ -24,8 +24,18 @@ const args = Object.fromEntries(
 const BUCKET = args.bucket ?? 'victoria-modpack'
 const OUT = 'dist-modpack'
 
+/**
+ * `shell: true` makes Node hand the arguments to cmd as one string, so anything
+ * containing a space is re-split by the shell. "Immersive Vehicles-1.20.1.jar"
+ * arrived at wrangler as two arguments and the upload died 52 files in. Quoting
+ * each argument keeps names with spaces intact.
+ */
+function quote(arg) {
+  return /[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg
+}
+
 function wrangler(argv, options = {}) {
-  return execFileSync('npx', ['wrangler', ...argv], {
+  return execFileSync('npx', ['wrangler', ...argv.map(quote)], {
     encoding: 'utf8',
     shell: true,
     ...options

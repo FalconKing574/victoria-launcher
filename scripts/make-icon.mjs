@@ -4,9 +4,9 @@ import pngToIco from 'png-to-ico'
 
 mkdirSync('build', { recursive: true })
 
-// The logo is a wide banner; pad it into a square canvas so it is not distorted.
-const square = await sharp('src/renderer/src/assets/logo.png')
-  .resize(256, 256, { fit: 'contain', background: { r: 11, g: 11, b: 16, alpha: 1 } })
+// app-icon.png is already square pixel art, so 'cover' keeps it crisp edge to edge.
+const square = await sharp('src/renderer/src/assets/app-icon.png')
+  .resize(256, 256, { fit: 'cover', kernel: 'nearest' })
   .png()
   .toBuffer()
 
