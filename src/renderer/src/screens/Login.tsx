@@ -35,7 +35,9 @@ export default function Login({ onPremium, onOffline }: LoginProps): JSX.Element
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.4 } }}
       exit={{ opacity: 0, transition: { duration: 0.25 } }}
-      style={{ display: 'grid', gridTemplateColumns: '380px 1fr', height: '100%' }}
+      // 420px so the 300px logo keeps ~26px of air on each side once the
+      // column's 34px padding is taken off.
+      style={{ display: 'grid', gridTemplateColumns: '420px 1fr', height: '100%' }}
     >
       {/* Form column — solid, so it reads as a panel rather than an overlay. */}
       <div
@@ -49,10 +51,20 @@ export default function Login({ onPremium, onOffline }: LoginProps): JSX.Element
           overflowY: 'auto'
         }}
       >
-        <img src={logo} alt="Victoria Kingdom" style={{ width: 168, imageRendering: 'pixelated' }} />
+        <img
+          src={logo}
+          alt="Victoria Kingdom"
+          style={{
+            width: '100%',
+            maxWidth: 300,
+            justifySelf: 'center',
+            imageRendering: 'pixelated',
+            marginTop: 6
+          }}
+        />
 
         <div style={{ display: 'grid', gap: 22, alignContent: 'center' }}>
-          <div>
+          <div style={{ textAlign: 'center' }}>
             <h1 style={{ margin: '0 0 6px', fontSize: 21, fontWeight: 700 }}>Bienvenido</h1>
             <p style={{ margin: 0, color: 'var(--text-dim)', fontSize: 13, lineHeight: 1.6 }}>
               Entra con tu cuenta de Minecraft, o juega escribiendo un nombre.
