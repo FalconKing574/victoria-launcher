@@ -5,7 +5,7 @@ import Icon, { type IconName } from '../components/Icon'
 import Panel from '../components/Panel'
 import Toggle from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
-import type { Settings as SettingsType } from '@shared/api'
+import type { Settings as SettingsType, UpdaterState } from '@shared/api'
 
 /**
  * Copiados de `src/main/lib/settings-core.ts` — el renderer no puede importar
@@ -271,10 +271,101 @@ export default function Settings({ username, accountType, onLogout }: SettingsPr
               checked={settings.musicEnabled}
               onChange={(value) => patch({ musicEnabled: value })}
             />
+
+            <UpdaterRow />
           </Section>
         </div>
       </div>
     </motion.div>
+  )
+}
+
+const PHASE_TEXT: Record<UpdaterState['phase'], string> = {
+  idle: 'Sin comprobar todavía.',
+  checking: 'Buscando actualizaciones...',
+  available: 'Hay una versión nueva. Descargando...',
+  downloading: 'Descargando la actualización...',
+  ready: 'Actualización lista. Se aplica al reiniciar.',
+  none: 'Estás en la última versión.',
+  error: 'No se pudo comprobar.',
+  dev: 'Las actualizaciones solo funcionan en el launcher instalado.'
+}
+
+/**
+ * Shows the launcher's own version and update state.
+ *
+ * The updater already ran in the background; this exists so the state is
+ * visible instead of silent, and so a player who wants the new version now can
+ * restart without waiting for the next launch.
+ */
+function UpdaterRow(): JSX.Element {
+  const [state, setState] = useState<UpdaterState | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    window.api.updater
+      .state()
+      .then(setState)
+      .catch(() => undefined)
+    return window.api.updater.onState(setState)
+  }, [])
+
+  const phase = state?.phase ?? 'idle'
+  const ready = phase === 'ready'
+
+  return (
+    <div className="row" style={{ display: 'grid', gap: 10, padding: '12px 13px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+            Versión {state?.version ?? '—'}
+          </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              color: ready ? 'var(--ok)' : phase === 'error' ? 'var(--err)' : 'var(--text-faint)',
+              lineHeight: 1.5
+            }}
+          >
+            {phase === 'downloading' && state ? `Descargando... ${state.percent}%` : PHASE_TEXT[phase]}
+          </div>
+        </div>
+
+        <button
+          onClick={async () => {
+            setBusy(true)
+            try {
+              if (ready) await window.api.updater.install()
+              else setState(await window.api.updater.check())
+            } catch {
+              // The phase already reports failure; nothing useful to add here.
+            } finally {
+              setBusy(false)
+            }
+          }}
+          disabled={busy || phase === 'checking' || phase === 'dev'}
+          style={{
+            padding: '9px 14px',
+            borderRadius: 9,
+            border: '1px solid var(--stroke-strong)',
+            background: ready ? 'rgba(61,220,132,0.12)' : 'rgba(255,255,255,0.05)',
+            color: ready ? 'var(--ok)' : 'var(--text)',
+            fontSize: 12.5,
+            flexShrink: 0,
+            opacity: busy || phase === 'checking' || phase === 'dev' ? 0.5 : 1,
+            cursor: busy || phase === 'dev' ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {ready ? 'Reiniciar e instalar' : busy ? 'Buscando...' : 'Buscar actualizaciones'}
+        </button>
+      </div>
+
+      {state?.message && phase === 'error' && (
+        <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
+          {state.message}
+        </p>
+      )}
+    </div>
   )
 }
 
