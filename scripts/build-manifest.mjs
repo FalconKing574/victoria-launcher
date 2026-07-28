@@ -158,24 +158,71 @@ const optional = OPTIONAL.map((mod) => {
 // deliberately excluded: it holds the player's keybinds and video settings, and
 // overwriting it on every update would wipe their setup.
 const OVERRIDE_DIRS = ['config', 'resourcepacks', 'shaderpacks']
+
+/**
+ * Wrangler refuses uploads over 300 MiB and this pack's config folder is
+ * 614 MiB, most of it menu videos, so the overrides ship as several archives
+ * instead of one. Files are bin-packed by size; each archive stays under the
+ * cap and the launcher extracts them in order.
+ */
+const PART_LIMIT_BYTES = 260 * 1024 * 1024
+
+function walk(dir, base, out = []) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    const rel = `${base}/${entry.name}`
+    if (entry.isDirectory()) walk(full, rel, out)
+    else out.push({ full, rel, size: statSync(full).size })
+  }
+  return out
+}
+
 let overrides
 if (args['skip-overrides'] === undefined) {
   console.log('Empaquetando configuración... (puede tardar, son cientos de MB)')
-  const zip = new AdmZip()
+
+  const files = []
   for (const folder of OVERRIDE_DIRS) {
     const source = join(INSTANCE, folder)
-    if (existsSync(source)) zip.addLocalFolder(source, folder)
+    if (existsSync(source)) files.push(...walk(source, folder))
     else console.warn(`AVISO: no existe ${folder}/ en la instancia, se omite.`)
   }
-  const overridesPath = join(OUT, 'overrides.zip')
-  zip.writeZip(overridesPath)
-  const buffer = readFileSync(overridesPath)
-  overrides = {
-    sha1: createHash('sha1').update(buffer).digest('hex'),
-    sizeBytes: statSync(overridesPath).size,
-    url: `${RELEASE_BASE}/overrides.zip`
+
+  // Largest first so big files claim their own part instead of stranding
+  // small ones in a part that then overflows.
+  files.sort((a, b) => b.size - a.size)
+
+  const groups = []
+  for (const file of files) {
+    let target = groups.find((g) => g.size + file.size <= PART_LIMIT_BYTES)
+    if (!target) {
+      target = { size: 0, files: [] }
+      groups.push(target)
+    }
+    target.files.push(file)
+    target.size += file.size
   }
-  console.log(`  overrides.zip: ${(overrides.sizeBytes / 1048576).toFixed(0)} MB`)
+
+  overrides = []
+  groups.forEach((group, i) => {
+    const name = `overrides-${i + 1}.zip`
+    const path = join(OUT, name)
+    const zip = new AdmZip()
+    for (const file of group.files) {
+      const dirInZip = file.rel.split('/').slice(0, -1).join('/')
+      zip.addLocalFile(file.full, dirInZip)
+    }
+    zip.writeZip(path)
+    const buffer = readFileSync(path)
+    const bytes = statSync(path).size
+    overrides.push({
+      name,
+      sha1: createHash('sha1').update(buffer).digest('hex'),
+      sizeBytes: bytes,
+      url: `${RELEASE_BASE}/${name}`
+    })
+    console.log(`  ${name}: ${(bytes / 1048576).toFixed(0)} MB (${group.files.length} archivos)`)
+  })
 } else {
   console.log('Saltando overrides (--skip-overrides).')
 }

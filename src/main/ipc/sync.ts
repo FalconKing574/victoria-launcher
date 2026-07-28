@@ -23,6 +23,7 @@ import {
   type Manifest,
   type LocalMod,
   type ManifestMod,
+  overridesFingerprint,
   type ManifestOverrides
 } from '../lib/sync-plan'
 
@@ -131,36 +132,44 @@ async function downloadMod(mod: ManifestMod): Promise<void> {
  * update would wipe their setup. The resource pack is enabled separately.
  */
 async function applyOverrides(overrides: ManifestOverrides, state: SyncState): Promise<boolean> {
-  if (state.overridesSha1 === overrides.sha1) return false
-
-  send('sync:status', { message: 'Descargando configuración del modpack...' })
+  const fingerprint = overridesFingerprint(overrides)
+  if (state.overridesSha1 === fingerprint) return false
 
   const dir = join(launcherRoot(), 'overrides')
   mkdirSync(dir, { recursive: true })
-  const archive = join(dir, `overrides-${overrides.sha1.slice(0, 12)}.zip`)
-  const partial = `${archive}.part`
 
-  const response = await fetch(overrides.url)
-  if (!response.ok || !response.body) {
-    throw new Error(`No se pudo descargar la configuración (HTTP ${response.status}).`)
+  let index = 0
+  for (const part of overrides) {
+    index += 1
+    send('sync:status', {
+      message: `Descargando configuración ${index}/${overrides.length}...`
+    })
+
+    const archive = join(dir, part.name)
+    const partial = `${archive}.part`
+
+    const response = await fetch(part.url)
+    if (!response.ok || !response.body) {
+      throw new Error(`No se pudo descargar ${part.name} (HTTP ${response.status}).`)
+    }
+
+    await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
+
+    const actual = sha1(partial)
+    if (actual !== part.sha1) {
+      rmSync(partial, { force: true })
+      throw new Error(`${part.name} se descargó corrupto. Inténtalo de nuevo.`)
+    }
+    rmSync(archive, { force: true })
+    renameSync(partial, archive)
+
+    send('sync:status', { message: `Aplicando configuración ${index}/${overrides.length}...` })
+    // overwrite: the pack's settings are the source of truth for these folders.
+    new AdmZip(archive).extractAllTo(INSTANCE_DIR, true)
+
+    rmSync(archive, { force: true })
   }
 
-  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
-
-  const actual = sha1(partial)
-  if (actual !== overrides.sha1) {
-    rmSync(partial, { force: true })
-    throw new Error('La configuración se descargó corrupta. Inténtalo de nuevo.')
-  }
-  rmSync(archive, { force: true })
-  renameSync(partial, archive)
-
-  send('sync:status', { message: 'Aplicando configuración...' })
-  const zip = new AdmZip(archive)
-  // overwrite: the pack's settings are the source of truth for these folders.
-  zip.extractAllTo(INSTANCE_DIR, true)
-
-  rmSync(archive, { force: true })
   return true
 }
 
@@ -241,7 +250,8 @@ export async function checkForUpdates(): Promise<SyncCheck> {
     })
 
     const overridesStale =
-      manifest.overrides !== undefined && manifest.overrides.sha1 !== state.overridesSha1
+      manifest.overrides !== undefined &&
+      overridesFingerprint(manifest.overrides) !== state.overridesSha1
 
     return {
       needsUpdate: !plan.upToDate || overridesStale,
@@ -300,7 +310,9 @@ export async function runSync(): Promise<SyncReport> {
     managed: nextManagedList(plan, manifest, state.managed),
     enabledOptional: state.enabledOptional,
     packVersion: manifest.packVersion,
-    overridesSha1: manifest.overrides?.sha1 ?? state.overridesSha1
+    overridesSha1: manifest.overrides
+      ? overridesFingerprint(manifest.overrides)
+      : state.overridesSha1
   })
 
   const report: SyncReport = {

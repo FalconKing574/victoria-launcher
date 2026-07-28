@@ -27,10 +27,23 @@ export interface OptionalMod extends ManifestMod {
  * them individually would mean hundreds of round trips; one archive with one
  * hash is both faster and atomically verifiable.
  */
-export interface ManifestOverrides {
+export interface OverridePart {
+  name: string
   sha1: string
   sizeBytes: number
   url: string
+}
+
+/**
+ * Split into parts because the upload tooling caps single files at 300 MiB and
+ * this pack's config folder is 614 MiB, most of it menu videos. Each part is an
+ * independent archive; extracting them in order reconstitutes the folders.
+ */
+export type ManifestOverrides = OverridePart[]
+
+/** One hash covering every part, so a changed part invalidates the whole set. */
+export function overridesFingerprint(parts: ManifestOverrides): string {
+  return parts.map((part) => part.sha1).join('-')
 }
 
 export interface Manifest {

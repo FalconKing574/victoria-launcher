@@ -134,7 +134,10 @@ const baseUrl = match[0]
 /** Every file to upload, as [localPath, keyInBucket]. */
 const uploads = [['manifest.json', 'manifest.json']]
 
-if (existsSync(join(OUT, 'overrides.zip'))) uploads.push(['overrides.zip', 'overrides.zip'])
+// The overrides ship as several parts because wrangler caps uploads at 300 MiB.
+for (const file of readdirSync(OUT)) {
+  if (/^overrides-\d+\.zip$/.test(file)) uploads.push([file, file])
+}
 
 const modsDir = join(OUT, 'mods')
 if (existsSync(modsDir)) {
@@ -153,7 +156,12 @@ const retarget = (entry) => ({
 })
 manifest.mods = manifest.mods.map(retarget)
 manifest.optional = manifest.optional.map(retarget)
-if (manifest.overrides) manifest.overrides.url = `${baseUrl}/overrides.zip`
+if (Array.isArray(manifest.overrides)) {
+  manifest.overrides = manifest.overrides.map((part) => ({
+    ...part,
+    url: `${baseUrl}/${part.name}`
+  }))
+}
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8')
 console.log(`\nURLs del manifiesto apuntando a ${baseUrl}`)
 
@@ -162,9 +170,18 @@ console.log(`\nSubiendo ${uploads.length} archivos (${totalMb.toFixed(0)} MB)...
 
 let done = 0
 for (const [local, key] of uploads) {
-  wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', join(OUT, local), '--remote'], {
-    stdio: 'ignore'
-  })
+  try {
+    wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', join(OUT, local), '--remote'], {
+      stdio: 'pipe'
+    })
+  } catch (error) {
+    // Swallowing this hid a 300 MiB size limit behind an unreadable stack trace.
+    console.error(`
+
+Falló la subida de ${key}:
+${error.stdout ?? ''}${error.stderr ?? error.message}`)
+    process.exit(1)
+  }
   done += 1
   process.stdout.write(`\r  ${done}/${uploads.length}  ${key.slice(0, 60)}`.padEnd(80))
 }
