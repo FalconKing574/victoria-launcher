@@ -172,7 +172,19 @@ const optional = OPTIONAL.map((mod) => {
 // config/, resourcepacks/ and shaderpacks/ as one archive. options.txt is
 // deliberately excluded: it holds the player's keybinds and video settings, and
 // overwriting it on every update would wipe their setup.
-const OVERRIDE_DIRS = ['config', 'resourcepacks', 'shaderpacks']
+const OVERRIDE_DIRS = ['config', 'resourcepacks', 'shaderpacks', 'resources', 'tacz']
+
+/**
+ * Paths inside the override folders that are NOT shipped.
+ *
+ * resources/videos is 726 MB of tutorial videos that are byte-identical
+ * duplicates of the ones in config/fancymenu/assets/videos -- two even under a
+ * different name -- and nothing in the menu configuration references that path.
+ * The menu reads its videos from config/ and only pulls images and sounds out
+ * of resources/, so shipping the folder would double half a gigabyte for
+ * nothing. Verified by grepping the FancyMenu customization files.
+ */
+const OVERRIDE_EXCLUDE = ['resources/videos']
 
 /**
  * Wrangler refuses uploads over 300 MiB and this pack's config folder is
@@ -202,6 +214,19 @@ if (args['skip-overrides'] === undefined) {
     if (existsSync(source)) files.push(...walk(source, folder))
     else console.warn(`AVISO: no existe ${folder}/ en la instancia, se omite.`)
   }
+
+  const before = files.length
+  const kept = files.filter(
+    (f) => !OVERRIDE_EXCLUDE.some((prefix) => f.rel.startsWith(`${prefix}/`))
+  )
+  if (kept.length !== before) {
+    const saved = files
+      .filter((f) => !kept.includes(f))
+      .reduce((sum, f) => sum + f.size, 0)
+    console.log(`  Excluidos ${before - kept.length} archivos (${(saved / 1048576).toFixed(0)} MB): ${OVERRIDE_EXCLUDE.join(', ')}`)
+  }
+  files.length = 0
+  files.push(...kept)
 
   // Largest first so big files claim their own part instead of stranding
   // small ones in a part that then overflows.
