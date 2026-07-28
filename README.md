@@ -91,10 +91,31 @@ todo el servidor.
 
 ### El launcher
 
-1. Sube el número de versión en `package.json`.
-2. `npm run dist`
-3. Crea una release en el repo de `publish` (en `electron-builder.yml`) y sube
-   **el `.exe` y el `latest.yml`**. Sin el `latest.yml` el autoupdate no ve nada.
+Sube el número de versión en `package.json` y lanza:
+
+```bash
+npm run release
+```
+
+Eso compila, crea la release en GitHub y sube los dos archivos solo. No tienes
+que tocar ninguno a mano.
+
+Requiere un token de GitHub con permiso sobre el repo, una sola vez:
+
+```bash
+setx GH_TOKEN "tu_token"
+```
+
+(Lo generas en GitHub → Settings → Developer settings → Personal access tokens.)
+
+Si prefieres hacerlo a mano, `npm run dist` deja ambos en `release/` y los subes
+tú a la release.
+
+**Por qué son dos archivos y no se pueden juntar.** Tus jugadores solo descargan
+el `.exe`; el `latest.yml` no lo ve nadie. Existe porque el launcher *que ya está
+instalado* necesita consultar algo pequeño para enterarse de que hay una versión
+nueva y comprobar su hash. No puede ir dentro del `.exe` nuevo, porque en ese
+momento aún no lo ha descargado — justo lo que el `latest.yml` dispara.
 
 Cada launcher busca actualizaciones a los pocos segundos de abrirse. Si hay una,
 la descarga sola y la instala al cerrar, así que todo el que abra el launcher
