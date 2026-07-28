@@ -30,3 +30,7 @@ publish:
   provider: github
   owner: FalconKing574
   repo: victoria-launcher
+  # electron-builder publishes drafts by default, and a draft is invisible to
+  # the updater: the release would look fine on GitHub while nobody ever
+  # received it. Publish straight away instead.
+  releaseType: release
