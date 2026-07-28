@@ -14,9 +14,34 @@ import { stdin, stdout } from 'process'
 const rl = createInterface({ input: stdin, output: stdout })
 const ask = (q) => new Promise((r) => rl.question(q, (a) => r(a.trim())))
 
-function has(command) {
+/**
+ * winget puts gh in Program Files but the current shell will not have it on
+ * PATH until it is restarted, so look there before giving up.
+ */
+const GH = (() => {
+  const candidates = [
+    'gh',
+    'C:\\Program Files\\GitHub CLI\\gh.exe',
+    'C:\\Program Files (x86)\\GitHub CLI\\gh.exe'
+  ]
+  for (const candidate of candidates) {
+    try {
+      execFileSync(candidate, ['--version'], { stdio: 'ignore' })
+      return candidate
+    } catch {
+      // Try the next location.
+    }
+  }
+  return null
+})()
+
+function gh(args, options = {}) {
+  return execFileSync(GH, args, { encoding: 'utf8', ...options })
+}
+
+function ghOk(args) {
   try {
-    execSync(command, { stdio: 'ignore' })
+    gh(args, { stdio: 'ignore' })
     return true
   } catch {
     return false
@@ -29,22 +54,28 @@ console.log(`
 ==========================================================
 `)
 
-const ghReady = has('gh --version') && has('gh auth status')
+const ghReady = GH !== null && ghOk(['auth', 'status'])
 
 if (!ghReady) {
-  console.log(`Falta la CLI de GitHub, o no has iniciado sesión en ella.
+  console.log(
+    GH === null
+      ? `No encuentro la CLI de GitHub. Instálala con:
 
-  1. Instálala:   winget install GitHub.cli
-  2. Cierra y abre la terminal.
-  3. Inicia sesión:  gh auth login
-  4. Vuelve a ejecutar este script.
+  winget install --id GitHub.cli --source winget
+`
+      : `La CLI está instalada pero no has iniciado sesión. Ejecuta:
 
-La sesión la haces tú: yo no manejo tus credenciales.
-`)
+  "${GH}" auth login
+
+` +
+        `Elige GitHub.com, HTTPS, y "Login with a web browser".
+Después vuelve a lanzar este script.
+`
+  )
   process.exit(1)
 }
 
-const owner = execSync('gh api user --jq .login', { encoding: 'utf8' }).trim()
+const owner = gh(['api', 'user', '--jq', '.login']).trim()
 console.log(`Cuenta de GitHub detectada: ${owner}\n`)
 
 const repo = (await ask('Nombre del repo para el LAUNCHER [victoria-launcher]: ')) || 'victoria-launcher'
@@ -71,23 +102,21 @@ const config = readFileSync(configPath, 'utf8')
 writeFileSync(configPath, config, 'utf8')
 console.log(`\n${configPath} apuntando a ${owner}/${repo}`)
 
-const exists = has(`gh repo view ${owner}/${repo}`)
+const exists = ghOk(['repo', 'view', `${owner}/${repo}`])
 if (exists) {
   console.log(`El repo ${owner}/${repo} ya existe, lo reutilizo.`)
 } else {
   console.log(`Creando ${owner}/${repo}...`)
-  execFileSync(
-    'gh',
-    ['repo', 'create', `${owner}/${repo}`, isPublic ? '--public' : '--private', '--disable-wiki'],
-    { stdio: 'inherit' }
-  )
+  gh(['repo', 'create', `${owner}/${repo}`, isPublic ? '--public' : '--private', '--disable-wiki'], {
+    stdio: 'inherit'
+  })
 }
 
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version
 console.log(`\nCompilando y publicando la versión ${version}...\n`)
 
 // electron-builder reads the token from the environment; gh already holds one.
-const token = execSync('gh auth token', { encoding: 'utf8' }).trim()
+const token = gh(['auth', 'token']).trim()
 execSync('npm run release', {
   stdio: 'inherit',
   env: { ...process.env, GH_TOKEN: token }
