@@ -101,6 +101,61 @@ async function downloadMod(mod: ManifestMod): Promise<void> {
   renameSync(partial, target)
 }
 
+export interface SyncCheck {
+  /** True only when we know an update is pending. */
+  needsUpdate: boolean
+  /** No modpack is published, so there is nothing to enforce. */
+  unavailable: boolean
+  toDownload: number
+  toRemove: number
+  installedVersion: string | null
+  latestVersion: string | null
+}
+
+/**
+ * Works out whether the pack is behind WITHOUT downloading anything, so the
+ * launcher can gate the play button on it.
+ *
+ * Every failure path returns `unavailable` rather than `needsUpdate`. If the
+ * manifest is unreachable — no modpack published yet, GitHub down, no internet —
+ * the player must still be able to play. Blocking on a network error would take
+ * the whole server offline for everyone the moment the host has a hiccup.
+ */
+export async function checkForUpdates(): Promise<SyncCheck> {
+  const state = loadState()
+  const base: SyncCheck = {
+    needsUpdate: false,
+    unavailable: true,
+    toDownload: 0,
+    toRemove: 0,
+    installedVersion: state.packVersion,
+    latestVersion: null
+  }
+
+  if (!MANIFEST_URL) return base
+
+  try {
+    const manifest = await fetchManifest()
+    const plan = planSync({
+      manifest,
+      local: scanLocal(),
+      managed: state.managed,
+      enabledOptional: state.enabledOptional
+    })
+
+    return {
+      needsUpdate: !plan.upToDate,
+      unavailable: false,
+      toDownload: plan.download.length,
+      toRemove: plan.remove.length,
+      installedVersion: state.packVersion,
+      latestVersion: manifest.packVersion
+    }
+  } catch {
+    return base
+  }
+}
+
 export interface SyncReport {
   upToDate: boolean
   downloaded: number
@@ -154,6 +209,7 @@ export async function runSync(): Promise<SyncReport> {
 
 export function registerSyncHandlers(): void {
   ipcMain.handle('sync:run', () => runSync())
+  ipcMain.handle('sync:check', () => checkForUpdates())
   ipcMain.handle('sync:manifest', () => fetchManifest())
   ipcMain.handle('sync:state', () => loadState())
   ipcMain.handle('sync:set-optional', (_event, id: string, enabled: boolean) => {

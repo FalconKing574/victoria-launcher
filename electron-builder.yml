@@ -17,3 +17,10 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   shortcutName: Victoria Kingdom
+# Where the launcher looks for its own updates. Change owner/repo to yours.
+# `npm run dist` writes latest.yml next to the installer; upload BOTH to the
+# GitHub release or auto-update cannot see the new version.
+publish:
+  provider: github
+  owner: FalconKingman
+  repo: victoria-launcher

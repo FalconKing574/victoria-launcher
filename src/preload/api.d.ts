@@ -31,6 +31,25 @@ export interface SyncState {
   packVersion: string | null
 }
 
+export interface SyncCheck {
+  needsUpdate: boolean
+  unavailable: boolean
+  toDownload: number
+  toRemove: number
+  installedVersion: string | null
+  latestVersion: string | null
+}
+
+export type UpdaterPhase =
+  | 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'none' | 'error' | 'dev'
+
+export interface UpdaterState {
+  phase: UpdaterPhase
+  version: string | null
+  percent: number
+  message: string | null
+}
+
 export interface SyncReport {
   upToDate: boolean
   downloaded: number
@@ -82,11 +101,18 @@ export interface VictoriaApi {
   }
   modpack: {
     sync(): Promise<SyncReport>
+    check(): Promise<SyncCheck>
     manifest(): Promise<Manifest>
     state(): Promise<SyncState>
     setOptional(id: string, enabled: boolean): Promise<SyncState>
     onStatus(cb: (status: { message: string }) => void): () => void
     onProgress(cb: (p: { percent: number; done: number; total: number }) => void): () => void
+  }
+  updater: {
+    check(): Promise<UpdaterState>
+    state(): Promise<UpdaterState>
+    install(): Promise<boolean>
+    onState(cb: (state: UpdaterState) => void): () => void
   }
   settings: {
     get(): Promise<Settings>

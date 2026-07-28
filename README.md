@@ -57,6 +57,52 @@ node scripts/fix-wincodesign.mjs
 
 Luego vuelve a lanzar `npm run dist`. Solo hace falta una vez por máquina.
 
+## Actualizaciones
+
+Hay dos cosas que se actualizan por separado, y cada una tiene su release.
+
+### El modpack
+
+Cuando cambies mods en la instancia:
+
+```bash
+node scripts/build-manifest.mjs --repo TU_USUARIO/TU_REPO --version 1.1.0
+```
+
+Crea una release con la etiqueta `v1.1.0` y sube `dist-modpack/manifest.json` y
+todos los `.jar` de `dist-modpack/mods/`.
+
+Apunta el launcher al manifest con la variable `VICTORIA_MANIFEST_URL`:
+
+```
+https://github.com/TU_USUARIO/TU_REPO/releases/latest/download/manifest.json
+```
+
+`latest/download` siempre resuelve a la release más nueva, así que publicar una
+release nueva actualiza a todos sin tocar el launcher.
+
+**Jugar queda bloqueado** mientras el modpack esté por detrás: el botón pasa a
+decir ACTUALIZAR. Es a propósito — entrar con mods distintos a los del servidor
+provoca un rechazo al conectar con un error que nadie sabe leer.
+
+Si el manifest no se puede alcanzar (sin internet, GitHub caído, o todavía no has
+publicado nada), **no se bloquea**. Un fallo de red no puede dejar sin jugar a
+todo el servidor.
+
+### El launcher
+
+1. Sube el número de versión en `package.json`.
+2. `npm run dist`
+3. Crea una release en el repo de `publish` (en `electron-builder.yml`) y sube
+   **el `.exe` y el `latest.yml`**. Sin el `latest.yml` el autoupdate no ve nada.
+
+Cada launcher busca actualizaciones a los pocos segundos de abrirse. Si hay una,
+la descarga sola y la instala al cerrar, así que todo el que abra el launcher
+después de tu release acaba en la versión nueva sin hacer nada.
+
+Aviso: el ejecutable no está firmado, así que Windows SmartScreen puede avisar la
+primera vez. Firmarlo requiere un certificado de pago.
+
 ## Control de acceso
 
 El launcher **no** decide quién puede entrar al servidor, y no debería: alguien

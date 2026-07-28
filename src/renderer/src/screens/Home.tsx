@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Button from '../components/Button'
 import Icon, { type IconName } from '../components/Icon'
@@ -6,7 +6,8 @@ import Panel from '../components/Panel'
 import ProgressBar from '../components/ProgressBar'
 import RemoteImage from '../components/RemoteImage'
 import { screenVariants } from '../theme/motion'
-import type { LaunchProgress, LaunchStatus } from '@shared/api'
+import type { LaunchProgress, LaunchStatus, SyncCheck } from '@shared/api'
+import { shouldBlockPlay } from '../lib/play-gate'
 import type { IUser } from 'minecraft-launcher-core'
 
 /* ------------------------------------------------------------------------- *
@@ -69,6 +70,51 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   const [modsEnabled, setModsEnabled] = useState<number | null>(null)
   const [memoryMb, setMemoryMb] = useState<number | null>(null)
 
+  // Playing with an outdated pack gets you rejected by the server with an error
+  // nobody can read, so the button is blocked until the pack matches.
+  const [pending, setPending] = useState<SyncCheck | null>(null)
+  const [updating, setUpdating] = useState(false)
+  const [updateNote, setUpdateNote] = useState<string | null>(null)
+
+  const refreshPending = useCallback((): void => {
+    window.api.modpack
+      .check()
+      .then(setPending)
+      .catch(() => undefined)
+  }, [])
+
+  async function handleUpdate(): Promise<void> {
+    setError(null)
+    setUpdateNote(null)
+    setUpdating(true)
+    try {
+      const report = await window.api.modpack.sync()
+      setUpdateNote(
+        report.downloaded === 0 && report.removed === 0
+          ? 'El modpack ya estaba al día.'
+          : `Modpack actualizado: ${report.downloaded} descargados, ${report.removed} retirados.`
+      )
+      refreshPending()
+    } catch (caught) {
+      setError((caught as Error).message)
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  useEffect(() => {
+    refreshPending()
+
+    const offSyncStatus = window.api.modpack.onStatus((s) => setStatus({ stage: 'download', message: s.message }))
+    const offSyncProgress = window.api.modpack.onProgress((p) =>
+      setProgress({ type: 'modpack', percent: p.percent })
+    )
+    return () => {
+      offSyncStatus()
+      offSyncProgress()
+    }
+  }, [refreshPending])
+
   useEffect(() => {
     // The launch may already be running if the user navigated away and back:
     // this screen unmounts on tab change, which used to reset the button to
@@ -115,6 +161,10 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
       offClosed()
     }
   }, [])
+
+  // Only a confirmed pending update blocks play. `unavailable` means we could
+  // not reach the manifest, and nobody should be locked out by a network fault.
+  const mustUpdate = shouldBlockPlay(pending)
 
   async function handlePlay(): Promise<void> {
     setError(null)
@@ -210,21 +260,37 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
             }}
           >
             <div style={{ width: 208, flexShrink: 0 }}>
-              <Button full loading={launching} onClick={handlePlay}>
-                {launching ? 'INICIANDO...' : 'JUGAR'}
-              </Button>
+              {mustUpdate ? (
+                <Button full loading={updating} onClick={handleUpdate}>
+                  {updating ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}
+                </Button>
+              ) : (
+                <Button full loading={launching} onClick={handlePlay}>
+                  {launching ? 'INICIANDO...' : 'JUGAR'}
+                </Button>
+              )}
             </div>
 
             <div style={{ flex: 1, minWidth: 220 }}>
-              {launching && progress ? (
+              {(launching || updating) && progress ? (
                 <ProgressBar percent={progress.percent} label={status?.message ?? 'Preparando...'} />
-              ) : launching && status ? (
+              ) : (launching || updating) && status ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-dim)' }}>
                   {status.message}
                 </p>
               ) : error ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--err)', lineHeight: 1.5 }}>
                   {error}
+                </p>
+              ) : mustUpdate ? (
+                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--gold-bright)', lineHeight: 1.5 }}>
+                  Hay una versión nueva del modpack
+                  {pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}. Tienes que
+                  actualizar antes de jugar, o el servidor te rechazará al conectar.
+                </p>
+              ) : updateNote ? (
+                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ok)', lineHeight: 1.5 }}>
+                  {updateNote}
                 </p>
               ) : (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
