@@ -84,7 +84,30 @@ Genera el modpack primero:
 // Create the bucket only if it is not already there, so re-running is safe.
 if (!wranglerOk(['r2', 'bucket', 'info', BUCKET])) {
   console.log(`Creando el bucket ${BUCKET}...`)
-  wrangler(['r2', 'bucket', 'create', BUCKET], { stdio: 'inherit' })
+  try {
+    wrangler(['r2', 'bucket', 'create', BUCKET], { stdio: 'pipe' })
+  } catch (error) {
+    const output = `${error.stdout ?? ''}${error.stderr ?? ''}`
+    // R2 has to be activated once in the dashboard before the API works, and
+    // the raw error is a stack trace that explains none of that.
+    if (/10042|enable R2/i.test(output)) {
+      console.error(`
+R2 todavía no está activado en tu cuenta de Cloudflare.
+
+  1. Entra en https://dash.cloudflare.com
+  2. Menú lateral -> R2 Object Storage
+  3. Pulsa el botón de activar / "Purchase R2"
+
+Cloudflare pide una tarjeta aunque no vayas a pagar: el plan gratuito son
+10 GB de almacenamiento y salida de datos ilimitada. Tu modpack ocupa ~1.1 GB.
+
+Cuando esté activado, vuelve a lanzar este script.
+`)
+      process.exit(1)
+    }
+    console.error(output || error.message)
+    process.exit(1)
+  }
 } else {
   console.log(`El bucket ${BUCKET} ya existe, lo reutilizo.`)
 }
