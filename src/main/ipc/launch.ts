@@ -5,8 +5,8 @@ import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
 import { Client, Authenticator } from 'minecraft-launcher-core'
 import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
-import { INSTANCE_DIR, MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
-import { launcherRoot } from '../lib/paths'
+import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
+import { launcherRoot, instanceDir } from '../lib/paths'
 import { detectJava } from '../lib/java'
 import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
@@ -113,8 +113,9 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       // size, and costs nothing to fix.
       customArgs: settings.optimizedJvm ? jvmPerformanceArgs(settings.maxMemoryMb) : undefined,
       overrides: {
-        // Reuse the CurseForge instance so its mods, config and saves apply.
-        gameDirectory: INSTANCE_DIR,
+        // The launcher's own per-user instance, where the sync put the mods,
+        // config and resource packs.
+        gameDirectory: instanceDir(),
         maxSockets: 8
       }
     }

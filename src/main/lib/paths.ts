@@ -6,6 +6,23 @@ export function launcherRoot(): string {
   return join(app.getPath('userData'), 'minecraft')
 }
 
+/**
+ * Where the game's mods, config and saves live.
+ *
+ * This used to be a hardcoded path into the developer's own CurseForge install,
+ * which meant every other player hit
+ *   EPERM: operation not permitted, mkdir 'C:\Users\<someone else>\curseforge\...'
+ * because that folder is not theirs to create. The launcher downloads the whole
+ * pack itself now, so it owns the instance too — one per user, under their own
+ * app data.
+ *
+ * VICTORIA_INSTANCE_DIR still overrides it, which is how an existing CurseForge
+ * instance can be reused instead of starting fresh.
+ */
+export function instanceDir(): string {
+  return process.env.VICTORIA_INSTANCE_DIR ?? join(app.getPath('userData'), 'instance')
+}
+
 export function settingsPath(): string {
   return join(app.getPath('userData'), 'settings.json')
 }

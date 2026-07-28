@@ -14,8 +14,8 @@ import { join } from 'path'
 import AdmZip from 'adm-zip'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
-import { INSTANCE_DIR, MANIFEST_URL } from '../config'
-import { launcherRoot } from '../lib/paths'
+import { MANIFEST_URL } from '../config'
+import { launcherRoot, instanceDir } from '../lib/paths'
 import { syncStatePath } from '../lib/paths'
 import {
   planSync,
@@ -49,7 +49,7 @@ const EMPTY_STATE: SyncState = {
 const DEFAULT_OPTIONAL = ['distant-horizons']
 
 function modsDir(): string {
-  return join(INSTANCE_DIR, 'mods')
+  return join(instanceDir(), 'mods')
 }
 
 function loadState(): SyncState {
@@ -165,7 +165,7 @@ async function applyOverrides(overrides: ManifestOverrides, state: SyncState): P
 
     send('sync:status', { message: `Aplicando configuración ${index}/${overrides.length}...` })
     // overwrite: the pack's settings are the source of truth for these folders.
-    new AdmZip(archive).extractAllTo(INSTANCE_DIR, true)
+    new AdmZip(archive).extractAllTo(instanceDir(), true)
 
     rmSync(archive, { force: true })
   }
@@ -186,7 +186,7 @@ const VICTORIA_RESOURCE_PACK = 'file/Victoria - RP.zip'
  * the server's menu and textures are meant to be on.
  */
 function ensureResourcePack(): void {
-  const path = join(INSTANCE_DIR, 'options.txt')
+  const path = join(instanceDir(), 'options.txt')
   if (!existsSync(path)) return
 
   try {
@@ -281,8 +281,31 @@ export interface SyncReport {
   packVersion: string
 }
 
+/**
+ * Creates the instance folder up front and turns a permission failure into
+ * something a player can act on. Raw "EPERM: operation not permitted, mkdir"
+ * with a path in it tells them nothing about what to do.
+ */
+function ensureInstanceDir(): void {
+  const dir = instanceDir()
+  try {
+    mkdirSync(dir, { recursive: true })
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code
+    if (code === 'EPERM' || code === 'EACCES') {
+      throw new Error(
+        `El launcher no tiene permiso para crear su carpeta en:\n${dir}\n\n` +
+          'Suele ser el antivirus bloqueándolo. Añade esa carpeta a las excepciones ' +
+          'y vuelve a intentarlo.'
+      )
+    }
+    throw error
+  }
+}
+
 export async function runSync(): Promise<SyncReport> {
   send('sync:status', { message: 'Comprobando actualizaciones...' })
+  ensureInstanceDir()
 
   const manifest = await fetchManifest()
   const state = loadState()
