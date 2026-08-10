@@ -50,8 +50,22 @@ const EXTRA_REQUIRED = []
  * un-exclude something. Removing an entry here and republishing puts the mod
  * back; the launcher deletes it from players on the next sync because it is
  * one of the files the launcher installed.
+ *
+ * `voicechat-forge` apareció en la instancia y nunca se había publicado. Un mod
+ * nuevo no entra por una actualización de versiones: Simple Voice Chat además
+ * necesita estar también en el servidor y un puerto UDP abierto, o los
+ * jugadores lo ven instalado y no les funciona. Quita esta entrada el día que
+ * el servidor lo tenga.
+ *
+ * `NEOFORGE` es una red de seguridad. Este pack corre **Forge 47.4.0**, y varios
+ * mods (EnhancedVisuals, CreativeCore...) publican dos archivos casi idénticos,
+ * `..._FORGE_...` y `..._NEOFORGE_...`. El de NeoForge declara dentro
+ * `modId="neoforge"`, que Forge no proporciona: lo trata como dependencia
+ * obligatoria ausente y **aborta el arranque**. Ya se coló uno
+ * (EnhancedVisuals_NEOFORGE_v1.8.30) al actualizar desde CurseForge. Si algún
+ * día el pack migra a NeoForge, quita esta entrada.
  */
-const EXCLUDED = ['Essential_']
+const EXCLUDED = ['Essential_', 'voicechat-forge', 'NEOFORGE']
 
 /**
  * Mods the player chooses. Deliberately a short list: the launcher must not let

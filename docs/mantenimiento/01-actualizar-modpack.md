@@ -62,7 +62,41 @@ Solo afecta a instalaciones nuevas. A quien ya juega no le cambia nada.
 Cambiar `DEFAULT_OPTIONAL` es código del launcher → hay que publicar también una
 versión nueva del launcher ([`02-actualizar-launcher.md`](02-actualizar-launcher.md)).
 
-## 4. Genera el manifiesto
+## 3.5. Si SOLO cambian versiones de mods, no uses build-manifest
+
+Es el caso más habitual: actualizas mods en CurseForge y nada más.
+
+```bash
+node scripts/update-mods-only.mjs --version 1.6.1            # enseña qué haría
+node scripts/update-mods-only.mjs --version 1.6.1 --publish  # sube
+```
+
+Parte del manifiesto **vivo** y solo sustituye las entradas cuya versión cambió.
+Los `overrides-*.zip` no se tocan.
+
+**Por qué importa:** `build-manifest.mjs` regenera los tres zips, y un zip no
+sale byte a byte igual dos veces. Sus sha1 cambiarían aunque el contenido sea
+idéntico, y el launcher —que compara por hash— le haría bajar **697 MB a cada
+jugador** por una actualización de 49 MB de jars.
+
+El script **aborta** si aparece un mod nuevo o desaparece uno: eso ya no es una
+subida de versiones y toca `build-manifest.mjs`.
+
+### Cuidado con las builds de NeoForge
+
+Este pack es **Forge 47.4.0**. Varios mods publican dos archivos casi iguales,
+`..._FORGE_...` y `..._NEOFORGE_...`, y CurseForge puede darte el que no es al
+actualizar. El de NeoForge lleva dentro `modId="neoforge"`, que Forge no
+proporciona: lo trata como dependencia obligatoria ausente y **el juego no
+arranca**. Ya pasó con `EnhancedVisuals_NEOFORGE_v1.8.30`.
+
+`EXCLUDED` lleva `NEOFORGE` como red de seguridad, pero comprueba lo que instalas:
+
+```bash
+unzip -p "ruta/al/mod.jar" META-INF/mods.toml | grep -E 'modId|loaderVersion'
+```
+
+## 4. Genera el manifiesto (solo si añades o quitas mods, o tocas configs)
 
 ```bash
 node scripts/build-manifest.mjs --version 1.0.7 --repo FalconKing574/victoria-launcher
