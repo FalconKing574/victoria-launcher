@@ -47,6 +47,20 @@ mundo que no había modpack. Sigue pasando la variable si publicas a otro sitio,
 pero olvidarla ya no rompe nada.
 **Comprueba:** `grep -o "manifest.json" out/main/index.js` después de compilar.
 
+### Un solo archivo que falta deja el modpack sin instalar
+
+**Síntoma:** el launcher repite «hay N archivos por descargar» para siempre y no
+actualiza nunca. Pasó de verdad: `victoriarp-1.9.0.jar` estaba en el manifiesto
+pero **nunca se subió a R2** y devolvía 404, así que `performSync` reventaba
+antes de guardar nada — y como no guarda, al siguiente intento vuelve a empezar.
+**Regla:** después de publicar, comprueba que **todo** el manifiesto se descarga:
+
+```bash
+node -e "fetch('https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json',{cache:'no-store'}).then(r=>r.json()).then(async m=>{const malos=[];for(const e of [...m.mods,...m.optional,...m.overrides.map(o=>({filename:o.name,url:o.url,sizeBytes:o.sizeBytes}))]){const r=await fetch(e.url,{method:'HEAD'});if(!r.ok||Number(r.headers.get('content-length'))!==e.sizeBytes)malos.push(e.filename+' HTTP '+r.status)}console.log(malos.length?malos:'todo descargable')})"
+```
+
+`update-mods-only.mjs --publish` ya lo hace solo al terminar.
+
 ### Versión de modpack que no sube
 
 **Síntoma:** publicas cambios, los launchers no descargan nada.

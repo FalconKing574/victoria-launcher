@@ -1,6 +1,6 @@
 {
   "name": "victoria-launcher",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Launcher oficial del servidor de Minecraft Victoria Kingdom",
   "main": "./out/main/index.js",
   "author": {

@@ -95,6 +95,11 @@ export interface ShaderSettings {
   installed: boolean
 }
 
+export interface RestoreResult extends ShaderSettings {
+  /** False cuando ni había copia guardada ni se pudo volver a bajar del pack. */
+  recuperado: boolean
+}
+
 export interface ModEntry {
   filename: string
   name: string
@@ -154,8 +159,10 @@ export interface VictoriaApi {
     get(): Promise<ShaderSettings>
     setEnabled(enabled: boolean): Promise<ShaderSettings>
     select(filename: string): Promise<ShaderSettings>
+    /** Deja de usar el shader actual sin apagar Oculus. */
+    deselect(): Promise<ShaderSettings>
     delete(filename: string): Promise<ShaderSettings>
-    restore(filename: string): Promise<ShaderSettings>
+    restore(filename: string): Promise<RestoreResult>
   }
   updater: {
     check(): Promise<UpdaterState>

@@ -366,6 +366,11 @@ function ModpackUpdateRow(): JSX.Element {
   const [busy, setBusy] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // Aparte del mensaje normal: un fallo tiene que verse aunque siga habiendo
+  // una actualización pendiente. Cuando compartían variable, la rama de
+  // «hay N archivos por descargar» ganaba siempre y el error no se pintaba
+  // nunca — que es justo cuando hace falta leerlo.
+  const [failure, setFailure] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -387,6 +392,7 @@ function ModpackUpdateRow(): JSX.Element {
     const offStatus = window.api.modpack.onStatus((s) => setMessage(s.message))
     const offDone = window.api.modpack.onDone((report) => {
       setSyncing(false)
+      setFailure(null)
       setMessage(
         report.downloaded === 0 && report.removed === 0
           ? 'El modpack ya estaba al día.'
@@ -396,7 +402,7 @@ function ModpackUpdateRow(): JSX.Element {
     })
     const offError = window.api.modpack.onError((payload) => {
       setSyncing(false)
-      setMessage(payload.message)
+      setFailure(payload.message)
     })
 
     return () => {
@@ -434,12 +440,30 @@ function ModpackUpdateRow(): JSX.Element {
                     (check?.latestVersion ? ` (v${check.latestVersion}).` : '.')
                   : (message ?? 'El modpack está al día.')}
           </div>
+
+          {/* El fallo va en su propia línea y siempre visible. Un modpack que
+              no se puede instalar tiene que decir por qué; antes se quedaba
+              repitiendo «hay N archivos por descargar» para siempre. */}
+          {failure && !syncing && (
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 11.5,
+                color: 'var(--err)',
+                lineHeight: 1.5,
+                whiteSpace: 'pre-wrap'
+              }}
+            >
+              {failure}
+            </div>
+          )}
         </div>
 
         <button
           onClick={async () => {
             setBusy(true)
             setMessage(null)
+            setFailure(null)
             try {
               const next = await window.api.modpack.check()
               setCheck(next)
@@ -453,7 +477,7 @@ function ModpackUpdateRow(): JSX.Element {
                 setMessage('El modpack está al día.')
               }
             } catch {
-              setMessage('No se pudo comprobar. Revisa tu conexión.')
+              setFailure('No se pudo comprobar. Revisa tu conexión.')
             } finally {
               setBusy(false)
             }

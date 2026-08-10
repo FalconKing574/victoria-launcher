@@ -40,6 +40,7 @@ const api: VictoriaApi = {
     get: () => ipcRenderer.invoke('shaders:get'),
     setEnabled: (enabled) => ipcRenderer.invoke('shaders:set-enabled', enabled),
     select: (filename) => ipcRenderer.invoke('shaders:select', filename),
+    deselect: () => ipcRenderer.invoke('shaders:deselect'),
     delete: (filename) => ipcRenderer.invoke('shaders:delete', filename),
     restore: (filename) => ipcRenderer.invoke('shaders:restore', filename)
   },

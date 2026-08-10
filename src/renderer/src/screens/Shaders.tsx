@@ -65,14 +65,29 @@ export default function Shaders(): JSX.Element {
     setError(null)
     setNote(null)
     try {
-      setSettings(await window.api.shaders.restore(pack.filename))
-      if (!pack.restorable) {
-        setNote(
-          `«${pack.name}» ya no está bloqueado. Volverá a instalarse la próxima vez que se actualice el modpack.`
+      const next = await window.api.shaders.restore(pack.filename)
+      setSettings(next)
+      if (next.recuperado) setNote(`«${pack.name}» está de vuelta en tu lista.`)
+      else
+        setError(
+          `No se pudo recuperar «${pack.name}»: no hay copia guardada y no se pudo bajar del modpack. Revisa tu conexión e inténtalo otra vez.`
         )
-      }
     } catch {
       setError('No se pudo recuperar ese shader.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** Quitarse el shader actual sin tocar el interruptor de Oculus. */
+  async function stopUsing(): Promise<void> {
+    setBusy(true)
+    setError(null)
+    setNote(null)
+    try {
+      setSettings(await window.api.shaders.deselect())
+    } catch {
+      setError('No se pudo dejar de usar ese shader.')
     } finally {
       setBusy(false)
     }
@@ -332,21 +347,17 @@ export default function Shaders(): JSX.Element {
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    {/* El que está en uso se puede apagar desde aquí.
-                        Antes este botón ponía «En uso» y estaba inerte, así que
-                        la única forma de dejar de usar un shader era borrarlo o
-                        buscar el interruptor de arriba. Dejar de usarlo escribe
-                        enableShaders=false y NO toca shaderPack: el archivo se
-                        queda, Minecraft arranca sin shaders, y al volver a
-                        activarlo reaparece el mismo. */}
+                    {/* Dejar de usar vacía la elección y NADA más. Antes
+                        apagaba Oculus, y con él se caían todos los demás
+                        shaders: para quitarte uno acababas sin poder elegir
+                        ninguno. Ahora Oculus sigue encendido, el juego arranca
+                        sin shader y puedes poner otro en el momento. */}
                     <button
-                      onClick={() =>
-                        void (active ? toggleOculus(false) : selectPack(pack.filename))
-                      }
+                      onClick={() => void (active ? stopUsing() : selectPack(pack.filename))}
                       disabled={busy || !enabled}
                       title={
                         active
-                          ? 'Arrancar sin shaders, sin desinstalarlo'
+                          ? 'Quitártelo sin desinstalarlo ni apagar Oculus'
                           : 'Usar este shader al arrancar'
                       }
                       style={{
@@ -471,7 +482,7 @@ export default function Shaders(): JSX.Element {
                   <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>
                     {pack.restorable
                       ? `${formatSize(pack.sizeBytes)} · guardado, vuelve al instante`
-                      : 'el archivo ya no está: lo reinstala el pack al actualizarse'}
+                      : 'sin copia guardada: se baja del modpack al recuperarlo'}
                   </div>
                 </div>
 
@@ -485,8 +496,8 @@ export default function Shaders(): JSX.Element {
                   disabled={busy}
                   title={
                     pack.restorable
-                      ? 'Devolverlo a la carpeta de shaders'
-                      : 'Dejar de bloquearlo para que el pack lo reinstale'
+                      ? 'Devolverlo a tu lista de shaders'
+                      : 'Volver a bajarlo del modpack ahora'
                   }
                   style={{
                     display: 'flex',
@@ -504,7 +515,7 @@ export default function Shaders(): JSX.Element {
                   }}
                 >
                   <Icon name="refresh" size={14} />
-                  {pack.restorable ? 'Recuperar' : 'Desbloquear'}
+                  {busy ? 'Recuperando...' : 'Recuperar'}
                 </button>
               </div>
             ))}

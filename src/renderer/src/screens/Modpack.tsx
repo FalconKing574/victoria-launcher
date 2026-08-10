@@ -212,7 +212,12 @@ export default function Modpack(): JSX.Element {
                       </span>
                     </div>
 
-                    <div style={{ padding: '12px 14px 13px', display: 'grid', gap: 8 }}>
+                    {/* minWidth 0 en la rejilla: sin esto, una celda de grid no
+                        baja de su ancho de contenido, y la fila de abajo no
+                        podía encoger por mucho ellipsis que llevara dentro. */}
+                    <div
+                      style={{ padding: '12px 14px 13px', display: 'grid', gap: 8, minWidth: 0 }}
+                    >
                       <div style={{ fontSize: 14, fontWeight: 700 }}>{mod.name}</div>
                       <p
                         style={{
@@ -230,7 +235,9 @@ export default function Modpack(): JSX.Element {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
+                          flexWrap: 'nowrap',
                           gap: 10,
+                          minWidth: 0,
                           paddingTop: 3,
                           borderTop: '1px solid var(--stroke)'
                         }}
@@ -245,7 +252,9 @@ export default function Modpack(): JSX.Element {
                             display: 'flex',
                             alignItems: 'baseline',
                             gap: 6,
+                            flex: '1 1 auto',
                             minWidth: 0,
+                            overflow: 'hidden',
                             paddingTop: 6,
                             fontSize: 11,
                             color: 'var(--text-faint)'

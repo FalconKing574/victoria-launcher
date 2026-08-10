@@ -133,6 +133,17 @@ no cambia lo que ve el jugador.
 que está en uso. Cambiar de shader se hace desde el launcher. Está avisado en la
 propia pantalla.
 
+**«Dejar de usar» vacía `shaderPack` y NO toca `enableShaders`.** Llegó a llamar
+a `set-enabled(false)`, y eso apagaba Oculus: quitarte un shader te dejaba sin
+poder elegir ningún otro. El interruptor maestro sigue siendo cosa aparte.
+
+**Recuperar un shader es inmediato**, incluso sin copia en la papelera. Los
+shaderpacks viajan dentro de `overrides-3.zip` (177 MB); `remote-zip.ts` lee el
+índice del zip por HTTP `Range` y baja **solo esa entrada** — BSL son 1 MB y
+tarda ~1 s. Antes había que esperar a la siguiente actualización del modpack,
+que en la práctica es no recuperarlo. Compruébalo contra el pack real con
+`node scripts/probe-remote-zip.mjs`.
+
 Ese archivo está excluido de los overrides para que una actualización del pack
 no le pise la elección al jugador.
 

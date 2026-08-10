@@ -165,4 +165,34 @@ for (const { nuevo } of bumps) {
 // El manifiesto va EL ÚLTIMO: hasta que no está, ningún launcher pide los jars
 // nuevos, así que no hay ventana en la que apunte a algo que aún no existe.
 put('manifest.json', join(OUT, 'manifest.json'))
-console.log('\nmanifest.json subido. Publicado.')
+console.log('\nmanifest.json subido.')
+
+// Comprobación final, y no es opcional: un solo archivo que falte deja el
+// modpack SIN INSTALAR para todos. `performSync` aborta al primer fallo y no
+// guarda nada, así que el launcher se queda repitiendo «hay N archivos por
+// descargar» eternamente. Ya pasó con victoriarp-1.9.0.jar, que estaba en el
+// manifiesto y nunca se había subido.
+console.log('\nComprobando que todo el manifiesto se descarga...')
+const vivo = await (await fetch(`${BASE}/manifest.json`, { cache: 'no-store' })).json()
+const piezas = [
+  ...vivo.mods,
+  ...vivo.optional,
+  ...(vivo.overrides ?? []).map((o) => ({ filename: o.name, url: o.url, sizeBytes: o.sizeBytes }))
+]
+const rotos = []
+for (const pieza of piezas) {
+  const respuesta = await fetch(pieza.url, { method: 'HEAD' })
+  const largo = Number(respuesta.headers.get('content-length'))
+  if (!respuesta.ok || largo !== pieza.sizeBytes) {
+    rotos.push(`${pieza.filename} — HTTP ${respuesta.status}${respuesta.ok ? ` (${largo} != ${pieza.sizeBytes})` : ''}`)
+  }
+}
+
+if (rotos.length) {
+  console.error(`\n### ${rotos.length} ARCHIVOS NO SE DESCARGAN ###`)
+  rotos.forEach((r) => console.error('  ' + r))
+  console.error('\nEl modpack NO se puede instalar así. Súbelos antes de dar esto por bueno.')
+  process.exit(1)
+}
+
+console.log(`Los ${piezas.length} archivos del manifiesto responden. Publicado.`)

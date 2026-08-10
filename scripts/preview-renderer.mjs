@@ -46,6 +46,20 @@ const TYPES = {
 
 /** Every channel the preload exposes, answered with something believable. */
 const STUB = `<script>
+  // En una pestaña que no está delante, Chrome congela requestAnimationFrame.
+  // framer-motion se queda a medias, AnimatePresence nunca termina la salida
+  // del splash y la vista previa se queda en el logo. Un temporizador de
+  // respaldo la desatasca. Los temporizadores tambien van limitados a ~1/s en
+  // segundo plano, asi que 1200ms es el valor que de verdad se cumple.
+  const rafNativo = window.requestAnimationFrame.bind(window)
+  window.requestAnimationFrame = (cb) => {
+    let hecho = false
+    const lanzar = (t) => { if (!hecho) { hecho = true; cb(t === undefined ? performance.now() : t) } }
+    const id = rafNativo(lanzar)
+    setTimeout(lanzar, 1200)
+    return id
+  }
+
   const noop = () => () => {}
   const enabledOptional = new Set(['distant-horizons', 'xaeros-world-map'])
   const settings = {
@@ -111,6 +125,7 @@ const STUB = `<script>
         get: async () => snap(),
         setEnabled: async (on) => { state.enabled = on; return snap() },
         select: async (f) => { state.selected = f; return snap() },
+        deselect: async () => { state.selected = null; return snap() },
         delete: async (f) => {
           const i = state.packs.findIndex((p) => p.filename === f)
           if (i >= 0) state.removed.push({ ...state.packs.splice(i, 1)[0], restorable: true })
@@ -118,11 +133,15 @@ const STUB = `<script>
         },
         restore: async (f) => {
           const i = state.removed.findIndex((p) => p.filename === f)
+          let recuperado = false
           if (i >= 0) {
             const [p] = state.removed.splice(i, 1)
-            if (p.restorable) state.packs.push({ filename: p.filename, name: p.name, sizeBytes: p.sizeBytes })
+            // El caso sin copia guardada se baja del pack; aqui se simula que
+            // sale bien, que es lo que hace el launcher de verdad.
+            state.packs.push({ filename: p.filename, name: p.name, sizeBytes: p.sizeBytes || 1105442 })
+            recuperado = true
           }
-          return snap()
+          return { ...snap(), recuperado }
         }
       }
     })(),

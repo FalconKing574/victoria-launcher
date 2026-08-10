@@ -42,6 +42,12 @@ interface Settings {
 const call = (channel: string, ...args: unknown[]): Settings =>
   handlers.get(channel)!(null, ...(args as never[])) as Settings
 
+/** `shaders:restore` es asíncrono: puede tener que bajar el shader del pack. */
+const restaurar = async (filename: string): Promise<Settings & { recuperado: boolean }> =>
+  (await handlers.get('shaders:restore')!(null, filename as never)) as Settings & {
+    recuperado: boolean
+  }
+
 /** Lo que ve Minecraft. */
 const inGame = (): string => join(userData, 'instance', 'shaderpacks')
 /** Instalados pero aparcados fuera del alcance del juego. */
@@ -114,6 +120,34 @@ describe('en shaderpacks/ solo está el que se usa', () => {
     expect(after.removed).toEqual([])
   })
 
+  it('dejar de usarlo NO apaga Oculus ni bloquea los demás', () => {
+    call('shaders:set-enabled', true)
+    call('shaders:select', BSL)
+
+    const after = call('shaders:deselect');
+
+    // Esto es lo que fallaba: quitarse un shader apagaba el interruptor
+    // maestro, y con él te quedabas sin poder elegir ningún otro.
+    expect(after.enabled).toBe(true)
+    expect(after.selected).toBeNull()
+    expect(readFileSync(configFile(), 'utf8')).toContain('enableShaders=true')
+    // Ninguno cargándose, pero los dos siguen instalados y elegibles.
+    expect(existsSync(join(inGame(), BSL))).toBe(false)
+    expect(names(after.packs)).toEqual([BSL, COMP])
+  })
+
+  it('tras dejar de usar uno se puede poner otro en el acto', () => {
+    call('shaders:set-enabled', true)
+    call('shaders:select', BSL)
+    call('shaders:deselect')
+
+    const after = call('shaders:select', COMP)
+
+    expect(after.selected).toBe(COMP)
+    expect(after.enabled).toBe(true)
+    expect(existsSync(join(inGame(), COMP))).toBe(true)
+  })
+
   it('volver a encenderlo devuelve el mismo, no el primero de la lista', () => {
     call('shaders:set-enabled', true)
     call('shaders:select', BSL)
@@ -166,11 +200,12 @@ describe('quitar y recuperar shaders', () => {
     expect(existsSync(join(inGame(), COMP))).toBe(true)
   })
 
-  it('recuperar lo reinstala sin ponérselo', () => {
+  it('recuperar lo reinstala sin ponérselo', async () => {
     call('shaders:delete', BSL)
-    const after = call('shaders:restore', BSL)
+    const after = await restaurar(BSL)
 
-    // Vuelve a estar instalado y visible...
+    // Vuelve a estar instalado y visible, y lo dice...
+    expect(after.recuperado).toBe(true)
     expect(names(after.packs)).toEqual([BSL, COMP])
     expect(readFileSync(join(library(), BSL), 'utf8')).toBe('zip-bsl')
     // ...pero recuperarlo no es ponérselo, así que no entra en la carpeta.
@@ -179,12 +214,13 @@ describe('quitar y recuperar shaders', () => {
     expect(JSON.parse(readFileSync(removedList(), 'utf8'))).toEqual([])
   })
 
-  it('aguanta quitar y recuperar el mismo shader dos veces', () => {
+  it('aguanta quitar y recuperar el mismo shader dos veces', async () => {
     call('shaders:delete', BSL)
-    call('shaders:restore', BSL)
+    await restaurar(BSL)
     call('shaders:delete', BSL)
-    const after = call('shaders:restore', BSL)
+    const after = await restaurar(BSL)
 
+    expect(after.recuperado).toBe(true)
     expect(names(after.packs)).toEqual([BSL, COMP])
     expect(after.removed).toEqual([])
   })
@@ -198,12 +234,16 @@ describe('quitar y recuperar shaders', () => {
     expect(settings.removed[0].restorable).toBe(false)
   })
 
-  it('desbloquear uno heredado lo saca de la lista para que el pack lo reinstale', () => {
+  it('uno heredado sin copia informa de que no se pudo, y deja de bloquearlo', async () => {
     mkdirSync(join(userData, 'minecraft'), { recursive: true })
     writeFileSync(removedList(), JSON.stringify(['Solas Shader V3.7.zip']))
 
-    const after = call('shaders:restore', 'Solas Shader V3.7.zip')
+    // Sin URL de modpack en los tests, la descarga de rescate no puede correr.
+    const after = await restaurar('Solas Shader V3.7.zip')
 
+    // Lo importante: NO miente diciendo que lo recuperó...
+    expect(after.recuperado).toBe(false)
+    // ...pero sí lo saca de la lista, que si no el pack se lo llevaría siempre.
     expect(after.removed).toEqual([])
     expect(JSON.parse(readFileSync(removedList(), 'utf8'))).toEqual([])
   })

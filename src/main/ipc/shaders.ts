@@ -13,6 +13,9 @@ import {
 import { basename, join } from 'path'
 import { instanceDir, launcherRoot } from '../lib/paths'
 import { parseProperties, writeProperties, shaderDisplayName } from '../lib/shaders-core'
+import { extractRemoteEntry, listRemoteZip } from '../lib/remote-zip'
+import { MANIFEST_URL } from '../config'
+import type { Manifest } from '../lib/sync-plan'
 
 /**
  * The shader mod in this pack is Oculus. It ships with the pack and is never
@@ -291,6 +294,42 @@ export function pruneDeletedShaders(): void {
   syncFilesToConfig()
 }
 
+/**
+ * Vuelve a bajar un shaderpack que ya no está en disco, en el momento.
+ *
+ * Los shaderpacks viajan dentro de los `overrides-*.zip` del pack, y el más
+ * grande pesa 177 MB. Antes, recuperar uno borrado por una versión antigua del
+ * launcher significaba esperar a la siguiente actualización del modpack — es
+ * decir, no recuperarlo. Un zip guarda su índice al final y dice en qué byte
+ * empieza cada archivo, así que con peticiones Range se baja solo el shader:
+ * un par de MB en vez de 177.
+ *
+ * Devuelve false si no se pudo, y entonces la pantalla lo dice en vez de fingir.
+ */
+async function redownloadShader(filename: string): Promise<boolean> {
+  if (!MANIFEST_URL) return false
+
+  let manifest: Manifest
+  try {
+    manifest = (await (await fetch(MANIFEST_URL, { cache: 'no-store' } as RequestInit)).json()) as Manifest
+  } catch {
+    return false
+  }
+
+  const dentro = `shaderpacks/${filename}`
+  for (const part of manifest.overrides ?? []) {
+    try {
+      const entrada = (await listRemoteZip(part.url)).find((e) => e.name === dentro)
+      if (!entrada) continue
+      await extractRemoteEntry(part.url, entrada, join(shaderpacksDir(), filename))
+      return true
+    } catch {
+      // Parte ilegible o sin soporte de rangos: se prueba con la siguiente.
+    }
+  }
+  return false
+}
+
 export function registerShaderHandlers(): void {
   // Al abrir el launcher, dejar la carpeta como dice la configuración. Cubre lo
   // que pasó fuera de aquí: una instancia que viene de una versión anterior con
@@ -329,6 +368,20 @@ export function registerShaderHandlers(): void {
     return getShaderSettings()
   })
 
+  /**
+   * Deja de usar el shader actual SIN apagar Oculus.
+   *
+   * Antes el botón «Dejar de usar» llamaba a set-enabled(false), y eso apagaba
+   * el interruptor maestro: te quedabas sin poder elegir ningún otro shader,
+   * que es lo contrario de lo que pide quien solo quiere quitarse este. Vaciar
+   * `shaderPack` deja Oculus encendido y el juego arranca sin shader.
+   */
+  ipcMain.handle('shaders:deselect', () => {
+    patchConfig({ shaderPack: '' })
+    syncFilesToConfig()
+    return getShaderSettings()
+  })
+
   ipcMain.handle('shaders:delete', (_event, filename: string) => {
     // basename, not the raw argument: this joins straight onto a path, and a
     // filename is all the renderer ever legitimately sends.
@@ -356,19 +409,27 @@ export function registerShaderHandlers(): void {
     return getShaderSettings()
   })
 
-  ipcMain.handle('shaders:restore', (_event, filename: string) => {
+  ipcMain.handle('shaders:restore', async (_event, filename: string) => {
     const safe = basename(filename)
+
     // Vuelve a la biblioteca, no a la instancia: recuperarlo no significa
     // ponérselo. Si resulta ser el que estaba en uso, syncFilesToConfig lo
     // coloca.
-    moveShader(shadersTrashDir(), shadersLibraryDir(), safe)
+    let recuperado = moveShader(shadersTrashDir(), shadersLibraryDir(), safe)
 
-    // Off the removed list either way. If the archive could not be moved back
-    // the pack's next update will reinstall it, which is the outcome the player
-    // asked for; leaving the name on the list would delete it again instead.
+    // Sin copia guardada — lo borró una versión anterior del launcher — se baja
+    // del pack en el momento. Esperar a la siguiente actualización del modpack
+    // era, en la práctica, no recuperarlo.
+    if (!recuperado) {
+      recuperado = await redownloadShader(safe)
+      if (recuperado) moveShader(shaderpacksDir(), shadersLibraryDir(), safe)
+    }
+
+    // Fuera de la lista de bloqueo en cualquier caso: mientras siga ahí, cada
+    // actualización del pack se lo volvería a llevar.
     saveRemoved(loadRemoved().filter((entry) => entry !== safe))
 
     syncFilesToConfig()
-    return getShaderSettings()
+    return { ...getShaderSettings(), recuperado }
   })
 }
