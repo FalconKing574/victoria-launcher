@@ -13,6 +13,15 @@ export interface RemoteImageProps {
   style?: CSSProperties
   /** Object-position for the loaded image, e.g. 'center 30%'. */
   position?: string
+  /**
+   * How the image fills its box.
+   *
+   * 'cover' is right for wide artwork. 'contain' is for square logos: a mod's
+   * icon is 128x128, and stretching that across a 268x104 banner blew it up to
+   * four times its size and cropped the top and bottom off. Shown contained it
+   * stays sharp and reads as the mod's badge, which is what it is.
+   */
+  fit?: 'cover' | 'contain'
 }
 
 /**
@@ -25,7 +34,8 @@ export default function RemoteImage({
   alt = '',
   label,
   style,
-  position = 'center'
+  position = 'center',
+  fit = 'cover'
 }: RemoteImageProps): JSX.Element {
   const [failed, setFailed] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -67,10 +77,15 @@ export default function RemoteImage({
           onLoad={() => setLoaded(true)}
           style={{
             position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            // Inset rather than flush when contained: a logo pinned to the
+            // edges of its panel looks like it overflowed.
+            inset: fit === 'contain' ? 14 : 0,
+            width: fit === 'contain' ? 'auto' : '100%',
+            height: fit === 'contain' ? 'auto' : '100%',
+            margin: fit === 'contain' ? 'auto' : undefined,
+            maxWidth: fit === 'contain' ? 'calc(100% - 28px)' : undefined,
+            maxHeight: fit === 'contain' ? 'calc(100% - 28px)' : undefined,
+            objectFit: fit,
             objectPosition: position,
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.35s ease'

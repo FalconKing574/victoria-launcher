@@ -7,7 +7,12 @@ export default function AmbientMusic(): JSX.Element | null {
 
   useEffect(() => {
     const sync = (): void => {
-      void window.api.settings.get().then((settings) => setEnabled(settings.musicEnabled))
+      void window.api.settings
+        .get()
+        .then((settings) => setEnabled(settings.musicEnabled))
+        // Without this a failed read is an unhandled rejection in the renderer,
+        // and the music is the least important thing on screen.
+        .catch(() => undefined)
     }
     sync()
     // The Settings screen fires this after saving so the toggle applies at once.
@@ -27,5 +32,16 @@ export default function AmbientMusic(): JSX.Element | null {
     }
   }, [enabled])
 
-  return <audio ref={audioRef} src={ost} loop preload="auto" />
+  // The element is only given a source once the music is actually on. Music is
+  // off by default, and preloading meant every launch read and decoded a 2.7 MB
+  // ogg that most players never hear -- during startup, competing with the
+  // panorama and the session restore for the same few hundred milliseconds.
+  return (
+    <audio
+      ref={audioRef}
+      src={enabled ? ost : undefined}
+      loop
+      preload={enabled ? 'auto' : 'none'}
+    />
+  )
 }

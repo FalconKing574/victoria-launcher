@@ -1,18 +1,40 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import Button from '../components/Button'
-import Icon, { type IconName } from '../components/Icon'
+import Icon from '../components/Icon'
 import Panel from '../components/Panel'
-import ProgressBar from '../components/ProgressBar'
 import RemoteImage from '../components/RemoteImage'
 import { Switch } from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
-import type { Manifest, OptionalMod, SyncReport, SyncState } from '@shared/api'
+import type { Manifest, OptionalMod, SyncState } from '@shared/api'
+
+import iconDistantHorizons from '../assets/mods/distant-horizons.png'
+import iconXaerosWorldMap from '../assets/mods/xaeros-world-map.png'
+import iconForgematica from '../assets/mods/forgematica.png'
 
 const CATEGORY_LABEL: Record<OptionalMod['category'], string> = {
   rendimiento: 'RENDIMIENTO',
   'calidad-de-vida': 'CALIDAD DE VIDA',
   visual: 'VISUAL'
+}
+
+/**
+ * Icons shipped with the launcher, by mod id.
+ *
+ * The manifest carries an `image` URL per optional mod, and all three of them
+ * pointed at media.forgecdn.net paths that answer 404 (NoSuchKey). So every
+ * card fell back to a giant letter on a gold square — which is exactly what
+ * "las imágenes no cargan" looked like.
+ *
+ * The optional list is short and hand-curated in scripts/build-manifest.mjs, so
+ * shipping its art costs 70 KB and can never break: no CDN, no hotlink, and it
+ * still works with the PC offline. The manifest's URL is kept as the fallback
+ * so a new optional mod can still bring its own image without a launcher
+ * release.
+ */
+const LOCAL_ICONS: Record<string, string> = {
+  'distant-horizons': iconDistantHorizons,
+  'xaeros-world-map': iconXaerosWorldMap,
+  forgematica: iconForgematica
 }
 
 export default function Modpack(): JSX.Element {
@@ -22,11 +44,6 @@ export default function Modpack(): JSX.Element {
   // nothing published yet, which is a normal state and not a failure.
   const [unavailable, setUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
-
-  const [syncing, setSyncing] = useState(false)
-  const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [percent, setPercent] = useState<number | null>(null)
-  const [report, setReport] = useState<SyncReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<string | null>(null)
 
@@ -54,40 +71,22 @@ export default function Modpack(): JSX.Element {
         if (alive) setLoading(false)
       })
 
-    const offStatus = window.api.modpack.onStatus((s) => setStatusMessage(s.message))
-    const offProgress = window.api.modpack.onProgress((p) => setPercent(p.percent))
+    // A sync started from the Play screen changes which optional mods are
+    // actually on disk, so refresh the switches when one finishes rather than
+    // leaving this screen showing what was true when it mounted.
+    const offDone = window.api.modpack.onDone(() => {
+      window.api.modpack
+        .state()
+        .then((nextState) => {
+          if (alive) setState(nextState)
+        })
+        .catch(() => undefined)
+    })
     return () => {
       alive = false
-      offStatus()
-      offProgress()
+      offDone()
     }
   }, [])
-
-  async function handleSync(): Promise<void> {
-    setSyncing(true)
-    setError(null)
-    setReport(null)
-    setPercent(null)
-    setStatusMessage('Comprobando el manifiesto...')
-    try {
-      const result = await window.api.modpack.sync()
-      setReport(result)
-      setUnavailable(false)
-      // The pack version and the managed list both move during a sync.
-      const [nextManifest, nextState] = await Promise.all([
-        window.api.modpack.manifest(),
-        window.api.modpack.state()
-      ])
-      setManifest(nextManifest)
-      setState(nextState)
-    } catch {
-      setError('No se pudo comprobar la actualización. Revisa tu conexión e inténtalo otra vez.')
-    } finally {
-      setSyncing(false)
-      setStatusMessage(null)
-      setPercent(null)
-    }
-  }
 
   async function handleOptional(mod: OptionalMod, enabled: boolean): Promise<void> {
     setPending(mod.id)
@@ -131,6 +130,18 @@ export default function Modpack(): JSX.Element {
       <div style={{ overflowY: 'auto', display: 'grid', gap: 12, alignContent: 'start' }}>
         {loading && (
           <p style={{ margin: 0, fontSize: 13, color: 'var(--text-dim)' }}>Cargando el modpack...</p>
+        )}
+
+        {/* Este aviso no existía: si fallaba guardar la elección, el interruptor
+            volvía a su sitio y no se decía nada, así que parecía que el clic no
+            había llegado. */}
+        {error && (
+          <div
+            className="row"
+            style={{ padding: '12px 14px', fontSize: 12.5, color: 'var(--err)', lineHeight: 1.55 }}
+          >
+            {error}
+          </div>
         )}
 
         {!loading && unavailable && <Unpublished />}
@@ -177,11 +188,11 @@ export default function Modpack(): JSX.Element {
                   >
                     <div style={{ position: 'relative' }}>
                       <RemoteImage
-                        src={mod.image}
+                        src={LOCAL_ICONS[mod.id] ?? mod.image}
                         alt=""
                         label={mod.name}
                         style={{ height: 104 }}
-                        position="center 40%"
+                        fit="contain"
                       />
                       <span
                         style={{
@@ -224,17 +235,38 @@ export default function Modpack(): JSX.Element {
                           borderTop: '1px solid var(--stroke)'
                         }}
                       >
+                        {/* El tamaño no se encoge y el nombre sí. Iban juntos en
+                            un solo span sin recortar, y los nombres reales
+                            ("DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar")
+                            piden 326 px donde hay 184: la línea se partía en
+                            tres y empujaba el interruptor fuera de sitio. */}
                         <span
                           style={{
-                            fontSize: 11,
-                            color: 'var(--text-faint)',
+                            display: 'flex',
+                            alignItems: 'baseline',
+                            gap: 6,
+                            minWidth: 0,
                             paddingTop: 6,
-                            fontVariantNumeric: 'tabular-nums'
+                            fontSize: 11,
+                            color: 'var(--text-faint)'
                           }}
+                          title={mod.filename}
                         >
-                          {(mod.sizeBytes / 1024 / 1024).toFixed(1)} MB · {mod.filename}
+                          <span style={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                            {(mod.sizeBytes / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                          <span
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              minWidth: 0
+                            }}
+                          >
+                            · {mod.filename}
+                          </span>
                         </span>
-                        <span style={{ paddingTop: 6 }}>
+                        <span style={{ paddingTop: 6, flexShrink: 0 }}>
                           <Switch
                             checked={enabled}
                             disabled={pending === mod.id}
@@ -252,79 +284,6 @@ export default function Modpack(): JSX.Element {
         )}
       </div>
     </motion.div>
-  )
-}
-
-function SyncSummary({ report }: { report: SyncReport }): JSX.Element {
-  return (
-    <div style={{ display: 'grid', gap: 7 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
-        <SummaryTile
-          icon="check"
-          value={report.packVersion}
-          label={report.upToDate ? 'Ya estaba al día' : 'Versión instalada ahora'}
-        />
-        <SummaryTile icon="download" value={String(report.downloaded)} label="Mods descargados" />
-        <SummaryTile icon="trash" value={String(report.removed)} label="Mods retirados" />
-      </div>
-
-      {report.keptOwn.length > 0 && (
-        <div
-          className="row"
-          style={{ display: 'flex', gap: 11, padding: '11px 13px', alignItems: 'flex-start' }}
-        >
-          <span style={{ color: 'var(--gold)', paddingTop: 1 }}>
-            <Icon name="shield" size={15} />
-          </span>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600 }}>
-              {report.keptOwn.length} {report.keptOwn.length === 1 ? 'mod tuyo' : 'mods tuyos'} sin
-              tocar
-            </div>
-            <p
-              style={{
-                margin: '3px 0 0',
-                fontSize: 11.5,
-                color: 'var(--text-faint)',
-                lineHeight: 1.55
-              }}
-            >
-              No los instaló el launcher, los añadiste tú, así que se quedan donde están:{' '}
-              {report.keptOwn.join(', ')}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function SummaryTile({
-  icon,
-  value,
-  label
-}: {
-  icon: IconName
-  value: string
-  label: string
-}): JSX.Element {
-  return (
-    <div className="row" style={{ padding: '10px 12px', display: 'grid', gap: 2 }}>
-      <span
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 7,
-          fontSize: 16,
-          fontWeight: 800,
-          color: 'var(--gold-bright)'
-        }}
-      >
-        <Icon name={icon} size={14} />
-        {value}
-      </span>
-      <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{label}</span>
-    </div>
   )
 }
 

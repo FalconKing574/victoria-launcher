@@ -11,6 +11,12 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "noEmit": true,
+    // Screens have been rewritten several times, and each pass left behind state
+    // that was still being set but no longer read -- including an error message
+    // that was written and never shown. These turn that into a build failure
+    // instead of something to notice by eye months later.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "types": ["node", "vite/client"],
     "baseUrl": ".",
     "paths": {

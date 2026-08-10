@@ -38,3 +38,26 @@ export function javaCandidates(): string[] {
 export function detectJava(override: string | null): string {
   return pickJavaPath({ override, candidates: javaCandidates(), exists: existsSync })
 }
+
+/** Minecraft 1.20.1 refuses to start on anything older. */
+export const MIN_JAVA_MAJOR = 17
+
+/**
+ * Reads the major version out of what `java -version` prints.
+ *
+ * Two shapes exist, and a launcher that only understands the modern one will
+ * happily hand Minecraft 1.20.1 a Java 8 it cannot use:
+ *   openjdk version "17.0.19" 2026-01-20   -> 17
+ *   java version "1.8.0_381"               -> 8   (the old 1.x scheme)
+ */
+export function parseJavaMajor(output: string): number | null {
+  const match = /version "(\d+)(?:\.(\d+))?/.exec(output)
+  if (!match) return null
+
+  const first = Number(match[1])
+  if (first === 1) {
+    const second = match[2] === undefined ? NaN : Number(match[2])
+    return Number.isNaN(second) ? null : second
+  }
+  return first
+}

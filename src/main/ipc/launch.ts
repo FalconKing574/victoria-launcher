@@ -7,7 +7,7 @@ import { Client, Authenticator } from 'minecraft-launcher-core'
 import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
 import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
 import { launcherRoot, instanceDir } from '../lib/paths'
-import { detectJava } from '../lib/java'
+import { ensureJava } from '../lib/java-runtime'
 import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
 import { offlineUuid } from '../lib/offline-uuid'
@@ -20,6 +20,11 @@ export interface LaunchRequest {
 }
 
 let running = false
+
+/** Lets the updater avoid restarting the app while Minecraft is starting. */
+export function isLaunchRunning(): boolean {
+  return running
+}
 
 function send(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -78,6 +83,14 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       authorization = { ...(await Authenticator.getAuth(name)), uuid: offlineUuid(name) }
     }
 
+    // Installs a JRE if this PC has none. Must happen before Forge: without a
+    // usable Java there is nothing to install Forge with.
+    const javaPath = await ensureJava(
+      settings.javaPath,
+      (message) => send('launch:status', { stage: 'java', message }),
+      (percent) => send('launch:progress', { type: 'java', percent })
+    )
+
     const forgePath = await ensureForgeInstaller()
     const client = new Client()
 
@@ -102,7 +115,7 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       authorization,
       root: launcherRoot(),
       forge: forgePath,
-      javaPath: detectJava(settings.javaPath),
+      javaPath,
       version: { number: MC_VERSION, type: 'release' },
       memory: {
         max: `${settings.maxMemoryMb}M`,
@@ -116,6 +129,14 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
         // The launcher's own per-user instance, where the sync put the mods,
         // config and resource packs.
         gameDirectory: instanceDir(),
+        // Must match gameDirectory. MCLC defaults the java process's working
+        // directory to `root`, and Forge resolves `config/` relative to the
+        // working directory rather than to --gameDir. Leaving it unset split
+        // the game in two: saves and resourcepacks landed in the instance,
+        // while every mod config was read from <root>/config -- so FancyMenu
+        // found an empty folder and fell back to the vanilla main menu even
+        // though all 28 layouts had synced correctly.
+        cwd: instanceDir(),
         maxSockets: 8
       }
     }
@@ -128,7 +149,12 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     // launch attempt is rejected with "el juego ya se está iniciando".
     if (!child) {
       running = false
-      throw new Error('No se pudo iniciar Minecraft. Revisa la ruta de Java en Ajustes.')
+      throw new Error(
+        'No se pudo iniciar Minecraft.\n\n' +
+          `Java usado: ${javaPath}\n\n` +
+          'Si el antivirus está bloqueando esa ruta, añádela a las excepciones. ' +
+          'También puedes indicar otra instalación de Java en Ajustes.'
+      )
     }
 
     send('launch:status', { stage: 'running', message: 'Minecraft en ejecución' })

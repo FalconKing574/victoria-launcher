@@ -58,8 +58,18 @@ const EXCLUDED = ['Essential_']
  * anyone toggle the pack's required mods, because disabling one desyncs them
  * from the server and produces a connection failure nobody can diagnose.
  *
- * Nvidium is here rather than required because it only works on Nvidia GPUs and
- * needs Embeddium. Moving it into EXTRA_REQUIRED ships it to everyone instead.
+ * Every entry's jar must exist in the instance's mods folder, or the manifest
+ * lists it with an empty hash and the launcher cannot install it.
+ *
+ * NO pongas `image` con una URL de media.forgecdn.net. Las tres que había aquí
+ * devolvían 404 (NoSuchKey), así que en la pestaña Mods todos los mods salían
+ * como una letra gigante. El icono de estos tres va empaquetado en el launcher
+ * (`src/renderer/src/assets/mods/<id>.png`), que no se puede caer.
+ *
+ * Si añades un mod opcional nuevo: mete su icono ahí y regístralo en
+ * LOCAL_ICONS de `src/renderer/src/screens/Modpack.tsx`. `image` sigue
+ * existiendo como reserva, pero comprueba que la URL responde 200 antes de
+ * publicarla.
  */
 const OPTIONAL = [
   {
@@ -68,26 +78,23 @@ const OPTIONAL = [
     summary:
       'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.',
     category: 'visual',
-    filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar',
-    image: 'https://media.forgecdn.net/avatars/thumbnails/508/677/64/64/637868261444007926.png'
+    filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar'
   },
   {
-    id: 'xaeros-minimap',
-    name: "Xaero's Minimap",
+    id: 'xaeros-world-map',
+    name: "Xaero's World Map",
     summary:
-      'Minimapa en la esquina con marcadores y cuevas. El pack ya trae el mapa completo; esto añade el minimapa.',
+      'Mapa completo del mundo que se va rellenando por donde pasas, con marcadores y puntos de interes. Viene activado.',
     category: 'calidad-de-vida',
-    filename: 'Xaeros_Minimap_25.2.10_Forge_1.20.jar',
-    image: 'https://media.forgecdn.net/avatars/thumbnails/168/652/64/64/636588047824059724.png'
+    filename: 'xaeroworldmap-forge-1.20.1-1.44.2.jar'
   },
   {
-    id: 'nvidium',
-    name: 'Nvidium',
+    id: 'forgematica',
+    name: 'Forgematica',
     summary:
-      'Renderizador para GPUs Nvidia. Sube mucho los FPS, sobre todo con Distant Horizons activo. Requiere Nvidia; en otras tarjetas se desactiva solo.',
-    category: 'rendimiento',
-    filename: 'nvidium-0.5.5.jar',
-    image: 'https://media.forgecdn.net/avatars/thumbnails/857/878/64/64/638301896040706094.png'
+      'Carga esquemas y te los proyecta como un plano fantasma para construirlos bloque a bloque. Util para construir, innecesario si solo juegas.',
+    category: 'calidad-de-vida',
+    filename: 'Forgematica-0.1.13-mc1.20.1.jar'
   }
 ]
 
@@ -169,6 +176,48 @@ const optional = OPTIONAL.map((mod) => {
   }
 })
 
+/**
+ * `--tambien-requeridos id,id` publishes those optional mods in BOTH lists.
+ *
+ * Moving a mod from required to optional is not free: `planSync` deletes any
+ * managed jar that is no longer wanted, and a player whose `enabledOptional`
+ * predates the id loses the mod on their next update without having asked for
+ * anything. That is fine when it is the point of the release, and unacceptable
+ * when it rides along with an unrelated one.
+ *
+ * So a publish that is only meant to ship something else can pin the affected
+ * mods as required for that round and move them later, deliberately.
+ *
+ * Used on pack 1.3.0, whose only real change was the phone: `distant-horizons`
+ * and `xaeros-world-map` had become optional in this script since pack 1.2.0
+ * was built, and shipping that quietly would have turned off two mods for
+ * everyone who installed before those ids existed.
+ */
+const TAMBIEN_REQUERIDOS = (args['tambien-requeridos'] ?? '')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean)
+
+for (const id of TAMBIEN_REQUERIDOS) {
+  const mod = optional.find((m) => m.id === id)
+  if (!mod) {
+    console.warn(`AVISO: --tambien-requeridos ${id} no es un opcional conocido.`)
+    continue
+  }
+  if (!mod.sha1) {
+    console.warn(`AVISO: ${id} no tiene hash, no se publica como requerido.`)
+    continue
+  }
+  if (mods.some((m) => m.filename === mod.filename)) continue
+  mods.push({
+    filename: mod.filename,
+    sha1: mod.sha1,
+    sizeBytes: mod.sizeBytes,
+    url: mod.url
+  })
+  console.log(`  ${id} publicado tambien como requerido.`)
+}
+
 // config/, resourcepacks/ and shaderpacks/ as one archive. options.txt is
 // deliberately excluded: it holds the player's keybinds and video settings, and
 // overwriting it on every update would wipe their setup.
@@ -184,7 +233,13 @@ const OVERRIDE_DIRS = ['config', 'resourcepacks', 'shaderpacks', 'resources', 't
  * of resources/, so shipping the folder would double half a gigabyte for
  * nothing. Verified by grepping the FancyMenu customization files.
  */
-const OVERRIDE_EXCLUDE = ['resources/videos']
+const OVERRIDE_EXCLUDE = [
+  'resources/videos',
+  // Owned by the launcher's Shaders tab, not by the pack. Shipping it would
+  // reset the player's shader choice -- and switch shaders back on -- every
+  // time the overrides change.
+  'config/oculus.properties'
+]
 
 /**
  * Wrangler refuses uploads over 300 MiB and this pack's config folder is
@@ -217,7 +272,9 @@ if (args['skip-overrides'] === undefined) {
 
   const before = files.length
   const kept = files.filter(
-    (f) => !OVERRIDE_EXCLUDE.some((prefix) => f.rel.startsWith(`${prefix}/`))
+    // Matches a whole folder or one exact file, so single configs can be
+    // excluded as well as directories.
+    (f) => !OVERRIDE_EXCLUDE.some((entry) => f.rel === entry || f.rel.startsWith(`${entry}/`))
   )
   if (kept.length !== before) {
     const saved = files

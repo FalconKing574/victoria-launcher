@@ -7,29 +7,33 @@ import ProgressBar from '../components/ProgressBar'
 import RemoteImage from '../components/RemoteImage'
 import { screenVariants } from '../theme/motion'
 import heroBandera from '../assets/hero-bandera.png'
-import type { LaunchProgress, LaunchStatus, SyncCheck } from '@shared/api'
+import newsServidor from '../assets/news/servidor.jpg'
+import newsComunidad from '../assets/news/comunidad.jpg'
+import newsModpack from '../assets/news/modpack.jpg'
+import type { LaunchProgress, LaunchStatus, SyncCheck, UpdaterState } from '@shared/api'
 import { shouldBlockPlay } from '../lib/play-gate'
+import type { NavKey } from '../components/SideNav'
 import type { IUser } from 'minecraft-launcher-core'
 
 /* ------------------------------------------------------------------------- *
- * IMÁGENES — cámbialas por capturas reales del servidor cuando las tengas.
+ * IMÁGENES
  *
- * Son URLs remotas: pega aquí cualquier enlace directo a una imagen (jpg/png)
- * y listo, no hace falta tocar nada más del archivo. Si una URL falla o el PC
- * está sin conexión, el launcher dibuja un fondo dorado en su lugar en vez de
- * un icono de imagen rota.
+ * Todas locales. Antes las tres fichas de novedades eran fotos de stock de
+ * Unsplash enlazadas en caliente: nada que ver con el servidor, y sin conexión
+ * las tres se caían a una letra sobre un cuadro dorado — que es lo que se veía
+ * como "no cargan las imágenes".
+ *
+ * Ahora son recortes de las caras del panorama original (`assets/panorama/
+ * original/`, 2048px sin desenfocar), o sea capturas de verdad del mundo del
+ * servidor. Se regeneran con el bloque de sharp de `scripts/`; 106 KB las tres.
+ * Si algún día hay capturas mejores, se sustituyen estos tres archivos y ya.
  * ------------------------------------------------------------------------- */
-// La bandera de Victoria Kingdom, local: no depende de internet ni de que un
-// servicio externo siga sirviendo la imagen.
 const HERO_IMAGE = heroBandera
 
 const NEWS_IMAGES = {
-  servidor:
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=70',
-  comunidad:
-    'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=70',
-  modpack:
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=70'
+  servidor: newsServidor,
+  comunidad: newsComunidad,
+  modpack: newsModpack
 }
 /* ------------------------------------------------------------------------- */
 
@@ -37,6 +41,8 @@ export interface HomeProps {
   username: string
   mclcUser?: IUser
   offlineUsername?: string
+  /** Lets the update notice send the player straight to Ajustes. */
+  onNavigate?: (key: NavKey) => void
 }
 
 const NEWS = [
@@ -60,7 +66,12 @@ const NEWS = [
   }
 ]
 
-export default function Home({ username, mclcUser, offlineUsername }: HomeProps): JSX.Element {
+export default function Home({
+  username,
+  mclcUser,
+  offlineUsername,
+  onNavigate
+}: HomeProps): JSX.Element {
   const [progress, setProgress] = useState<LaunchProgress | null>(null)
   const [status, setStatus] = useState<LaunchStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -79,6 +90,9 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   const [updateNote, setUpdateNote] = useState<string | null>(null)
   // How many files are still queued, so the label is a real count.
   const [remaining, setRemaining] = useState<number | null>(null)
+
+  // The launcher's own update, so the notice can cover both.
+  const [updater, setUpdater] = useState<UpdaterState | null>(null)
 
   const refreshPending = useCallback((): void => {
     window.api.modpack
@@ -121,6 +135,21 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   useEffect(() => {
     refreshPending()
 
+    // The download runs in the main process and carries on while this screen is
+    // unmounted, which happens every time the player clicks another sidebar
+    // tab. Rebuilding from that snapshot instead of starting blank is what
+    // stops a install in progress from looking like it had stalled.
+    window.api.modpack
+      .live()
+      .then((snapshot) => {
+        if (!snapshot.running) return
+        setUpdating(true)
+        setProgress({ type: 'modpack', percent: snapshot.percent })
+        setRemaining(Math.max(0, snapshot.total - snapshot.done))
+        if (snapshot.message) setStatus({ stage: 'download', message: snapshot.message })
+      })
+      .catch(() => undefined)
+
     const offSyncStatus = window.api.modpack.onStatus((s) =>
       setStatus({ stage: 'download', message: s.message })
     )
@@ -128,11 +157,35 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
       setProgress({ type: 'modpack', percent: p.percent })
       setRemaining(Math.max(0, p.total - p.done))
     })
+    // These two finish a sync this screen may not have started itself, so they
+    // are what clear the state after a tab change.
+    const offSyncDone = window.api.modpack.onDone(() => {
+      setUpdating(false)
+      setRemaining(null)
+      refreshPending()
+    })
+    const offSyncError = window.api.modpack.onError((payload) => {
+      setError(payload.message)
+      setUpdating(false)
+      setLaunching(false)
+    })
     return () => {
       offSyncStatus()
       offSyncProgress()
+      offSyncDone()
+      offSyncError()
     }
   }, [refreshPending])
+
+  // Checked on every mount, so opening the launcher always reports what is
+  // pending instead of leaving it to be discovered in Ajustes.
+  useEffect(() => {
+    window.api.updater
+      .state()
+      .then(setUpdater)
+      .catch(() => undefined)
+    return window.api.updater.onState(setUpdater)
+  }, [])
 
   useEffect(() => {
     // The launch may already be running if the user navigated away and back:
@@ -185,6 +238,16 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
   // button does the work — but the label should say what is about to happen.
   const willInstall = shouldBlockPlay(pending)
 
+  // One line covering both updates. The launcher's comes first: it installs
+  // itself and restarts, which would interrupt a modpack download anyway.
+  const launcherPending = updater?.phase === 'available' || updater?.phase === 'ready'
+  const updateNotice = launcherPending
+    ? `Hay una versión nueva del launcher${updater?.version ? ` (${updater.version})` : ''}. Se instala sola al reiniciar.`
+    : willInstall
+      ? `Hay una actualización del modpack pendiente: ${pending?.toDownload ?? 0} archivos` +
+        `${pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}.`
+      : null
+
   return (
     <motion.div
       variants={screenVariants}
@@ -200,6 +263,42 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
         overflowY: 'auto'
       }}
     >
+      {/* Aviso de actualizaciones pendientes. Sale sólo cuando hay algo que
+          hacer, y lleva a Ajustes, que es donde están los dos botones. */}
+      {updateNotice && !updating && (
+        <div
+          className="row"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '11px 14px',
+            border: '1px solid rgba(230,180,34,0.35)',
+            background: 'rgba(230,180,34,0.07)'
+          }}
+        >
+          <span style={{ color: 'var(--gold-bright)', display: 'flex', flexShrink: 0 }}>
+            <Icon name="download" size={17} />
+          </span>
+          <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.5 }}>{updateNotice}</span>
+          <button
+            onClick={() => onNavigate?.('settings')}
+            style={{
+              padding: '8px 13px',
+              borderRadius: 8,
+              border: '1px solid var(--stroke-strong)',
+              background: 'rgba(230,180,34,0.12)',
+              color: 'var(--gold-bright)',
+              fontSize: 12.5,
+              flexShrink: 0,
+              cursor: 'pointer'
+            }}
+          >
+            Ir a Ajustes
+          </button>
+        </div>
+      )}
+
       {/* Banda principal: arte del servidor con el botón de jugar encima. */}
       <Panel style={{ padding: 0, overflow: 'hidden', position: 'relative', minHeight: 232 }}>
         <RemoteImage
@@ -268,7 +367,10 @@ export default function Home({ username, mclcUser, offlineUsername }: HomeProps)
             }}
           >
             <div style={{ width: 208, flexShrink: 0 }}>
-              <Button full loading={launching} onClick={handlePlay}>
+              {/* `updating` counts too: after a tab change the install may be
+                  one this mount never started, so `launching` is false while a
+                  download is very much in progress. */}
+              <Button full loading={launching || updating} onClick={handlePlay}>
                 {updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
               </Button>
             </div>

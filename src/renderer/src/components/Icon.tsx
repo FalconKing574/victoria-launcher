@@ -13,6 +13,7 @@ export type IconName =
   | 'package'
   | 'book'
   | 'refresh'
+  | 'shaders'
   | 'check'
   | 'download'
   | 'trash'
@@ -41,6 +42,8 @@ const PATHS: Record<IconName, string> = {
   package: 'M12 2.6l8.5 4.7v9.4L12 21.4 3.5 16.7V7.3zM3.8 7.2L12 11.8l8.2-4.6M12 11.8v9.4',
   book: 'M4 4.8A2.8 2.8 0 0 1 6.8 2H20v20H6.8A2.8 2.8 0 0 1 4 19.2zM4 17.4h16M8 6.6h7M8 10.2h7',
   refresh: 'M20.5 12a8.5 8.5 0 1 1-2.6-6.1M20.6 4v5h-5',
+  shaders:
+    'M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6M12 16.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4z',
   check: 'M20 6.5L9.2 17.3 4 12.1',
   download: 'M12 3v11.5M7.5 10.5L12 15l4.5-4.5M4 20h16',
   trash: 'M4 6.5h16M9.5 6.5V4.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2.3M6.3 6.5L7.4 20a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l1.1-13.5',

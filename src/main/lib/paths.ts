@@ -40,3 +40,14 @@ export function crashLogPath(): string {
 export function syncStatePath(): string {
   return join(app.getPath('userData'), 'modpack-state.json')
 }
+
+/**
+ * sha1 of each jar, keyed on its size and modification time.
+ *
+ * Purely a cache: deleting it costs one slow check and nothing else. It lives
+ * beside the state rather than inside the instance so a wiped instance does not
+ * take it down with it — the stale entries get pruned on the next scan anyway.
+ */
+export function hashCachePath(): string {
+  return join(app.getPath('userData'), 'mod-hashes.json')
+}

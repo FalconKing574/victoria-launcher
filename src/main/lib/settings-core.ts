@@ -14,19 +14,17 @@ export interface Settings {
   offlineUsername: string | null
 }
 
-/**
- * Sized from the real pack: 114 mods / 738 MB, including Distant Horizons,
- * Complementary shaders, Immersive Engineering, Create, Tropicraft and TACZ.
- *
- * Below MIN_RECOMMENDED the game runs but thrashes the collector. Above ~10 GB
- * it gets WORSE, not better: a larger heap means the garbage collector has more
- * to walk on each pass, so pauses get longer and show up as stutter. 8 GB is the
- * sweet spot for this pack, which is what the CurseForge instance already used.
- */
-export const RAM_ABSOLUTE_MIN_MB = 4096
-export const RAM_MIN_RECOMMENDED_MB = 6144
-export const RAM_RECOMMENDED_MB = 8192
-export const RAM_DIMINISHING_MB = 10240
+// Defined once in src/preload/tuning.ts and re-exported here, because the
+// Ajustes screen draws its slider marks from the same numbers and used to keep
+// a hand-copied duplicate of them.
+export {
+  RAM_ABSOLUTE_MIN_MB,
+  RAM_MIN_RECOMMENDED_MB,
+  RAM_RECOMMENDED_MB,
+  RAM_DIMINISHING_MB
+} from '../../preload/tuning'
+
+import { RAM_RECOMMENDED_MB } from '../../preload/tuning'
 
 export const DEFAULT_SETTINGS: Settings = {
   maxMemoryMb: RAM_RECOMMENDED_MB,

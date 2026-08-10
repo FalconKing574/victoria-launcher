@@ -1,24 +1,22 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import Avatar from '../components/Avatar'
 import Icon, { type IconName } from '../components/Icon'
 import Panel from '../components/Panel'
 import Toggle from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
-import type { Settings as SettingsType, UpdaterState } from '@shared/api'
-
-/**
- * Copiados de `src/main/lib/settings-core.ts` — el renderer no puede importar
- * del proceso principal, así que si allí cambian, hay que cambiarlos aquí.
- *
- * Por encima de ~10 GB el juego va PEOR, no mejor: un heap más grande obliga al
- * recolector de basura a recorrer más memoria en cada pasada, así que las pausas
- * duran más y se notan como tirones.
- */
-const RAM_ABSOLUTE_MIN_MB = 4096
-const RAM_MIN_RECOMMENDED_MB = 6144
-const RAM_RECOMMENDED_MB = 8192
-const RAM_DIMINISHING_MB = 10240
+// Las mismas constantes que usa el proceso principal para decidir la memoria.
+// Antes había una copia a mano aquí, con un comentario pidiendo acordarse de
+// cambiar las dos: las marcas del slider salen de estos números, así que una
+// desincronización habría señalado "8 GB recomendado" a un valor que ya no lo es.
+import {
+  RAM_ABSOLUTE_MIN_MB,
+  RAM_DIMINISHING_MB,
+  RAM_MIN_RECOMMENDED_MB,
+  RAM_RECOMMENDED_MB
+} from '@shared/tuning'
+import type { Settings as SettingsType, SyncCheck, UpdaterState } from '@shared/api'
 
 const RAM_SLIDER_MIN_MB = 2048
 const RAM_SLIDER_MAX_MB = 16384
@@ -106,22 +104,7 @@ export default function Settings({ username, accountType, onLogout }: SettingsPr
                 padding: '11px 13px'
               }}
             >
-              <img
-                src={`https://mc-heads.net/avatar/${encodeURIComponent(username ?? 'Steve')}/32`}
-                alt=""
-                onError={(event) => {
-                  // Sin conexión el avatar no carga; mejor sin nada que roto.
-                  event.currentTarget.style.visibility = 'hidden'
-                }}
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 8,
-                  imageRendering: 'pixelated',
-                  flexShrink: 0,
-                  background: 'var(--surface-3)'
-                }}
-              />
+              <Avatar username={username ?? 'Steve'} size={34} radius={8} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div
                   style={{
@@ -273,6 +256,7 @@ export default function Settings({ username, accountType, onLogout }: SettingsPr
             />
 
             <UpdaterRow />
+            <ModpackUpdateRow />
           </Section>
         </div>
       </div>
@@ -365,6 +349,131 @@ function UpdaterRow(): JSX.Element {
           {state.message}
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * The same check the play button runs, exposed on its own.
+ *
+ * Playing already installs whatever the pack needs, so this changes nothing
+ * about how updates arrive — it exists so someone who wants to know now, or to
+ * pull a fix down before sitting at the menu, does not have to launch the game
+ * to find out.
+ */
+function ModpackUpdateRow(): JSX.Element {
+  const [check, setCheck] = useState<SyncCheck | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    window.api.modpack
+      .check()
+      .then((next) => {
+        if (alive) setCheck(next)
+      })
+      .catch(() => undefined)
+
+    // A download started anywhere else in the launcher still owns this row.
+    window.api.modpack
+      .live()
+      .then((live) => {
+        if (alive && live.running) setSyncing(true)
+      })
+      .catch(() => undefined)
+
+    const offStatus = window.api.modpack.onStatus((s) => setMessage(s.message))
+    const offDone = window.api.modpack.onDone((report) => {
+      setSyncing(false)
+      setMessage(
+        report.downloaded === 0 && report.removed === 0
+          ? 'El modpack ya estaba al día.'
+          : `Modpack actualizado: ${report.downloaded} archivos.`
+      )
+      window.api.modpack.check().then(setCheck).catch(() => undefined)
+    })
+    const offError = window.api.modpack.onError((payload) => {
+      setSyncing(false)
+      setMessage(payload.message)
+    })
+
+    return () => {
+      alive = false
+      offStatus()
+      offDone()
+      offError()
+    }
+  }, [])
+
+  const needsUpdate = check?.needsUpdate === true
+  const unavailable = check?.unavailable === true
+  const disabled = busy || syncing || unavailable
+
+  return (
+    <div className="row" style={{ display: 'grid', gap: 10, padding: '12px 13px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+            Modpack {check?.installedVersion ? `v${check.installedVersion}` : '—'}
+          </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              lineHeight: 1.5,
+              color: needsUpdate ? 'var(--gold-bright)' : 'var(--text-faint)'
+            }}
+          >
+            {syncing
+              ? (message ?? 'Actualizando el modpack...')
+              : unavailable
+                ? 'No se pudo contactar con el servidor del modpack.'
+                : needsUpdate
+                  ? `Hay ${check?.toDownload ?? 0} archivos por descargar` +
+                    (check?.latestVersion ? ` (v${check.latestVersion}).` : '.')
+                  : (message ?? 'El modpack está al día.')}
+          </div>
+        </div>
+
+        <button
+          onClick={async () => {
+            setBusy(true)
+            setMessage(null)
+            try {
+              const next = await window.api.modpack.check()
+              setCheck(next)
+              if (next.needsUpdate) {
+                setSyncing(true)
+                // Not awaited: the sync reports itself through the events above,
+                // and awaiting here would freeze the button for the whole
+                // download instead of showing progress.
+                void window.api.modpack.sync().catch(() => undefined)
+              } else {
+                setMessage('El modpack está al día.')
+              }
+            } catch {
+              setMessage('No se pudo comprobar. Revisa tu conexión.')
+            } finally {
+              setBusy(false)
+            }
+          }}
+          disabled={disabled}
+          style={{
+            padding: '9px 14px',
+            borderRadius: 9,
+            border: '1px solid var(--stroke-strong)',
+            background: needsUpdate ? 'rgba(230,180,34,0.12)' : 'rgba(255,255,255,0.05)',
+            color: needsUpdate ? 'var(--gold-bright)' : 'var(--text)',
+            fontSize: 12.5,
+            flexShrink: 0,
+            opacity: disabled ? 0.5 : 1,
+            cursor: disabled ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {syncing ? 'Actualizando...' : busy ? 'Buscando...' : 'Buscar actualizaciones'}
+        </button>
+      </div>
     </div>
   )
 }

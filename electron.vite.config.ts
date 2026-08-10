@@ -9,10 +9,16 @@ import react from '@vitejs/plugin-react'
  * shell environment, so reading process.env at runtime always yielded an empty
  * string and the modpack could never be found. Override at build time with
  *   VICTORIA_MANIFEST_URL=... npm run release
+ *
+ * The default is the live R2 bucket, which is where the modpack actually is.
+ * It used to default to a GitHub release asset that returns 404 — so anyone
+ * who built without remembering the variable shipped a launcher that told
+ * every player there was no modpack. A default that works removes the trap
+ * instead of documenting it.
  */
 const MANIFEST_URL =
   process.env.VICTORIA_MANIFEST_URL ??
-  'https://github.com/FalconKing574/victoria-modpack/releases/latest/download/manifest.json'
+  'https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json'
 
 export default defineConfig({
   main: {

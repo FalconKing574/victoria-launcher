@@ -25,10 +25,19 @@ export interface Manifest {
   optional: OptionalMod[]
 }
 
+/**
+ * What `modpack.state()` actually returns. `overridesSha1` and `overrideParts`
+ * were missing here after the overrides were split into several archives, so
+ * the renderer's view of the state silently stopped matching the main process's.
+ * Nothing broke because no screen reads them, but the next one to try would
+ * have got a type error for a field that is really there.
+ */
 export interface SyncState {
   managed: string[]
   enabledOptional: string[]
   packVersion: string | null
+  overridesSha1: string | null
+  overrideParts: Record<string, string>
 }
 
 export interface SyncCheck {
@@ -50,12 +59,40 @@ export interface UpdaterState {
   message: string | null
 }
 
+export interface SyncLive {
+  running: boolean
+  percent: number
+  done: number
+  total: number
+  message: string | null
+}
+
 export interface SyncReport {
   upToDate: boolean
   downloaded: number
   removed: number
   keptOwn: string[]
   packVersion: string
+}
+
+export interface ShaderPack {
+  filename: string
+  name: string
+  sizeBytes: number
+}
+
+export interface RemovedShaderPack extends ShaderPack {
+  /** True when the archive was kept, so restoring it is instant. */
+  restorable: boolean
+}
+
+export interface ShaderSettings {
+  enabled: boolean
+  selected: string | null
+  packs: ShaderPack[]
+  /** Removed by the player. Empty in the normal case. */
+  removed: RemovedShaderPack[]
+  installed: boolean
 }
 
 export interface ModEntry {
@@ -81,7 +118,7 @@ export interface LaunchProgress {
 }
 
 export interface LaunchStatus {
-  stage: 'forge' | 'download' | 'starting' | 'running'
+  stage: 'java' | 'forge' | 'download' | 'starting' | 'running'
   message: string
 }
 
@@ -107,8 +144,18 @@ export interface VictoriaApi {
     manifest(): Promise<Manifest>
     state(): Promise<SyncState>
     setOptional(id: string, enabled: boolean): Promise<SyncState>
+    live(): Promise<SyncLive>
     onStatus(cb: (status: { message: string }) => void): () => void
     onProgress(cb: (p: { percent: number; done: number; total: number }) => void): () => void
+    onDone(cb: (report: SyncReport) => void): () => void
+    onError(cb: (error: { message: string }) => void): () => void
+  }
+  shaders: {
+    get(): Promise<ShaderSettings>
+    setEnabled(enabled: boolean): Promise<ShaderSettings>
+    select(filename: string): Promise<ShaderSettings>
+    delete(filename: string): Promise<ShaderSettings>
+    restore(filename: string): Promise<ShaderSettings>
   }
   updater: {
     check(): Promise<UpdaterState>

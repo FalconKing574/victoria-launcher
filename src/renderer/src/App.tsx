@@ -8,6 +8,7 @@ import Splash from './screens/Splash'
 import Login from './screens/Login'
 import Home from './screens/Home'
 import Modpack from './screens/Modpack'
+import Shaders from './screens/Shaders'
 import Settings from './screens/Settings'
 import type { PremiumSession } from '@shared/api'
 
@@ -122,9 +123,11 @@ export default function App(): JSX.Element {
                         offlineUsername={
                           account.type === 'offline' ? account.username : undefined
                         }
+                        onNavigate={setNav}
                       />
                     )}
                     {nav === 'mods' && <Modpack key="mods" />}
+                    {nav === 'shaders' && <Shaders key="shaders" />}
                     {nav === 'settings' && (
                       <Settings
                         key="settings"

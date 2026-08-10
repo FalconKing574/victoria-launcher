@@ -19,7 +19,14 @@ export interface PremiumSession {
 /** Stores the Microsoft refresh token encrypted with the OS keychain. */
 function saveRefreshToken(token: string): void {
   if (!safeStorage.isEncryptionAvailable()) return
-  writeFileSync(msTokenPath(), safeStorage.encryptString(token))
+  try {
+    writeFileSync(msTokenPath(), safeStorage.encryptString(token))
+  } catch {
+    // Remembering the session is a convenience. A disk that is full, or an
+    // antivirus holding the file, must not turn a login that already succeeded
+    // into an error the player cannot make sense of — they just get asked
+    // again next time.
+  }
 }
 
 function readRefreshToken(): string | null {

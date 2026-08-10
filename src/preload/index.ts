@@ -30,8 +30,18 @@ const api: VictoriaApi = {
     manifest: () => ipcRenderer.invoke('sync:manifest'),
     state: () => ipcRenderer.invoke('sync:state'),
     setOptional: (id, enabled) => ipcRenderer.invoke('sync:set-optional', id, enabled),
+    live: () => ipcRenderer.invoke('sync:live'),
     onStatus: (cb) => on('sync:status', cb),
-    onProgress: (cb) => on('sync:progress', cb)
+    onProgress: (cb) => on('sync:progress', cb),
+    onDone: (cb) => on('sync:done', cb),
+    onError: (cb) => on('sync:error', cb)
+  },
+  shaders: {
+    get: () => ipcRenderer.invoke('shaders:get'),
+    setEnabled: (enabled) => ipcRenderer.invoke('shaders:set-enabled', enabled),
+    select: (filename) => ipcRenderer.invoke('shaders:select', filename),
+    delete: (filename) => ipcRenderer.invoke('shaders:delete', filename),
+    restore: (filename) => ipcRenderer.invoke('shaders:restore', filename)
   },
   updater: {
     check: () => ipcRenderer.invoke('updater:check'),

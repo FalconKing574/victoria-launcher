@@ -1,22 +1,25 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { createHash } from 'crypto'
 import {
-  createWriteStream,
+  createReadStream,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
-  renameSync,
   rmSync,
+  statSync,
   writeFileSync
 } from 'fs'
 import { join } from 'path'
-import AdmZip from 'adm-zip'
 import { pipeline } from 'stream/promises'
-import { Readable } from 'stream'
+import AdmZip from 'adm-zip'
 import { MANIFEST_URL } from '../config'
 import { launcherRoot, instanceDir } from '../lib/paths'
-import { syncStatePath } from '../lib/paths'
+import { downloadVerified } from '../lib/download'
+import { writeJsonAtomic } from '../lib/write-atomic'
+import { isFresh, parseCache, pruneCache, type FileStamp, type HashCache } from '../lib/hash-cache'
+import { pruneDeletedShaders } from './shaders'
+import { hashCachePath, syncStatePath } from '../lib/paths'
 import {
   planSync,
   nextManagedList,
@@ -33,20 +36,23 @@ interface SyncState {
   packVersion: string | null
   /** sha1 of the overrides archive already extracted into the instance. */
   overridesSha1: string | null
+  /** Per-archive hashes, so an unchanged part is never downloaded twice. */
+  overrideParts: Record<string, string>
 }
 
 const EMPTY_STATE: SyncState = {
   managed: [],
   enabledOptional: [],
   packVersion: null,
-  overridesSha1: null
+  overridesSha1: null,
+  overrideParts: {}
 }
 
 /**
  * Optional mods that start switched on. A player can still turn them off; this
  * only decides what a fresh install gets.
  */
-const DEFAULT_OPTIONAL = ['distant-horizons']
+const DEFAULT_OPTIONAL = ['distant-horizons', 'xaeros-world-map']
 
 function modsDir(): string {
   return join(instanceDir(), 'mods')
@@ -68,23 +74,125 @@ function loadState(): SyncState {
 }
 
 function saveState(state: SyncState): void {
-  writeFileSync(syncStatePath(), JSON.stringify(state, null, 2), 'utf8')
+  writeJsonAtomic(syncStatePath(), state)
 }
 
-function sha1(path: string): string {
-  return createHash('sha1').update(readFileSync(path)).digest('hex')
+function loadHashCache(): HashCache {
+  try {
+    return parseCache(JSON.parse(readFileSync(hashCachePath(), 'utf8')))
+  } catch {
+    // No cache yet, or an unreadable one. Either way the next scan rebuilds it.
+    return {}
+  }
 }
 
-function scanLocal(): LocalMod[] {
+function saveHashCache(cache: HashCache): void {
+  try {
+    writeJsonAtomic(hashCachePath(), cache)
+  } catch {
+    // A cache that cannot be written is a slow launcher, not a broken one.
+  }
+}
+
+/** Hashes without pulling the whole jar into memory; some are over 100 MB. */
+async function hashFile(path: string): Promise<string> {
+  const hash = createHash('sha1')
+  await pipeline(createReadStream(path), hash)
+  return hash.digest('hex')
+}
+
+/**
+ * The mods folder as the sync planner needs to see it: filename plus sha1.
+ *
+ * Asynchronous and cached, because this is the hot path. It runs on every
+ * modpack check — which is every visit to Jugar and to Ajustes — and hashing
+ * 117 jars from scratch means reading 425 MB. Doing that synchronously blocked
+ * the main process, so the whole window stopped responding on every tab change.
+ * Now an unchanged jar costs one statSync.
+ */
+async function scanLocal(): Promise<LocalMod[]> {
   const dir = modsDir()
   if (!existsSync(dir)) return []
-  return readdirSync(dir)
-    .filter((file) => file.toLowerCase().endsWith('.jar'))
-    .map((filename) => ({ filename, sha1: sha1(join(dir, filename)) }))
+
+  const files = readdirSync(dir).filter((file) => file.toLowerCase().endsWith('.jar'))
+  const cache = loadHashCache()
+  const next: HashCache = {}
+  const mods: LocalMod[] = []
+  let recomputed = 0
+
+  for (const filename of files) {
+    const path = join(dir, filename)
+
+    let stamp: FileStamp
+    try {
+      const stat = statSync(path)
+      const cached = cache[filename]
+      if (isFresh(cached, stat)) {
+        next[filename] = cached
+        mods.push({ filename, sha1: cached.sha1 })
+        continue
+      }
+      stamp = { size: stat.size, mtimeMs: stat.mtimeMs }
+    } catch {
+      // Vanished between the listing and the stat. Nothing to plan around.
+      continue
+    }
+
+    try {
+      const digest = await hashFile(path)
+      recomputed += 1
+      next[filename] = { ...stamp, sha1: digest }
+      mods.push({ filename, sha1: digest })
+    } catch {
+      // Unreadable — locked by the running game, or quarantined. Leaving it out
+      // of the scan makes the planner treat it as missing and download it
+      // again, which is the recoverable answer.
+    }
+  }
+
+  if (recomputed > 0 || Object.keys(cache).length !== Object.keys(next).length) {
+    saveHashCache(pruneCache(next, files))
+  }
+  return mods
 }
 
 function send(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) win.webContents.send(channel, payload)
+}
+
+/**
+ * A snapshot of the sync in progress.
+ *
+ * Events alone were not enough: the Play screen unmounts whenever the player
+ * clicks another tab in the sidebar, taking its listeners and its progress
+ * state with it. The download kept running in this process, but coming back to
+ * the tab showed an idle button, which looked exactly like a stalled download.
+ * Keeping the state here lets the screen rebuild itself on mount.
+ */
+export interface SyncLive {
+  running: boolean
+  percent: number
+  done: number
+  total: number
+  message: string | null
+}
+
+let live: SyncLive = { running: false, percent: 0, done: 0, total: 0, message: null }
+
+/** Lets the updater avoid restarting the app in the middle of a download. */
+export function isSyncRunning(): boolean {
+  return inFlight !== null
+}
+
+function sendStatus(message: string): void {
+  live = { ...live, message }
+  send('sync:status', { message })
+}
+
+function sendProgress(done: number, total: number): void {
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0
+  live = { ...live, percent, done, total }
+  send('sync:progress', { percent, done, total })
 }
 
 export async function fetchManifest(): Promise<Manifest> {
@@ -97,29 +205,41 @@ export async function fetchManifest(): Promise<Manifest> {
 }
 
 async function downloadMod(mod: ManifestMod): Promise<void> {
-  const dir = modsDir()
-  mkdirSync(dir, { recursive: true })
+  await downloadVerified(mod.url, join(modsDir(), mod.filename), {
+    expected: mod.sha1,
+    algo: 'sha1',
+    label: mod.filename
+  })
+}
 
-  const target = join(dir, mod.filename)
-  const partial = `${target}.part`
+interface OverridesResult {
+  /** True when at least one archive was actually extracted this run. */
+  changed: boolean
+  /** Hashes to record, covering only the parts the manifest still lists. */
+  parts: Record<string, string>
+}
 
-  const response = await fetch(mod.url)
-  if (!response.ok || !response.body) {
-    throw new Error(`No se pudo descargar ${mod.filename} (HTTP ${response.status}).`)
-  }
-
-  await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
-
-  // Verify before publishing. A truncated or tampered jar that lands in mods/
-  // would crash the game on launch with an error pointing nowhere useful.
-  const actual = sha1(partial)
-  if (actual !== mod.sha1) {
-    rmSync(partial, { force: true })
-    throw new Error(`${mod.filename} se descargó corrupto. Inténtalo de nuevo.`)
-  }
-
-  rmSync(target, { force: true })
-  renameSync(partial, target)
+/**
+ * Unpacks an archive without holding the main process for the whole extraction.
+ *
+ * These are 260 MB of config, videos and resource packs, and extractAllTo did
+ * every file in one synchronous run: the window froze for the entire unpack,
+ * so the launcher looked hung at exactly the moment it was telling the player
+ * it was working. The async variant yields between entries.
+ *
+ * Not a complete fix — the AdmZip constructor still reads the archive into a
+ * buffer in one go, so there is a pause at the start of each part. Removing
+ * that would mean a different zip library, which is not worth it for three
+ * archives per pack update.
+ */
+function extractArchive(archive: string, target: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // overwrite: the pack's settings are the source of truth for these folders.
+    new AdmZip(archive).extractAllToAsync(target, true, false, (error) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
 }
 
 /**
@@ -131,46 +251,74 @@ async function downloadMod(mod: ManifestMod): Promise<void> {
  * player's keybinds, video settings and volume, and replacing it on every
  * update would wipe their setup. The resource pack is enabled separately.
  */
-async function applyOverrides(overrides: ManifestOverrides, state: SyncState): Promise<boolean> {
+async function applyOverrides(
+  overrides: ManifestOverrides,
+  state: SyncState,
+  /**
+   * Records the parts done so far. Called after each one, because a failure on
+   * part 3 used to throw away parts 1 and 2 as well: nothing was written until
+   * the whole set succeeded, so a dropped connection near the end cost the
+   * player another 520 MB on the next attempt.
+   */
+  persist: (parts: Record<string, string>) => void
+): Promise<OverridesResult> {
   const fingerprint = overridesFingerprint(overrides)
-  if (state.overridesSha1 === fingerprint) return false
+  if (state.overridesSha1 === fingerprint) {
+    return { changed: false, parts: state.overrideParts }
+  }
 
   const dir = join(launcherRoot(), 'overrides')
-  mkdirSync(dir, { recursive: true })
+  const previous = state.overrideParts
+  const parts: Record<string, string> = {}
+  let changed = false
 
   let index = 0
   for (const part of overrides) {
     index += 1
-    send('sync:status', {
-      message: `Descargando configuración ${index}/${overrides.length}...`
-    })
+
+    // Usually one archive moves between pack versions and the others are
+    // byte-identical. Comparing the whole set as a single fingerprint meant a
+    // one-line config edit cost every player all 684 MB instead of the 164 MB
+    // that actually changed.
+    if (previous[part.name] === part.sha1) {
+      parts[part.name] = part.sha1
+      continue
+    }
 
     const archive = join(dir, part.name)
-    const partial = `${archive}.part`
+    await downloadVerified(part.url, archive, {
+      expected: part.sha1,
+      algo: 'sha1',
+      label: part.name,
+      onProgress: (received, total) => {
+        // A 260 MB archive with only "Descargando configuración 1/3" on screen
+        // is indistinguishable from a stalled one, so show the megabytes.
+        const mb = (received / 1048576).toFixed(0)
+        sendStatus(
+          total > 0
+            ? `Descargando configuración ${index}/${overrides.length} · ${mb} de ${(total / 1048576).toFixed(0)} MB`
+            : `Descargando configuración ${index}/${overrides.length} · ${mb} MB`
+        )
+      }
+    })
 
-    const response = await fetch(part.url)
-    if (!response.ok || !response.body) {
-      throw new Error(`No se pudo descargar ${part.name} (HTTP ${response.status}).`)
+    sendStatus(`Aplicando configuración ${index}/${overrides.length}...`)
+    try {
+      await extractArchive(archive, instanceDir())
+    } catch (error) {
+      throw new Error(
+        `No se pudo aplicar ${part.name}: ${(error as Error).message}\n\n` +
+          'Si el antivirus está bloqueando la carpeta del launcher, añádela a las excepciones.'
+      )
     }
 
-    await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
-
-    const actual = sha1(partial)
-    if (actual !== part.sha1) {
-      rmSync(partial, { force: true })
-      throw new Error(`${part.name} se descargó corrupto. Inténtalo de nuevo.`)
-    }
     rmSync(archive, { force: true })
-    renameSync(partial, archive)
-
-    send('sync:status', { message: `Aplicando configuración ${index}/${overrides.length}...` })
-    // overwrite: the pack's settings are the source of truth for these folders.
-    new AdmZip(archive).extractAllTo(instanceDir(), true)
-
-    rmSync(archive, { force: true })
+    parts[part.name] = part.sha1
+    changed = true
+    persist({ ...parts })
   }
 
-  return true
+  return { changed, parts }
 }
 
 /** Resource pack that carries the Victoria menu and textures. */
@@ -187,12 +335,25 @@ const VICTORIA_RESOURCE_PACK = 'file/Victoria - RP.zip'
  */
 function ensureResourcePack(): void {
   const path = join(instanceDir(), 'options.txt')
-  if (!existsSync(path)) return
 
   try {
+    // A fresh instance has no options.txt until Minecraft has run once, so
+    // returning early here meant every new player got the pack downloaded but
+    // never switched on. Writing just this line is enough: the game fills in
+    // every other setting on first launch and leaves this one alone.
+    if (!existsSync(path)) {
+      mkdirSync(instanceDir(), { recursive: true })
+      writeFileSync(path, `resourcePacks:["vanilla","${VICTORIA_RESOURCE_PACK}"]\n`, 'utf8')
+      return
+    }
+
     const lines = readFileSync(path, 'utf8').split(/\r?\n/)
     const index = lines.findIndex((line) => line.startsWith('resourcePacks:'))
-    if (index === -1) return
+    if (index === -1) {
+      lines.push(`resourcePacks:["vanilla","${VICTORIA_RESOURCE_PACK}"]`)
+      writeFileSync(path, lines.join('\n'), 'utf8')
+      return
+    }
 
     const raw = lines[index].slice('resourcePacks:'.length)
     const packs = JSON.parse(raw) as string[]
@@ -244,7 +405,7 @@ export async function checkForUpdates(): Promise<SyncCheck> {
     const manifest = await fetchManifest()
     const plan = planSync({
       manifest,
-      local: scanLocal(),
+      local: await scanLocal(),
       managed: state.managed,
       enabledOptional: state.enabledOptional
     })
@@ -303,15 +464,15 @@ function ensureInstanceDir(): void {
   }
 }
 
-export async function runSync(): Promise<SyncReport> {
-  send('sync:status', { message: 'Comprobando actualizaciones...' })
+async function performSync(): Promise<SyncReport> {
+  sendStatus('Comprobando actualizaciones...')
   ensureInstanceDir()
 
   const manifest = await fetchManifest()
   const state = loadState()
   const plan = planSync({
     manifest,
-    local: scanLocal(),
+    local: await scanLocal(),
     managed: state.managed,
     enabledOptional: state.enabledOptional
   })
@@ -319,27 +480,55 @@ export async function runSync(): Promise<SyncReport> {
   const total = plan.download.length
   let done = 0
 
+  // The manifest already told us each jar's sha1, so recording it as we go
+  // spares the check that runs the moment this finishes from re-reading every
+  // file we just wrote — 425 MB on a first install.
+  const cache = loadHashCache()
+
   for (const mod of plan.download) {
-    send('sync:status', { message: `Descargando ${mod.filename}` })
+    sendStatus(`Descargando ${mod.filename}`)
     await downloadMod(mod)
+    try {
+      const stat = statSync(join(modsDir(), mod.filename))
+      cache[mod.filename] = { size: stat.size, mtimeMs: stat.mtimeMs, sha1: mod.sha1 }
+    } catch {
+      // Only the cache; the file itself was already verified by the download.
+    }
     done += 1
-    send('sync:progress', { percent: Math.round((done / total) * 100), done, total })
+    sendProgress(done, total)
   }
 
   for (const filename of plan.remove) {
     rmSync(join(modsDir(), filename), { force: true })
+    delete cache[filename]
   }
 
+  if (plan.download.length > 0 || plan.remove.length > 0) saveHashCache(cache)
+
   let overridesApplied = false
+  let overrideParts = state.overrideParts
   if (manifest.overrides) {
-    overridesApplied = await applyOverrides(manifest.overrides, state)
-    if (overridesApplied) ensureResourcePack()
+    const result = await applyOverrides(manifest.overrides, state, (parts) => {
+      // Only the parts move. packVersion and the managed list must not advance
+      // until the whole sync finishes, or an interrupted run would leave the
+      // launcher believing it is up to date when it is not.
+      saveState({ ...loadState(), overrideParts: parts })
+    })
+    overridesApplied = result.changed
+    overrideParts = result.parts
+    if (overridesApplied) {
+      ensureResourcePack()
+      // The archives just put every shipped shaderpack back on disk; take out
+      // again the ones the player deleted.
+      pruneDeletedShaders()
+    }
   }
 
   saveState({
     managed: nextManagedList(plan, manifest, state.managed),
     enabledOptional: state.enabledOptional,
     packVersion: manifest.packVersion,
+    overrideParts,
     overridesSha1: manifest.overrides
       ? overridesFingerprint(manifest.overrides)
       : state.overridesSha1
@@ -356,8 +545,45 @@ export async function runSync(): Promise<SyncReport> {
   return report
 }
 
+let inFlight: Promise<SyncReport> | null = null
+
+/**
+ * Runs a sync, or joins the one already running.
+ *
+ * Two concurrent syncs would fight over the same files and each other's .part
+ * downloads. That was reachable: leaving the Play tab mid-download lost the
+ * screen's progress state, so coming back showed an idle button and a second
+ * press started a second sync on top of the first.
+ */
+export function runSync(): Promise<SyncReport> {
+  if (inFlight) return inFlight
+
+  live = {
+    running: true,
+    percent: 0,
+    done: 0,
+    total: 0,
+    message: 'Comprobando actualizaciones...'
+  }
+
+  inFlight = performSync()
+    .catch((error: Error) => {
+      // Broadcast as well as reject: whoever pressed PLAY may have navigated
+      // away, and the screen that comes back has no promise to catch.
+      send('sync:error', { message: error.message })
+      throw error
+    })
+    .finally(() => {
+      inFlight = null
+      live = { ...live, running: false }
+    })
+
+  return inFlight
+}
+
 export function registerSyncHandlers(): void {
   ipcMain.handle('sync:run', () => runSync())
+  ipcMain.handle('sync:live', () => live)
   ipcMain.handle('sync:check', () => checkForUpdates())
   ipcMain.handle('sync:manifest', () => fetchManifest())
   ipcMain.handle('sync:state', () => loadState())
