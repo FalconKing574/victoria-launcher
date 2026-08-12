@@ -127,6 +127,12 @@ export interface LaunchStatus {
   message: string
 }
 
+/** Por qué se cerró el juego, sacado de su propio crash report. */
+export interface CrashDiagnosis {
+  message: string
+  file: string | null
+}
+
 export interface VictoriaApi {
   window: {
     minimize(): void
@@ -180,7 +186,7 @@ export interface VictoriaApi {
     onProgress(cb: (progress: LaunchProgress) => void): () => void
     onStatus(cb: (status: LaunchStatus) => void): () => void
     onError(cb: (error: { message: string }) => void): () => void
-    onClosed(cb: (info: { code: number }) => void): () => void
+    onClosed(cb: (info: { code: number; diagnosis: CrashDiagnosis | null }) => void): () => void
   }
 }
 

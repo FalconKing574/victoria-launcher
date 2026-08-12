@@ -221,8 +221,14 @@ export default function Home({
       setProgress(null)
       // A non-zero exit means the game died rather than being closed normally.
       if (info.code !== 0) {
+        // Se prefiere lo que dice el propio crash report de Minecraft. El
+        // mensaje de antes culpaba siempre a la memoria y a Java, que casi
+        // nunca es el motivo, y mandaba a la gente a tocar lo que no era.
         setError(
-          `Minecraft se cerró con el código ${info.code}. Revisa la memoria y la ruta de Java en Ajustes.`
+          info.diagnosis
+            ? `Minecraft se cerró solo.\n${info.diagnosis.message}` +
+                (info.diagnosis.file ? `\n\nDetalle completo en:\n${info.diagnosis.file}` : '')
+            : `Minecraft se cerró con el código ${info.code}. Si se repite, mira los crash-reports de la instancia.`
         )
       }
     })
@@ -394,7 +400,21 @@ export default function Home({
                   {status.message}
                 </p>
               ) : error ? (
-                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--err)', lineHeight: 1.5 }}>
+                // pre-wrap: el diagnóstico del crash viene en varias líneas
+                // (qué pasó, qué mod, dónde está el archivo) y en una sola
+                // no se entiende nada. Seleccionable para poder pegarlo.
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 12.5,
+                    color: 'var(--err)',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    userSelect: 'text',
+                    maxHeight: 92,
+                    overflowY: 'auto'
+                  }}
+                >
                   {error}
                 </p>
               ) : willInstall ? (

@@ -279,6 +279,29 @@ empaquetada en `src/renderer/src/assets/fonts` (47 KB, una fuente variable).
 La música (2.7 MB) tampoco se precarga ya: solo se le pone `src` al `<audio>`
 cuando el ajuste está activado, y viene desactivado por defecto.
 
+### «Se cerró con el código 1» no es un diagnóstico
+
+El launcher decía siempre «Revisa la memoria y la ruta de Java en Ajustes», que
+casi nunca es la causa y manda al jugador a tocar lo que no toca. Minecraft deja
+en `instance\crash-reports\` un archivo que dice qué pasaba y qué mod estaba en
+la pila; `src/main/lib/crash-report.ts` lo lee y lo enseña. Comprobado contra
+los 70 crash reports que había en las dos instancias: los entiende todos.
+
+Cuando un jugador reporte un cierre, **pídele el crash report** (o el
+`logs/latest.log` si no hay ninguno, que es lo que pasa cuando cae el driver de
+vídeo o el sistema mata el proceso). Sin eso solo se puede adivinar.
+
+### Cambiar de idioma o de resource pack recarga TODO
+
+Las dos cosas disparan una recarga de recursos, que reconstruye los atlas de
+texturas. Es el momento en el que revientan los mods que guardan texturas
+dinámicas: el `NativeImage` que tenían se libera y lo siguen usando. En este
+pack ya han salido dos de esa familia — `Image is not allocated` (fotos del
+teléfono, eyemod + victoriarp) y `Texture not loaded yet` (iv-paint).
+
+Si alguien reporta un cierre al cambiar idioma o resource pack, mira por ahí
+antes que por la memoria.
+
 ## Antivirus
 
 El instalador no está firmado, así que salta SmartScreen y algunos antivirus.

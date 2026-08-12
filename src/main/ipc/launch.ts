@@ -1,5 +1,14 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { existsSync, mkdirSync, createWriteStream, renameSync, rmSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  createWriteStream,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync
+} from 'fs'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
@@ -11,6 +20,7 @@ import { ensureJava } from '../lib/java-runtime'
 import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
 import { offlineUuid } from '../lib/offline-uuid'
+import { summarizeCrashReport, describeCrash, lastErrorInLog } from '../lib/crash-report'
 
 export interface LaunchRequest {
   /** Premium sessions pass the MCLC user object produced by msmc. */
@@ -20,6 +30,73 @@ export interface LaunchRequest {
 }
 
 let running = false
+
+/** El archivo más reciente de una carpeta, o null si no hay ninguno. */
+function newestFile(dir: string, filter: (name: string) => boolean): string | null {
+  if (!existsSync(dir)) return null
+  try {
+    const candidatos = readdirSync(dir)
+      .filter(filter)
+      .map((name) => {
+        const path = join(dir, name)
+        return { path, mtime: statSync(path).mtimeMs }
+      })
+      .sort((a, b) => b.mtime - a.mtime)
+    return candidatos[0]?.path ?? null
+  } catch {
+    return null
+  }
+}
+
+export interface CrashDiagnosis {
+  /** Lo que se le enseña al jugador. */
+  message: string
+  /** Dónde está el archivo, para poder mandarlo. */
+  file: string | null
+}
+
+/**
+ * Averigua por qué se cerró el juego, en vez de culpar a la memoria.
+ *
+ * El mensaje era siempre «Minecraft se cerró con el código N. Revisa la memoria
+ * y la ruta de Java en Ajustes.» Casi nunca es eso, y manda al jugador a
+ * cambiar cosas que no tienen la culpa — mientras Minecraft ha dejado, en la
+ * carpeta de al lado, un archivo que dice exactamente qué pasó y qué mod estaba
+ * en la pila. Leerlo cuesta unos milisegundos y convierte «se cerró con el
+ * código 1» en algo que alguien puede arreglar.
+ */
+function diagnoseCrash(): CrashDiagnosis | null {
+  const desde = Date.now() - 5 * 60 * 1000
+
+  const reporte = newestFile(join(instanceDir(), 'crash-reports'), (name) =>
+    name.toLowerCase().endsWith('.txt')
+  )
+  if (reporte) {
+    try {
+      // Solo si es de este arranque: uno de hace semanas explicaría otra cosa.
+      if (statSync(reporte).mtimeMs >= desde) {
+        const texto = describeCrash(summarizeCrashReport(readFileSync(reporte, 'utf8')))
+        if (texto) return { message: texto, file: reporte }
+      }
+    } catch {
+      // Ilegible: se sigue con el log.
+    }
+  }
+
+  // Sin crash report — una caída del driver de vídeo o un proceso matado no
+  // dejan ninguno — el final del log todavía suele decir algo.
+  const log = join(instanceDir(), 'logs', 'latest.log')
+  try {
+    if (existsSync(log) && statSync(log).mtimeMs >= desde) {
+      const texto = lastErrorInLog(readFileSync(log, 'utf8'))
+      if (texto) return { message: texto, file: log }
+    }
+  } catch {
+    // Nada que añadir.
+  }
+
+  return null
+}
 
 /** Lets the updater avoid restarting the app while Minecraft is starting. */
 export function isLaunchRunning(): boolean {
@@ -108,7 +185,9 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       running = false
       // Bring the launcher back when the game exits, even if it was hidden.
       for (const win of BrowserWindow.getAllWindows()) win.show()
-      send('launch:closed', { code })
+      // Solo se busca la causa si se cerró mal: en una salida normal no hay
+      // nada que diagnosticar y leer archivos sería trabajo tirado.
+      send('launch:closed', { code, diagnosis: code === 0 ? null : diagnoseCrash() })
     })
 
     const options: ILauncherOptions = {
