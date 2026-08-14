@@ -21,6 +21,7 @@ import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
 import { offlineUuid } from '../lib/offline-uuid'
 import { summarizeCrashReport, describeCrash, lastErrorInLog } from '../lib/crash-report'
+import { restoreMicrosoft } from './auth'
 
 export interface LaunchRequest {
   /** Premium sessions pass the MCLC user object produced by msmc. */
@@ -151,7 +152,49 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
 
     let authorization: IUser
     if (request.mclcUser) {
-      authorization = request.mclcUser
+      // El token de Minecraft dura pocas horas, y la sesión que trae el
+      // renderer se pidió una sola vez: al abrir el launcher. Con el launcher
+      // abierto toda la tarde, ese token ya venció cuando el jugador aprieta
+      // Jugar.
+      //
+      // El juego arranca igual —no valida el token al iniciar— y falla recién
+      // al entrar a un servidor que pide autenticación premium, con
+      // "Failed to log in: Invalid session". El propio Minecraft lo deja
+      // escrito antes, en su log: "Failed to verify authentication".
+      //
+      // Por eso se refresca acá, a segundos de lanzar, en vez de confiar en lo
+      // que se pidió al abrir. Es también lo que hace que el consejo de
+      // "reiniciá el launcher" deje de ser necesario.
+      const refresco = await restoreMicrosoft().catch(() => ({ status: 'expired' as const }))
+      const fresca = refresco.status === 'ok' ? refresco.session : null
+      if (fresca) {
+        // Del refresco sólo se toma lo que caducaba. El resto se deja como
+        // estaba, que es lo que MCLC ya había aceptado.
+        //
+        // No se copia el objeto entero a propósito: msmc y MCLC describen la
+        // sesión con tipos que no encajan —msmc admite `meta.type: 'legacy'`,
+        // que MCLC no conoce, y marca opcionales campos que MCLC exige—. Como
+        // lo único que se venció es el token, copiar campo por campo es más
+        // honesto que forzar el tipo con un cast y esperar que coincidan.
+        authorization = {
+          ...request.mclcUser,
+          access_token: fresca.mclc.access_token,
+          uuid: fresca.mclc.uuid ?? request.mclcUser.uuid,
+          name: fresca.mclc.name ?? request.mclcUser.name
+        }
+      } else {
+        // Si el refresh falla se intenta igual con lo que había: puede que el
+        // token siga vivo y que lo que falló sea la red. Negarse a lanzar
+        // sería peor que dejarlo probar.
+        authorization = request.mclcUser
+        // Se reusa la etapa 'starting' en vez de inventar una: los estados que
+        // acepta el renderer están declarados en preload/api.d.ts y agregar uno
+        // significa que la pantalla no sabría dibujarlo.
+        send('launch:status', {
+          stage: 'starting',
+          message: 'No se pudo renovar la sesión de Microsoft; se intenta con la anterior.'
+        })
+      }
     } else {
       const name = request.offlineUsername as string
       // MCLC invents a random UUID for offline users. An offline-mode server

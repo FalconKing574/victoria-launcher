@@ -142,7 +142,9 @@ export interface VictoriaApi {
   }
   auth: {
     microsoftLogin(): Promise<PremiumSession>
-    microsoftRestore(): Promise<PremiumSession | null>
+    microsoftRestore(): Promise<
+      { status: 'ok'; session: PremiumSession } | { status: 'expired' } | { status: 'none' }
+    >
     microsoftLogout(): Promise<boolean>
   }
   mods: {

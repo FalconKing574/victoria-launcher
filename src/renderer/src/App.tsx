@@ -24,6 +24,11 @@ export default function App(): JSX.Element {
   const [stage, setStage] = useState<Stage>('splash')
   const [account, setAccount] = useState<Account | null>(null)
   const [nav, setNav] = useState<NavKey>('play')
+  // Se muestra cuando habia sesion de Microsoft guardada y ya no sirve. Sin
+  // esto el launcher firmaba en offline con el nick guardado, que suele ser el
+  // mismo nombre premium: la pantalla se veia igual y el jugador se enteraba
+  // recien al entrar a un servidor, con un "Invalid session".
+  const [sesionVencida, setSesionVencida] = useState(false)
 
   const signIn = useCallback((next: Account): void => {
     setAccount(next)
@@ -34,9 +39,20 @@ export default function App(): JSX.Element {
   // again on every launch. Microsoft comes first because it is a real session;
   // a saved nick is only a preference, and it is the fallback.
   const handleSplashDone = useCallback(async (): Promise<void> => {
-    const restored = await window.api.auth.microsoftRestore().catch(() => null)
-    if (restored) {
-      signIn({ type: 'premium', username: restored.name, premium: restored })
+    const restored = await window.api.auth.microsoftRestore().catch(
+      () => ({ status: 'expired' }) as const
+    )
+    if (restored.status === 'ok') {
+      signIn({ type: 'premium', username: restored.session.name, premium: restored.session })
+      return
+    }
+
+    // Habia una sesion de Microsoft y dejo de servir. Hay que decirlo: caer a
+    // offline en silencio deja al jugador sin skin y sin poder entrar a
+    // ningun servidor premium, sin una sola pista de que fue el launcher.
+    if (restored.status === 'expired') {
+      setSesionVencida(true)
+      setStage('login')
       return
     }
 
@@ -83,6 +99,7 @@ export default function App(): JSX.Element {
             {stage === 'login' && (
               <Login
                 key="login"
+                sesionVencida={sesionVencida}
                 onPremium={(session) =>
                   signIn({ type: 'premium', username: session.name, premium: session })
                 }

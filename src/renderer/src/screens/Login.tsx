@@ -9,12 +9,18 @@ import type { PremiumSession } from '@shared/api'
 export interface LoginProps {
   onPremium: (session: PremiumSession) => void
   onOffline: (username: string) => void
+  /** La sesion de Microsoft guardada ya no sirve y hay que volver a entrar. */
+  sesionVencida?: boolean
 }
 
-export default function Login({ onPremium, onOffline }: LoginProps): JSX.Element {
+export default function Login({ onPremium, onOffline, sesionVencida }: LoginProps): JSX.Element {
   const [username, setUsername] = useState('')
   const [busy, setBusy] = useState<'ms' | 'offline' | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    sesionVencida
+      ? 'Tu sesión de Microsoft venció. Entrá de nuevo para recuperar tu skin y poder jugar en el servidor.'
+      : null
+  )
 
   const nickValid = /^[A-Za-z0-9_]{3,16}$/.test(username.trim())
 

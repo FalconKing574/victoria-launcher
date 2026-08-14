@@ -30,13 +30,33 @@ function saveRefreshToken(token: string): void {
 }
 
 function readRefreshToken(): string | null {
-  if (!existsSync(msTokenPath()) || !safeStorage.isEncryptionAvailable()) return null
+  if (!existsSync(msTokenPath())) return null
+  if (!safeStorage.isEncryptionAvailable()) {
+    // Sin esto el fallo es mudo: el archivo esta ahi, no se puede leer, y el
+    // launcher se comporta como si nunca hubiera habido sesion.
+    console.error('[auth] safeStorage no disponible: no se puede leer la sesion guardada.')
+    return null
+  }
   try {
     return safeStorage.decryptString(readFileSync(msTokenPath()))
-  } catch {
+  } catch (e) {
+    console.error('[auth] No se pudo descifrar ms-token.bin:', e)
     return null
   }
 }
+
+/** Si hay una sesión de Microsoft guardada, aunque no se pueda usar. */
+export function hasSavedSession(): boolean {
+  return existsSync(msTokenPath())
+}
+
+export type RestoreResult =
+  /** Sesión válida y lista para jugar. */
+  | { status: 'ok'; session: PremiumSession }
+  /** Había una sesión guardada y ya no sirve. Hay que volver a entrar. */
+  | { status: 'expired' }
+  /** Nunca hubo sesión de Microsoft en esta máquina. */
+  | { status: 'none' }
 
 export function clearRefreshToken(): void {
   if (existsSync(msTokenPath())) rmSync(msTokenPath())
@@ -62,17 +82,35 @@ export async function loginMicrosoft(): Promise<PremiumSession> {
   return toSession(xbox)
 }
 
-/** Silent re-login on startup. Returns null when there is no usable token. */
-export async function restoreMicrosoft(): Promise<PremiumSession | null> {
+/**
+ * Re-login silencioso al abrir el launcher.
+ *
+ * <p>Distingue "no hay sesión" de "había una y ya no sirve", y esa diferencia
+ * importa: cuando falla, el launcher tiene que <b>decirlo</b> y pedir que se
+ * entre de nuevo. Antes devolvía null en los dos casos y la pantalla firmaba en
+ * modo offline con el nick guardado. Como el nick guardado suele ser el mismo
+ * nombre premium, la sesión se veía idéntica — mismo nombre, mismo todo — pero
+ * el juego arrancaba sin sesión real.
+ *
+ * <p>Eso deja al jugador sin skin y sin poder entrar a ningún servidor que pida
+ * autenticación premium, con un "Invalid session" que no menciona el launcher
+ * por ningún lado.
+ */
+export async function restoreMicrosoft(): Promise<RestoreResult> {
+  const habia = hasSavedSession()
   const refreshToken = readRefreshToken()
-  if (!refreshToken) return null
+  if (!refreshToken) {
+    // El archivo existe pero no se pudo leer: la sesión está, rota. No es lo
+    // mismo que no tener ninguna.
+    return habia ? { status: 'expired' } : { status: 'none' }
+  }
   try {
     const auth = new Auth('select_account')
     const xbox = await auth.refresh(refreshToken)
-    return await toSession(xbox)
+    return { status: 'ok', session: await toSession(xbox) }
   } catch {
     clearRefreshToken()
-    return null
+    return { status: 'expired' }
   }
 }
 
