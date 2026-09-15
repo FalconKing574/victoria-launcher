@@ -141,12 +141,24 @@ ${info}
 }
 const baseUrl = match[0]
 
-/** Every file to upload, as [localPath, keyInBucket]. */
-const uploads = [['manifest.json', 'manifest.json']]
+/**
+ * Every file to upload, as [localPath, keyInBucket].
+ *
+ * The manifest is deliberately NOT in here — it gets appended last. See the
+ * comment above the upload loop for why that ordering is the whole point.
+ */
+const uploads = []
 
 // The overrides ship as several parts because wrangler caps uploads at 300 MiB.
 for (const file of readdirSync(OUT)) {
   if (/^overrides-\d+\.zip$/.test(file)) uploads.push([file, file])
+
+  // La siembra: lo que el launcher instala una sola vez. Se sube con el mismo
+  // bucle que todo lo demas porque el olvido tipico de este script es
+  // exactamente ese --un archivo que esta en el manifiesto y no en R2 devuelve
+  // 404, `performSync` revienta antes de guardar nada, y el launcher repite
+  // 'hay N archivos por descargar' para siempre--.
+  if (file === 'mapa-ciudad.zip') uploads.push([file, file])
 }
 
 const modsDir = join(OUT, 'mods')
@@ -175,8 +187,27 @@ if (Array.isArray(manifest.overrides)) {
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8')
 console.log(`\nURLs del manifiesto apuntando a ${baseUrl}`)
 
+/**
+ * The manifest goes LAST, and that ordering is the whole point.
+ *
+ * It used to go first. A publish is over a gigabyte and takes ten minutes or
+ * more, so between the manifest landing and the last jar finishing there was a
+ * long window where the manifest already announced the new version while half
+ * the files it pointed at still returned 404. Any launcher that checked for
+ * updates inside that window saw the new version and died downloading a file
+ * that did not exist yet — and from the player's side that is indistinguishable
+ * from a broken install.
+ *
+ * The manifest is the only file the launcher reads to decide anything, so it is
+ * also the switch. Flipping it after everything else is already in place makes
+ * the publish atomic as far as the launcher can tell: either the old version is
+ * live and complete, or the new one is. Never half of each.
+ */
+uploads.push(['manifest.json', 'manifest.json'])
+
 const totalMb = uploads.reduce((sum, [local]) => sum + statSync(join(OUT, local)).size, 0) / 1048576
-console.log(`\nSubiendo ${uploads.length} archivos (${totalMb.toFixed(0)} MB)...\n`)
+console.log(`\nSubiendo ${uploads.length} archivos (${totalMb.toFixed(0)} MB)...`)
+console.log('El manifiesto va ultimo: hasta que suba, los launchers ven la version anterior.\n')
 
 let done = 0
 for (const [local, key] of uploads) {

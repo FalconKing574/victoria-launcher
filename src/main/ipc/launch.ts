@@ -7,8 +7,10 @@ import {
   readFileSync,
   renameSync,
   rmSync,
-  statSync
+  statSync,
+  writeFileSync
 } from 'fs'
+import { execFile } from 'child_process'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
@@ -21,13 +23,35 @@ import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
 import { offlineUuid } from '../lib/offline-uuid'
 import { summarizeCrashReport, describeCrash, lastErrorInLog } from '../lib/crash-report'
-import { restoreMicrosoft } from './auth'
+import {
+  esFallaDeVideo,
+  fmlSinVentanaTemprana,
+  mensajeFallaDeVideo,
+  PREFERENCIA_GPU_ALTO_RENDIMIENTO
+} from '../lib/graficos'
+import { writeProperties } from '../lib/shaders-core'
+import {
+  restoreMicrosoft,
+  readVictoriaPassword,
+  saveVictoriaPassword,
+  clearVictoriaPassword
+} from './auth'
+import { pedirVale } from '../lib/victoria-auth'
+import { fetchManifest } from './sync'
 
 export interface LaunchRequest {
   /** Premium sessions pass the MCLC user object produced by msmc. */
   mclcUser?: IUser
   /** Custom accounts pass their nick; MCLC builds an offline user from it. */
   offlineUsername?: string
+  /**
+   * La contrasenia de Victoria (la de AuthMe), para no escribir `/login` adentro.
+   *
+   * Opcional en los dos sentidos: si no viene, se prueba con la que haya
+   * guardada; si tampoco hay, el juego arranca igual y AuthMe la pide adentro,
+   * que es el camino de siempre.
+   */
+  victoriaPassword?: string
 }
 
 let running = false
@@ -66,8 +90,19 @@ export interface CrashDiagnosis {
  * en la pila. Leerlo cuesta unos milisegundos y convierte «se cerró con el
  * código 1» en algo que alguien puede arreglar.
  */
-function diagnoseCrash(): CrashDiagnosis | null {
+function diagnoseCrash(javaPath: string): CrashDiagnosis | null {
   const desde = Date.now() - 5 * 60 * 1000
+
+  // Antes que nada: ¿fue la placa de video? Se mira el crash report, el final del
+  // log y el hs_err_pid que deja la JVM cuando revienta dentro del driver (ése no
+  // aparece en el log). Si lo fue, se prende el modo compatible para el próximo
+  // arranque y se le explica al jugador; un «OpenGLException» pelado no le dice
+  // qué hacer.
+  const fallaVideo = buscarFallaDeVideo(desde)
+  if (fallaVideo) {
+    activarModoCompatible(javaPath)
+    return { message: mensajeFallaDeVideo(), file: fallaVideo }
+  }
 
   const reporte = newestFile(join(instanceDir(), 'crash-reports'), (name) =>
     name.toLowerCase().endsWith('.txt')
@@ -97,6 +132,98 @@ function diagnoseCrash(): CrashDiagnosis | null {
   }
 
   return null
+}
+
+// ------------------------------------------------------------------ video
+
+/** Marca en la instancia: una vez que falló el video, el modo compatible queda para siempre. */
+function marcaModoCompatible(): string {
+  return join(instanceDir(), '.victoria-modo-compatible-video')
+}
+
+/** El archivo reciente (de este arranque) que muestra una falla de video, o null. */
+function buscarFallaDeVideo(desde: number): string | null {
+  const candidatos: (string | null)[] = [
+    newestFile(join(instanceDir(), 'crash-reports'), (n) => n.toLowerCase().endsWith('.txt')),
+    join(instanceDir(), 'logs', 'latest.log'),
+    newestFile(instanceDir(), (n) => /^hs_err_pid\d+\.log$/i.test(n))
+  ]
+  for (const archivo of candidatos) {
+    if (!archivo || !existsSync(archivo)) continue
+    try {
+      if (statSync(archivo).mtimeMs < desde) continue
+      const texto = readFileSync(archivo, 'utf8')
+      // Del log sólo importa el final: un OpenGLException de hace diez arranques
+      // no explica este.
+      const recorte = archivo.endsWith('latest.log') ? texto.slice(-60000) : texto
+      if (esFallaDeVideo(recorte)) return archivo
+    } catch {
+      // Ilegible: se prueba el siguiente.
+    }
+  }
+  return null
+}
+
+/** Prende el modo compatible: marca, fml.toml, shaders y placa dedicada. */
+function activarModoCompatible(javaPath: string): void {
+  try {
+    writeFileSync(marcaModoCompatible(), new Date().toISOString())
+  } catch {
+    // Sin marca igual se aplica ahora; sólo no se recordaría.
+  }
+  aplicarModoCompatible()
+  try {
+    const oculus = join(instanceDir(), 'config', 'oculus.properties')
+    const original = existsSync(oculus) ? readFileSync(oculus, 'utf8') : ''
+    writeFileSync(oculus, writeProperties(original, { enableShaders: 'false' }))
+  } catch {
+    // Si no se pudo, el fml.toml solo ya resuelve la mayoría de los casos.
+  }
+  pedirPlacaDedicada(javaPath)
+}
+
+/**
+ * Antes de cada arranque, si la marca existe: la ventana de carga temprana apagada.
+ *
+ * Hace falta repetirlo porque una actualización del pack puede volver a traer el
+ * fml.toml con la ventana prendida.
+ */
+function aplicarModoCompatible(): void {
+  const fml = join(instanceDir(), 'config', 'fml.toml')
+  try {
+    const original = existsSync(fml) ? readFileSync(fml, 'utf8') : ''
+    const nuevo = fmlSinVentanaTemprana(original)
+    if (nuevo !== original) {
+      mkdirSync(join(instanceDir(), 'config'), { recursive: true })
+      writeFileSync(fml, nuevo)
+    }
+  } catch {
+    // Nada que hacer: el juego arranca con lo que haya.
+  }
+}
+
+/**
+ * Le pide a Windows «alto rendimiento» para el Java del juego (y su javaw).
+ *
+ * Es la misma opción que Configuración → Pantalla → Gráficos, guardada en el
+ * registro del usuario (no del sistema). En una PC con una sola placa no cambia
+ * nada.
+ */
+function pedirPlacaDedicada(javaPath: string): void {
+  if (process.platform !== 'win32' || !javaPath) return
+  const ejecutables = new Set<string>([javaPath])
+  ejecutables.add(javaPath.replace(/java\.exe$/i, 'javaw.exe'))
+  ejecutables.add(javaPath.replace(/javaw\.exe$/i, 'java.exe'))
+  for (const exe of ejecutables) {
+    execFile(
+      'reg',
+      ['add', 'HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences', '/v', exe, '/t', 'REG_SZ', '/d', PREFERENCIA_GPU_ALTO_RENDIMIENTO, '/f'],
+      { windowsHide: true },
+      () => {
+        // Si falla (política de la empresa, registro bloqueado) no hay nada más que intentar.
+      }
+    )
+  }
 }
 
 /** Lets the updater avoid restarting the app while Minecraft is starting. */
@@ -135,6 +262,59 @@ async function ensureForgeInstaller(): Promise<string> {
     throw error
   }
   return target
+}
+
+/**
+ * Consigue el vale y lo deja en el entorno, para que el mod lo mande al entrar.
+ *
+ * ## Por que una variable de entorno
+ *
+ * El proceso del juego hereda el entorno del launcher, asi que alcanza con
+ * ponerla antes de lanzar. Se descartaron las otras dos:
+ *
+ * - Un `-Dvictoria.vale=...` queda escrito en la linea de comandos del proceso,
+ *   que en Windows cualquier otro proceso del usuario puede leer. El vale dura
+ *   un minuto, pero un minuto alcanza.
+ * - Un archivo hay que acordarse de borrarlo, y el dia que el juego se cierre
+ *   mal queda ahi.
+ *
+ * ## Nunca frena el arranque
+ *
+ * Si no hay servidor de autenticacion configurado, si esta caido, o si la
+ * contrasenia no era, esto no dice nada y el juego arranca igual: AuthMe le pide
+ * `/login` adentro. Convertir un atajo que fallo en un error que no deja jugar
+ * seria cambiar una molestia por un problema.
+ */
+async function conseguirVale(nombre: string, contrasena?: string): Promise<void> {
+  delete process.env.VICTORIA_VALE
+  const guardada = contrasena ? null : readVictoriaPassword()
+  const clave = contrasena ?? guardada
+  if (!clave || !nombre) return
+  try {
+    const manifest = await fetchManifest()
+    if (!manifest.auth) return
+    const vale = await pedirVale(manifest.auth, nombre, clave)
+    if (vale) {
+      process.env.VICTORIA_VALE = vale
+      // Solo se guarda la que FUNCIONO. Guardarla antes de saberlo dejaria
+      // pegada una contrasenia equivocada que hay que borrar a mano.
+      if (contrasena) saveVictoriaPassword(contrasena)
+      return
+    }
+    // 🔴 Si fallo una GUARDADA, se olvida.
+    //
+    // Sin esto, el que cambia su contrasenia de AuthMe queda pegado a la vieja
+    // para siempre: el vale falla en silencio, entra escribiendo `/login`, y el
+    // launcher nunca le vuelve a preguntar porque cree que ya la tiene. La
+    // proxima vez se la pide de nuevo, que es lo correcto.
+    //
+    // La que acaba de escribir NO se borra: puede haber fallado porque el
+    // servidor estaba caido, y en ese caso pedirsela otra vez seria echarle a
+    // el la culpa de una caida.
+    if (guardada) clearVictoriaPassword()
+  } catch {
+    // Manifiesto inalcanzable, red caida: el juego arranca igual.
+  }
 }
 
 export async function launchGame(request: LaunchRequest): Promise<void> {
@@ -230,7 +410,7 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       for (const win of BrowserWindow.getAllWindows()) win.show()
       // Solo se busca la causa si se cerró mal: en una salida normal no hay
       // nada que diagnosticar y leer archivos sería trabajo tirado.
-      send('launch:closed', { code, diagnosis: code === 0 ? null : diagnoseCrash() })
+      send('launch:closed', { code, diagnosis: code === 0 ? null : diagnoseCrash(javaPath) })
     })
 
     const options: ILauncherOptions = {
@@ -262,6 +442,19 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
         maxSockets: 8
       }
     }
+
+    // El vale, lo ultimo antes de lanzar.
+    //
+    // Aca y no al abrir el launcher porque dura sesenta segundos: pedirlo antes
+    // de instalar Java y bajar mods seria pedirlo para que venza esperando.
+    await conseguirVale(authorization.name, request.victoriaPassword)
+
+    // La ventana de carga temprana de Forge va apagada SIEMPRE, no sólo después de un cierre.
+    // Abre un segundo contexto OpenGL antes que Minecraft y es la causa más común de
+    // «OpenGLException» con drivers Intel/AMD: esperar a que cada jugador falle una vez para
+    // apagarla era hacerle pasar el error. Lo único que se pierde es la barrita del principio.
+    // Shaders y placa dedicada siguen siendo sólo del modo compatible (después de un cierre).
+    aplicarModoCompatible()
 
     send('launch:status', { stage: 'starting', message: 'Iniciando Minecraft...' })
     const child = await client.launch(options)

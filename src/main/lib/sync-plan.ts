@@ -46,6 +46,60 @@ export function overridesFingerprint(parts: ManifestOverrides): string {
   return parts.map((part) => part.sha1).join('-')
 }
 
+/**
+ * El servidor de autenticacion de Victoria, si lo hay.
+ *
+ * Viene en el manifiesto y no escrito en el launcher a proposito: asi rotar la
+ * llave es editar un archivo en R2 y no publicar una version nueva de la app y
+ * esperar a que le llegue a todos. Ver `lib/victoria-auth.ts`.
+ *
+ * Opcional: sin esto el launcher se comporta como siempre y el jugador escribe
+ * `/login` adentro del juego.
+ */
+export interface ManifestAuth {
+  host: string
+  puerto: number
+  /** Llave publica DER/SPKI en base64. */
+  llave: string
+}
+
+/**
+ * Una SIEMBRA: se instala una sola vez y despues es del jugador.
+ *
+ * ## Por que no puede ir en los overrides
+ *
+ * Los overrides se extraen **pisando** en cada actualizacion. Eso esta bien para
+ * las configs, que las decidimos nosotros, y esta MAL para cualquier carpeta que
+ * el jugador escriba mientras juega: se la borrariamos en cada update.
+ *
+ * El caso que motivo esto es el mapa de Xaero. La ciudad tiene que venir ya
+ * explorada --sin eso el mapa arranca negro y el taxi no sirve para lo unico que
+ * necesita, que es mirar de donde a donde hay que ir-- pero esa carpeta la
+ * reescribe el jugador con cada cuadra que camina. Mandarla en los overrides
+ * seria borrarle su propia exploracion cada vez que actualiza.
+ *
+ * ## Como se decide si se instala
+ *
+ * Por la EXISTENCIA de `destino`, no por un hash. Si la carpeta ya esta, el
+ * jugador ya jugo y lo que tiene adentro vale mas que lo nuestro. Si no esta, es
+ * una instalacion nueva y se siembra.
+ */
+export interface ManifestSeed {
+  /** Que se siembra, para el mensaje en pantalla. */
+  nombre: string
+  /**
+   * La ruta, relativa a la instancia, que decide si ya esta sembrado.
+   *
+   * Se comprueba que EXISTA. Apuntar a la carpeta del mundo y no al zip es a
+   * proposito: lo que importa es si el jugador ya tiene mapa, no si alguna vez
+   * bajamos el archivo.
+   */
+  destino: string
+  sha1: string
+  sizeBytes: number
+  url: string
+}
+
 export interface Manifest {
   packVersion: string
   minecraft: string
@@ -53,6 +107,9 @@ export interface Manifest {
   mods: ManifestMod[]
   optional: OptionalMod[]
   overrides?: ManifestOverrides
+  auth?: ManifestAuth
+  /** Lo que se instala solo en la primera instalacion. Ver {@link ManifestSeed}. */
+  siembra?: ManifestSeed[]
 }
 
 /** A jar currently sitting in the instance's mods folder. */

@@ -14,7 +14,13 @@
  *   node scripts/update-mods-only.mjs --version 1.6.0 --publish  (sube a R2)
  *
  * Un mod NUEVO o RETIRADO no se cuela por aquí: si el recuento no cuadra, para.
- * Para eso está `build-manifest.mjs`.
+ * Para eso está `build-manifest.mjs`... salvo con `--agregar`: un jar nuevo en
+ * la instancia se AÑADE al manifiesto como requerido y se sube, sin tocar los
+ * overrides. Un mod nuevo no cambia ninguna config del pack (si la cambiara,
+ * sería build-manifest), y hacerles bajar 697 MB a todos por 18 MB de jar es
+ * lo que esto evita. Retirar un mod sigue siendo build-manifest.
+ *
+ *   node scripts/update-mods-only.mjs --version 1.64.0 --agregar --publish
  */
 import { createHash } from 'crypto'
 import { copyFileSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
@@ -94,15 +100,20 @@ const retirados = [...byKey.values()]
 console.log(`\n${bumps.length} mods suben de versión:`)
 for (const { viejo, nuevo } of bumps) console.log(`   ${viejo}\n   -> ${nuevo}`)
 
-if (nuevos.length || retirados.length) {
+const agregados = args.agregar ? nuevos : []
+if ((nuevos.length && !args.agregar) || retirados.length) {
   console.error('\nEsto NO es solo una subida de versiones:')
-  nuevos.forEach((f) => console.error('  MOD NUEVO:', f))
+  nuevos.forEach((f) => console.error('  MOD NUEVO:', f, '(se puede con --agregar)'))
   retirados.forEach((f) => console.error('  MOD RETIRADO:', f))
   console.error('\nUsa scripts/build-manifest.mjs para eso. Abortado.')
   process.exit(1)
 }
+if (agregados.length) {
+  console.log(`\n${agregados.length} mods nuevos (--agregar):`)
+  agregados.forEach((f) => console.log('   +', f))
+}
 
-if (bumps.length === 0) {
+if (bumps.length === 0 && agregados.length === 0) {
   console.log('\nNada que actualizar.')
   process.exit(0)
 }
@@ -125,15 +136,27 @@ next.mods = live.mods.map((entry) => {
   }
 })
 
+for (const nuevo of agregados) {
+  const source = join(modsDir, nuevo)
+  copyFileSync(source, join(OUT, 'mods', nuevo))
+  next.mods.push({
+    filename: nuevo,
+    sha1: sha1(source),
+    sizeBytes: statSync(source).size,
+    url: `${BASE}/mods/${encodeURIComponent(nuevo)}`
+  })
+}
+
 // Los .jar viejos salen de dist-modpack para que no se vuelvan a subir.
 for (const { viejo } of bumps) rmSync(join(OUT, 'mods', viejo), { force: true })
 
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(next, null, 2), 'utf8')
 
-const totalMb = bumps.reduce((t, b) => t + statSync(join(modsDir, b.nuevo)).size, 0) / 1048576
+const subidas = [...bumps.map((b) => b.nuevo), ...agregados]
+const totalMb = subidas.reduce((t, f) => t + statSync(join(modsDir, f)).size, 0) / 1048576
 console.log(`\nmanifest.json escrito: packVersion ${live.packVersion} -> ${VERSION}`)
 console.log(`Overrides intactos (${live.overrides.length} partes, sin retocar).`)
-console.log(`A subir: ${bumps.length} jars, ${totalMb.toFixed(1)} MB.`)
+console.log(`A subir: ${subidas.length} jars, ${totalMb.toFixed(1)} MB.`)
 
 if (!args.publish) {
   console.log('\nNada subido. Repite con --publish cuando lo veas bien.')
@@ -156,10 +179,10 @@ function put(key, file) {
 }
 
 let done = 0
-for (const { nuevo } of bumps) {
+for (const nuevo of subidas) {
   put(`mods/${nuevo}`, join(OUT, 'mods', nuevo))
   done += 1
-  console.log(`  [${done}/${bumps.length}] ${nuevo}`)
+  console.log(`  [${done}/${subidas.length}] ${nuevo}`)
 }
 
 // El manifiesto va EL ÚLTIMO: hasta que no está, ningún launcher pide los jars

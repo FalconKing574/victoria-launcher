@@ -18,7 +18,9 @@ const api: VictoriaApi = {
   auth: {
     microsoftLogin: () => ipcRenderer.invoke('auth:microsoft-login'),
     microsoftRestore: () => ipcRenderer.invoke('auth:microsoft-restore'),
-    microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout')
+    microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout'),
+    needsVictoriaPassword: () => ipcRenderer.invoke('auth:needs-victoria-password'),
+    forgetVictoriaPassword: () => ipcRenderer.invoke('auth:forget-victoria-password')
   },
   mods: {
     list: () => ipcRenderer.invoke('mods:list'),

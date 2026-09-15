@@ -20,8 +20,9 @@ const args = Object.fromEntries(
   }, [])
 )
 
-const HOST = args.host ?? '167.253.65.58'
-const PORT = Number(args.port ?? 25590)
+// El host cambio el 29-08-2026. La IP vieja era 167.253.65.58:25590.
+const HOST = args.host ?? '131.221.32.76'
+const PORT = Number(args.port ?? 25567)
 const MANIFEST = 'https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json'
 
 // --- protocolo: enteros VarInt y cadenas con longitud delante ---------------

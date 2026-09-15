@@ -146,6 +146,10 @@ export interface VictoriaApi {
       { status: 'ok'; session: PremiumSession } | { status: 'expired' } | { status: 'none' }
     >
     microsoftLogout(): Promise<boolean>
+    /** Si hay que pedirle la contrasenia de Victoria antes de jugar. */
+    needsVictoriaPassword(): Promise<boolean>
+    /** La olvida: para cambiarla, o cuando dejo de servir. */
+    forgetVictoriaPassword(): Promise<boolean>
   }
   mods: {
     list(): Promise<ModEntry[]>
@@ -183,7 +187,18 @@ export interface VictoriaApi {
     save(patch: Partial<Settings>): Promise<Settings>
   }
   launch: {
-    start(request: { mclcUser?: IUser; offlineUsername?: string }): Promise<void>
+    /**
+     * `victoriaPassword` es la de AuthMe, y sólo hace falta la primera vez.
+     *
+     * El launcher la guarda cifrada con el llavero del sistema y después la
+     * reusa sola. Si no viene y no hay ninguna guardada, el juego arranca igual
+     * y AuthMe la pide adentro, como siempre.
+     */
+    start(request: {
+      mclcUser?: IUser
+      offlineUsername?: string
+      victoriaPassword?: string
+    }): Promise<void>
     isRunning(): Promise<boolean>
     onProgress(cb: (progress: LaunchProgress) => void): () => void
     onStatus(cb: (status: LaunchStatus) => void): () => void

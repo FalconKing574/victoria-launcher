@@ -35,6 +35,50 @@ const OUT = 'dist-modpack'
 const RELEASE_BASE = `https://github.com/${REPO}/releases/download/v${VERSION}`
 
 /**
+ * La raiz del repo del servidor, de donde salen las piezas que no vive aca.
+ *
+ * Hoy: el zip del mapa de la ciudad (`_deploy/mapa-ciudad.zip`) y los datos del
+ * servidor de autenticacion (`_deploy/auth.json`). Los dos los produce
+ * VictoriaRP y los consume el modpack, asi que el camino tiene que existir en
+ * alguna parte; ponerlo aca es mas honesto que copiar los archivos a mano.
+ */
+const RAIZ_RP = args['rp'] ?? join(process.env.USERPROFILE ?? process.env.HOME ?? '.', 'Desktop', 'VictoriaRP')
+
+/**
+ * El servidor de autenticacion, si se sabe cual es.
+ *
+ * ## Se arrastra en vez de perderse
+ *
+ * Sale de `_deploy/auth.json` si esta, y si no, del manifiesto QUE YA ESTA
+ * PUBLICADO. Lo segundo no es un adorno: sin eso, publicar una version por
+ * cualquier otro motivo BORRARIA el bloque `auth` del manifiesto y todos los
+ * launchers dejarian de pedir el vale en silencio --el codigo hace
+ * `if (!manifest.auth) return`--. Un dato que se pierde al publicar es un dato
+ * que se va a perder.
+ *
+ * El `llave` es la base64 de `plugins/VictoriaAuth/llave.pub` del servidor.
+ */
+let auth
+const AUTH_LOCAL = join(RAIZ_RP, '_deploy', 'auth.json')
+if (existsSync(AUTH_LOCAL)) {
+  auth = JSON.parse(readFileSync(AUTH_LOCAL, 'utf8'))
+  console.log(`  auth: ${auth.host}:${auth.puerto} (de _deploy/auth.json)`)
+} else {
+  try {
+    const vivo = await fetch('https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json', { cache: 'no-store' }).then((r) => r.json())
+    if (vivo.auth) {
+      auth = vivo.auth
+      console.log(`  auth: ${auth.host}:${auth.puerto} (arrastrado del manifiesto vivo)`)
+    }
+  } catch {
+    // Sin red se publica sin auth. Se avisa abajo.
+  }
+}
+if (!auth) {
+  console.log('  Sin auth: el launcher no va a pedir el vale y el jugador entra con /login.')
+}
+
+/**
  * Required mods that are not installed in the instance yet.
  *
  * The whole performance stack (Embeddium, ModernFix, FerriteCore, EntityCulling,
@@ -85,6 +129,20 @@ const EXCLUDED = ['Essential_', 'voicechat-forge', 'NEOFORGE']
  * existiendo como reserva, pero comprueba que la URL responde 200 antes de
  * publicarla.
  */
+// El mapa de Xaero salió de esta lista el 25-08-2026, y con él entró su
+// minimapa como mod requerido.
+//
+// El motivo no es de gusto: el servidor va a mandar waypoints —el punto de
+// encuentro de un viaje en taxi, el lugar de un aviso al 911— y el que los
+// crea es el MINIMAPA. `xaeroworldmap` solo los muestra: su
+// `xaero/map/mods/gui/WaypointReader` es un puente para leer los del minimapa,
+// no un almacén propio.
+//
+// Un sistema del que la mitad de los jugadores no recibe la ubicación no es un
+// sistema: es una función que a veces anda. Por eso los dos son requeridos, y
+// por eso este cambio también toca `DEFAULT_OPTIONAL` en `src/main/ipc/sync.ts`
+// —que es código y hay que publicar el launcher— y `LOCAL_ICONS` en
+// `Modpack.tsx`.
 const OPTIONAL = [
   {
     id: 'distant-horizons',
@@ -93,14 +151,6 @@ const OPTIONAL = [
       'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.',
     category: 'visual',
     filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar'
-  },
-  {
-    id: 'xaeros-world-map',
-    name: "Xaero's World Map",
-    summary:
-      'Mapa completo del mundo que se va rellenando por donde pasas, con marcadores y puntos de interes. Viene activado.',
-    category: 'calidad-de-vida',
-    filename: 'xaeroworldmap-forge-1.20.1-1.44.2.jar'
   },
   {
     id: 'forgematica',
@@ -338,13 +388,75 @@ if (args['skip-overrides'] === undefined) {
   console.log('Saltando overrides (--skip-overrides).')
 }
 
+/**
+ * La siembra: lo que se instala una sola vez y despues es del jugador.
+ *
+ * Hoy es el mapa de la ciudad ya explorado, que lo arma
+ * `VictoriaRP/tools/armar_mapa_ciudad.py`. NO puede viajar en los overrides
+ * --se extraen pisando, y esa carpeta la reescribe el jugador con cada cuadra
+ * que camina-- asi que va aparte y el launcher solo la instala si la carpeta no
+ * existe. Ver `ManifestSeed` en `src/main/lib/sync-plan.ts`.
+ *
+ * Si el zip no esta, no se publica siembra y no pasa nada: el mapa arranca
+ * negro, que es como venia.
+ */
+const SIEMBRA_MAPA = join(
+  RAIZ_RP, '_deploy', 'mapa-ciudad.zip'
+)
+let siembra
+if (existsSync(SIEMBRA_MAPA)) {
+  const destino = leerDestinoDeLaSiembra(SIEMBRA_MAPA)
+  if (destino) {
+    const buffer = readFileSync(SIEMBRA_MAPA)
+    const bytes = statSync(SIEMBRA_MAPA).size
+    cpSync(SIEMBRA_MAPA, join(OUT, 'mapa-ciudad.zip'))
+    siembra = [
+      {
+        nombre: 'el mapa de la ciudad',
+        destino,
+        sha1: createHash('sha1').update(buffer).digest('hex'),
+        sizeBytes: bytes,
+        url: `${RELEASE_BASE}/mapa-ciudad.zip`
+      }
+    ]
+    console.log(`  mapa-ciudad.zip: ${(bytes / 1048576).toFixed(1)} MB -> ${destino}`)
+  } else {
+    console.log('  mapa-ciudad.zip no tiene la forma esperada: no se publica.')
+  }
+} else {
+  console.log('  Sin mapa-ciudad.zip: el mapa va a arrancar negro para el que instala.')
+}
+
+/**
+ * De donde sale el `destino` de la siembra del mapa.
+ *
+ * Se LEE DEL ZIP en vez de escribirse a mano porque el nombre del mundo lo
+ * inventa Xaero --`Multiplayer_<lo que el jugador escribio en la lista de
+ * servidores>`-- y escribirlo aca seria apostar a que coincida. La primera
+ * carpeta del zip es la que hay que comprobar: si esa existe, el jugador ya
+ * tiene mapa.
+ */
+function leerDestinoDeLaSiembra(zipPath) {
+  const zip = new AdmZip(zipPath)
+  for (const entrada of zip.getEntries()) {
+    const partes = entrada.entryName.split('/').filter(Boolean)
+    // xaero/world-map/<mundo>/... -- se comprueba hasta el mundo.
+    if (partes.length >= 3 && partes[0] === 'xaero') {
+      return `${partes[0]}/${partes[1]}/${partes[2]}`
+    }
+  }
+  return null
+}
+
 const manifest = {
   packVersion: VERSION,
   minecraft: '1.20.1',
   forge: '47.4.0',
   mods,
   optional,
-  ...(overrides ? { overrides } : {})
+  ...(overrides ? { overrides } : {}),
+  ...(siembra ? { siembra } : {}),
+  ...(auth ? { auth } : {})
 }
 
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8')

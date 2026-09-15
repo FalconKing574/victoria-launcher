@@ -61,7 +61,7 @@ const STUB = `<script>
   }
 
   const noop = () => () => {}
-  const enabledOptional = new Set(['distant-horizons', 'xaeros-world-map'])
+  const enabledOptional = new Set(['distant-horizons'])
   const settings = {
     maxMemoryMb: 8192, minMemoryMb: 2048, javaPath: null,
     musicEnabled: false, closeOnLaunch: false, optimizedJvm: true,
@@ -75,7 +75,6 @@ const STUB = `<script>
     // vista previa no sirve para nada.
     optional: [
       { id: 'distant-horizons', name: 'Distant Horizons', category: 'visual', filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar', sizeBytes: 29561297, image: 'https://media.forgecdn.net/avatars/thumbnails/508/677/64/64/637868261444007926.png', summary: 'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.' },
-      { id: 'xaeros-world-map', name: "Xaero's World Map", category: 'calidad-de-vida', filename: 'xaeroworldmap-forge-1.20.1-1.44.2.jar', sizeBytes: 1421224, image: 'https://media.forgecdn.net/avatars/thumbnails/168/651/64/64/636588047698795323.png', summary: 'Mapa completo del mundo que se va rellenando por donde pasas, con marcadores y puntos de interes. Viene activado.' },
       { id: 'forgematica', name: 'Forgematica', category: 'calidad-de-vida', filename: 'Forgematica-0.1.13-mc1.20.1.jar', sizeBytes: 997501, image: 'https://media.forgecdn.net/avatars/thumbnails/1053/44/64/64/638600313224615916.png', summary: 'Carga esquemas y te los proyecta como un plano fantasma para construirlos bloque a bloque. Util para construir, innecesario si solo juegas.' }
     ]
   }

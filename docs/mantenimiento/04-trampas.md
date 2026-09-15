@@ -321,8 +321,136 @@ instrucciones de exclusión que ya están en `LEEME.txt`.
   sesión (`gh`, wrangler), pídesela.
 - Habla en español.
 
+## Los dos módulos que más cuesta romper, y ahora tienen test
+
+Cubiertos el 28-08. Los dos tocan el disco del jugador y no tenían ninguno:
+
+**`write-atomic`** guarda `modpack-state.json`, que es el registro de qué jars
+instaló el launcher. Si ese archivo queda truncado no parsea, el launcher cae a
+un estado vacío, y **desde ahí cada mod de la carpeta cuenta como del jugador**:
+un mod que salga de un manifiesto posterior ya no se podría borrar nunca. Por eso
+escribe a un hermano `.tmp` y renombra. Los tests cubren lo que importa —que un
+valor que no se puede serializar **no toque el archivo bueno**, que un `.tmp`
+viejo de una corrida interrumpida no bloquee la siguiente, y que reemplazar un
+archivo existente funcione, que en Windows es donde eso solía fallar—.
+
+**`downloadVerified`** es lo único que garantiza que lo que termina en la carpeta
+del jugador es lo que el manifiesto dice. Sin esa comprobación se instalaría lo
+que haya contestado el servidor: un jar a medio bajar, o el cuerpo de un error de
+un proxy. El test que más vale es **que un jar bueno que ya estaba sobreviva a
+una descarga nueva que viene corrupta**.
+
+Un detalle que quedó anotado y no se cambió: `downloadVerified` hace
+`rmSync(target)` antes del `renameSync`, aunque el propio `write-atomic.ts`
+documenta que en Windows el rename ya reemplaza el destino. Deja una ventana
+mínima —con el archivo nuevo ya verificado en `.part`, o sea recuperable— y
+podría ser deliberado por algún caso de archivo en uso. No se tocó sin poder
+probarlo contra un jugador real.
+
+**Y uno que sí se cambió: `saveSettings` ahora escribe atómico.** Era un
+`writeFileSync` directo mientras el estado del modpack ya iba por
+`writeJsonAtomic`, y esa asimetría escondía una pérdida silenciosa: un corte a la
+mitad deja un `settings.json` que no parsea, `loadSettings` cae a los valores por
+defecto para que el launcher abra igual —que está bien— y el jugador pierde sin
+enterarse su memoria asignada, su ruta de Java y su elección de música. El
+launcher que se los borró parece no haber hecho nada.
+
+## Un test que importa `electron` se baja el binario entero
+
+Diecisiete segundos y una dependencia de red, en un test que no necesita
+ninguna de las dos cosas. Pasa sin que uno lo pida: importar cualquier cosa que
+termine tocando `paths` arrastra `electron`, y vitest se pone a bajarlo.
+
+La línea que lo evita, arriba de todo en el archivo de test:
+
+```ts
+vi.mock('electron', () => ({ app: { getPath: () => '/tmp/fake-userdata' } }))
+```
+
+Con eso el mismo archivo baja de 17,75 s a medio segundo. La suite entera son
+**148 tests en 1,4 segundos**; si alguna vez tarda mucho más, es esto.
+
+## Las rutas: todo cuelga de `userData`, y hay un test que lo vigila
+
+El bug más caro que tuvo este módulo: la carpeta de la instancia era una ruta
+fija al CurseForge del desarrollador, así que **a todos los demás** les reventaba
+con un `EPERM: operation not permitted, mkdir` sobre una carpeta que no era suya.
+Funcionaba perfecto en la máquina donde se escribió, que es la peor clase de bug.
+
+`tests/paths.test.ts` fija la regla que salió de ahí: todas las rutas cuelgan de
+`userData`, ninguna nombra a un usuario ni a otro programa, `VICTORIA_INSTANCE_DIR`
+manda **sólo** sobre la instancia, y el estado y el caché viven **fuera** de ella
+—así borrar la instancia no se lleva puesto el registro de qué instaló el
+launcher—.
+
+## `npm audit` marca 8 vulnerabilidades y no hay nada que hacer
+
+Revisado el 28-08-2026. Las **ocho** —dos críticas incluidas— cuelgan de una sola
+dependencia: **`minecraft-launcher-core@3.18.2`**, que es la **última
+publicada** (diciembre de 2024). `npm audit fix` no las arregla: `fixAvailable`
+viene en `false`.
+
+Lo que arrastra: `request` (deprecado desde 2020) con `form-data`, `tough-cookie`
+y `uuid` colgando, más `js-yaml`, `qs` y una copia vieja de `adm-zip`.
+
+**El código propio no usa nada de eso.** Vale la pena tenerlo claro porque el
+aviso asusta:
+
+- La `adm-zip` que el launcher usa para extraer los overrides es la **directa,
+  `0.6.0`, que NO es vulnerable** — el rango afectado es `<0.6.0`. La vulnerable
+  es `0.4.16` y vive dentro de `minecraft-launcher-core/node_modules/`.
+- Lo que esa librería descarga y descomprime son los assets y natives de
+  **Mojang**, no archivos nuestros.
+
+O sea: no es urgente y no hay acción disponible hoy. La salida real, si algún día
+importa, es cambiar la librería que lanza el juego — y eso es un proyecto en sí
+mismo, no un `npm update`.
+
+## Un mod opcional vive escrito en TRES lugares
+
+Y los tres se editan a mano:
+
+1. `scripts/build-manifest.mjs` → `OPTIONAL`, que es lo que se publica.
+2. `src/main/ipc/sync.ts` → `DEFAULT_OPTIONAL`, los que vienen encendidos en una
+   instalación nueva.
+3. `src/renderer/src/screens/Modpack.tsx` → `LOCAL_ICONS`, la imagen de la
+   pantalla.
+
+Mover un mod entre opcional y requerido obliga a tocar los tres — ya pasó con
+`xaeros-world-map`— y lo que se olvida **no rompe nada ruidosamente**: un
+`DEFAULT_OPTIONAL` que nombra un id inexistente enciende un mod fantasma, un
+ícono de más empaqueta una imagen que nadie ve, y uno de menos deja el ícono
+colgando de que el CDN responda.
+
+`tests/opcionales.test.ts` compara las tres listas. Está probado sacándole el
+ícono a `forgematica`: lo detecta y lo nombra.
+
+## Sacar un mod de opcional a requerido no obliga a publicar el launcher
+
+Comprobado el 28-08-2026 con `xaeros-world-map`, que pasó a requerido en el
+modpack `1.34.0` mientras el launcher publicado seguía siendo el `1.4.3`.
+
+`DEFAULT_OPTIONAL` (en `src/main/ipc/sync.ts`) **sólo se lee cuando no existe el
+archivo de estado**, o sea en la primera instalación, y nada más que para dejar
+encendidos ciertos opcionales. Un launcher viejo que todavía lo tenga en esa
+lista pone un id que ya no está en el `optional` del manifest: sobra, y no
+rompe. El jar llega igual porque está entre los **mods requeridos**.
+
+O sea: el cambio surte efecto con sólo publicar el modpack. Publicar el launcher
+sirve para que la lista de opcionales de la pantalla Modpack quede prolija, no
+para que los jugadores reciban el mod. **No es urgente y no hay que apurar un
+release por esto.**
+
+Al revés sí importa: mover un mod de **requerido a opcional** necesita el
+launcher nuevo, porque el que decide si un opcional apagado se borra es el
+código del launcher.
+
 ## Pendiente
 
 **El servidor de Minecraft no tiene whitelist.** El launcher no controla quién
 entra: cualquiera con la IP puede conectarse. Se arregla en el servidor
 (`whitelist.json` o un plugin), no aquí.
+
+**El launcher está en `1.5.0` en `package.json` y el último release es `1.4.3`.**
+Los cambios que lo llevaron ahí son los de `xaeros-world-map` de arriba; por lo
+dicho, se puede publicar cuando haya algo más que justifique el release.

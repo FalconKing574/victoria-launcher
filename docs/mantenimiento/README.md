@@ -31,7 +31,7 @@ Carpeta de reparto   C:\Users\FalconKingman\Desktop\Victoria Kingdom Launcher
 GitHub               FalconKing574/victoria-launcher
 Bucket R2            victoria-modpack
 Manifiesto           https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json
-Servidor de Minecraft 167.253.65.58:25590
+Servidor de Minecraft 131.221.32.76:25567
 Minecraft / Forge    1.20.1 / 47.4.0
 ```
 

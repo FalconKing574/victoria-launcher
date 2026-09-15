@@ -31,6 +31,18 @@ export function msTokenPath(): string {
   return join(app.getPath('userData'), 'ms-token.bin')
 }
 
+/**
+ * La contrasenia de Victoria, cifrada con el llavero del sistema.
+ *
+ * Es la de AuthMe: la misma que el jugador escribia con `/login` adentro del
+ * juego. Se guarda para no volver a pedirsela, igual que el token de Microsoft
+ * y con el mismo `safeStorage`. Si el llavero no esta disponible, no se guarda
+ * nada y se le pide cada vez -- que es molesto pero no inseguro.
+ */
+export function victoriaPasswordPath(): string {
+  return join(app.getPath('userData'), 'victoria-pass.bin')
+}
+
 /** Where startup failures are recorded; a packaged app has no console. */
 export function crashLogPath(): string {
   return join(app.getPath('userData'), 'crash.log')

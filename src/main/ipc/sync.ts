@@ -27,7 +27,8 @@ import {
   type LocalMod,
   type ManifestMod,
   overridesFingerprint,
-  type ManifestOverrides
+  type ManifestOverrides,
+  type ManifestSeed
 } from '../lib/sync-plan'
 
 interface SyncState {
@@ -52,7 +53,10 @@ const EMPTY_STATE: SyncState = {
  * Optional mods that start switched on. A player can still turn them off; this
  * only decides what a fresh install gets.
  */
-const DEFAULT_OPTIONAL = ['distant-horizons', 'xaeros-world-map']
+// `xaeros-world-map` salió de aquí el 25-08-2026: dejó de ser opcional y ahora
+// viaja como mod requerido junto con `xaerominimap`, porque el servidor manda
+// waypoints y el que los crea es el minimapa.
+const DEFAULT_OPTIONAL = ['distant-horizons']
 
 function modsDir(): string {
   return join(instanceDir(), 'mods')
@@ -321,6 +325,47 @@ async function applyOverrides(
   return { changed, parts }
 }
 
+/**
+ * Instala lo que va una sola vez: hoy, el mapa de la ciudad ya explorado.
+ *
+ * ## Se salta si el destino existe, y esa es toda la regla
+ *
+ * No compara hashes ni versiones. Si la carpeta esta, el jugador ya jugo: lo que
+ * tenga adentro es su exploracion y vale mas que la nuestra. Bajar y pisar seria
+ * borrarle el mapa que se hizo caminando, que es exactamente lo que este
+ * mecanismo existe para no hacer.
+ *
+ * ## Falla blando
+ *
+ * Si la descarga falla, se sigue. Un mapa que arranca negro es una molestia; un
+ * launcher que no deja jugar porque no pudo bajar una comodidad, no.
+ */
+async function sembrar(siembra: ManifestSeed[]): Promise<void> {
+  for (const semilla of siembra) {
+    const destino = join(instanceDir(), semilla.destino)
+    if (existsSync(destino)) {
+      continue
+    }
+    const archivo = join(launcherRoot(), 'overrides', `siembra-${semilla.sha1}.zip`)
+    try {
+      sendStatus(`Descargando ${semilla.nombre}...`)
+      await downloadVerified(semilla.url, archivo, {
+        expected: semilla.sha1,
+        algo: 'sha1',
+        label: semilla.nombre
+      })
+      sendStatus(`Instalando ${semilla.nombre}...`)
+      await extractArchive(archivo, instanceDir())
+    } catch {
+      // A proposito en silencio: no es un error del jugador y no puede hacer
+      // nada al respecto. Se reintenta solo en el proximo arranque, porque la
+      // condicion sigue siendo que el destino no exista.
+    } finally {
+      rmSync(archivo, { force: true })
+    }
+  }
+}
+
 /** Resource pack that carries the Victoria menu and textures. */
 const VICTORIA_RESOURCE_PACK = 'file/Victoria - RP.zip'
 
@@ -332,8 +377,14 @@ const VICTORIA_RESOURCE_PACK = 'file/Victoria - RP.zip'
  * so it is edited surgically rather than shipped in the overrides archive. If
  * they deliberately removed the pack this puts it back, which is the point:
  * the server's menu and textures are meant to be on.
+ *
+ * Exportada sólo para poder probarla. Es la única pieza del sync que ya se
+ * rompió dos veces sin que nadie lo notara —una porque corría dentro de un `if`
+ * que casi nunca era cierto, otra porque no reponía `vanilla`— y las dos veces
+ * el síntoma fue la interfaz del juego en cajitas, que no apunta a esto ni de
+ * lejos. Ver `tests/resource-pack.test.ts`.
  */
-function ensureResourcePack(): void {
+export function ensureResourcePack(): void {
   const path = join(instanceDir(), 'options.txt')
 
   try {
@@ -358,6 +409,19 @@ function ensureResourcePack(): void {
     const raw = lines[index].slice('resourcePacks:'.length)
     const packs = JSON.parse(raw) as string[]
     if (packs.includes(VICTORIA_RESOURCE_PACK)) return
+
+    // 🔴 Tambien hay que reponer "vanilla", y el motivo no es cosmetico.
+    //
+    // Cuando la config de un mod no parsea durante una recarga de recursos,
+    // Minecraft responde `Caught error loading resourcepacks, removing all
+    // selected resourcepacks` y deja la linea en `resourcePacks:[]` — VACIA, sin
+    // vanilla. Paso de verdad con un `.toml` que tenia una coma de mas, y dejo
+    // la interfaz de todos los jugadores dibujada en cajitas.
+    //
+    // Agregar solo el pack de Victoria sobre una lista vacia deja un orden que
+    // el juego nunca escribe. Reponer vanilla primero devuelve exactamente el
+    // estado normal, que es lo que se quiere despues de un accidente.
+    if (!packs.includes('vanilla')) packs.unshift('vanilla')
 
     packs.push(VICTORIA_RESOURCE_PACK)
     lines[index] = `resourcePacks:${JSON.stringify(packs)}`
@@ -517,11 +581,32 @@ async function performSync(): Promise<SyncReport> {
     overridesApplied = result.changed
     overrideParts = result.parts
     if (overridesApplied) {
-      ensureResourcePack()
       // The archives just put every shipped shaderpack back on disk; take out
       // again the ones the player deleted.
       pruneDeletedShaders()
     }
+  }
+
+  // 🔴 EL PACK SE VUELVE A ACTIVAR EN CADA SYNC, no sólo cuando cambian los
+  // overrides.
+  //
+  // Estaba adentro del `if (overridesApplied)`, y ahí el pack podía quedar
+  // apagado PARA SIEMPRE: los overrides sólo cambian cuando se publica una
+  // versión que los toca — y una actualización de jars no los toca — así que si
+  // `options.txt` perdía la línea por cualquier motivo, el launcher no la volvía
+  // a escribir nunca. Se encontró así, con `resourcePacks:[]` en una instancia
+  // que llevaba varias actualizaciones sin overrides nuevos.
+  //
+  // Ponerlo afuera no cuesta nada: la función edita `options.txt` de forma
+  // quirúrgica y es idempotente, así que correrla siempre es una lectura y, casi
+  // siempre, ninguna escritura.
+  ensureResourcePack()
+
+  // La siembra va DESPUES de los overrides y antes de guardar el estado: los
+  // overrides crean la instancia, asi que sembrar antes escribiria en carpetas
+  // que un instante despues se pisan.
+  if (manifest.siembra) {
+    await sembrar(manifest.siembra)
   }
 
   saveState({

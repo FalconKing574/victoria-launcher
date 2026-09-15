@@ -8,7 +8,6 @@ import { screenVariants } from '../theme/motion'
 import type { Manifest, OptionalMod, SyncState } from '@shared/api'
 
 import iconDistantHorizons from '../assets/mods/distant-horizons.png'
-import iconXaerosWorldMap from '../assets/mods/xaeros-world-map.png'
 import iconForgematica from '../assets/mods/forgematica.png'
 
 const CATEGORY_LABEL: Record<OptionalMod['category'], string> = {
@@ -33,7 +32,6 @@ const CATEGORY_LABEL: Record<OptionalMod['category'], string> = {
  */
 const LOCAL_ICONS: Record<string, string> = {
   'distant-horizons': iconDistantHorizons,
-  'xaeros-world-map': iconXaerosWorldMap,
   forgematica: iconForgematica
 }
 
