@@ -63,7 +63,9 @@ export default function App(): JSX.Element {
   // token de Minecraft; un no premium sin sesión va a la pantalla de cuenta.
   const arrancar = useCallback(async (): Promise<void> => {
     setServidorCaido(false)
-    const ms = await window.api.auth.microsoftRestore().catch(() => ({ status: 'expired' }) as const)
+    const ms =
+      (await window.api.auth.microsoftRestore().catch(() => ({ status: 'expired' }) as const)) ??
+      ({ status: 'none' } as const)
     const sesionMs = ms.status === 'ok' ? ms.session : undefined
 
     let r = await window.api.cuentas.estado()

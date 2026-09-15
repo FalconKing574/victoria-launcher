@@ -76,15 +76,52 @@ const STUB = `<script>
     optional: [
       { id: 'distant-horizons', name: 'Distant Horizons', category: 'visual', filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar', sizeBytes: 29561297, image: 'https://media.forgecdn.net/avatars/thumbnails/508/677/64/64/637868261444007926.png', summary: 'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.' },
       { id: 'forgematica', name: 'Forgematica', category: 'calidad-de-vida', filename: 'Forgematica-0.1.13-mc1.20.1.jar', sizeBytes: 997501, image: 'https://media.forgecdn.net/avatars/thumbnails/1053/44/64/64/638600313224615916.png', summary: 'Carga esquemas y te los proyecta como un plano fantasma para construirlos bloque a bloque. Util para construir, innecesario si solo juegas.' }
-    ]
+    ],
+    normas: {
+      version: 1,
+      titulo: 'Normas de Victoria Kingdom',
+      secciones: [
+        { titulo: 'Respeto', texto: 'Nada de insultos, acoso ni discriminación, dentro y fuera del rol.' },
+        { titulo: 'Rol', texto: 'Tu personaje vive en el Reino de Victoria. Lo que pasa en el rol se resuelve en el rol.\\nNo uses información de fuera del juego (metagaming) ni fuerces acciones sobre otros (powergaming).' },
+        { titulo: 'Juego limpio', texto: 'Prohibidos los clientes modificados, x-ray, duplicar ítems y aprovechar bugs. Si encontrás uno, avisá por ticket.' },
+        { titulo: 'Sanciones', texto: 'Cuatro advertencias: aviso, un día, siete días y ban permanente. Si pasás un mes sin advertencias, se borra una.' }
+      ]
+    }
   }
+  // ?cuenta=nueva (por defecto), pasos, lista o sancion
+  const escenario = new URLSearchParams(location.search).get('cuenta') ?? 'nueva'
+  let pasos = escenario === 'pasos' ? ['discord', 'normas', 'tutorial'] : escenario === 'nueva' ? null : []
+  const cuentaDe = () => ({ nombre: 'Aldeano', tipo: 'NO_PREMIUM', discord: pasos && !pasos.includes('discord') ? 'aldeano' : undefined, correo: 'a***@gmail.com', pasos: [...pasos] })
+  const conCuenta = () => ({ ok: true, cuenta: cuentaDe() })
+  const quitar = (paso) => { pasos = pasos.filter((x) => x !== paso); return conCuenta() }
+  const espera = (ms) => new Promise((r) => setTimeout(r, ms))
   window.api = {
     window: { minimize: noop, maximize: noop, close: noop, openExternal: async () => {} },
     auth: {
       microsoftLogin: async () => { throw new Error('Vista previa: no hay login real.') },
-      microsoftRestore: async () => null,
+      microsoftRestore: async () => ({ status: 'none' }),
       microsoftLogout: async () => true
     },
+    cuentas: {
+      estado: async () =>
+        pasos === null
+          ? { ok: false, error: 'sesion', mensaje: 'Entrá a tu cuenta de Victoria.' }
+          : escenario === 'sancion'
+            ? { ...conCuenta(), sancion: { propia: true, mensaje: 'Tu cuenta está suspendida.', motivo: 'Uso de x-ray', desde: Date.now() - 864e5, hasta: Date.now() + 6 * 864e5 } }
+            : conCuenta(),
+      registrar: async () => { await espera(500); return { ok: true, paso: 'codigo', correo: 'a***@gmail.com' } },
+      confirmar: async ({ codigo }) => { await espera(400); if (codigo !== '123456') return { ok: false, error: 'codigo_mal', mensaje: 'Código incorrecto. (Vista previa: usá 123456)' }; pasos = ['discord', 'normas', 'tutorial']; return conCuenta() },
+      reenviar: async () => ({ ok: true, paso: 'codigo', correo: 'a***@gmail.com' }),
+      entrar: async () => { await espera(400); pasos = []; return conCuenta() },
+      premium: async () => ({ ok: false, error: 'premium_invalido', mensaje: 'Vista previa: no hay Microsoft.' }),
+      discord: async () => { await espera(1500); return quitar('discord') },
+      normas: async () => quitar('normas'),
+      tutorial: async () => quitar('tutorial'),
+      recuperar: async () => ({ ok: true, paso: 'codigo', correo: 'a***@gmail.com' }),
+      restablecer: async () => { pasos = []; return conCuenta() },
+      salir: async () => { pasos = null; return { ok: true } }
+    },
+    sistema: { equipo: async () => ({ memoriaMb: 16384, gpu: 'nvidia' }) },
     mods: { list: async () => manifest.mods.map((m) => ({ ...m, name: m.filename, enabled: true })), toggle: async () => [] },
     modpack: {
       sync: async () => ({ upToDate: true, downloaded: 0, removed: 0, keptOwn: [], packVersion: '1.4.0' }),
