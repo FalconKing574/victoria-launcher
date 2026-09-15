@@ -56,3 +56,4 @@ gh release list --repo FalconKing574/victoria-launcher --limit 3
 leer el manifiesto vivo, mirar dentro del .zip publicado, confirmar que la
 release no es borrador. Publicar sin comprobar ya ha dejado a los jugadores sin
 actualización más de una vez — está contado en [`04-trampas.md`](04-trampas.md).
+- [05-firma-de-codigo.md](05-firma-de-codigo.md) — firma gratis con SignPath Foundation: pedirla, configurarla y juntar reputación para que el antivirus deje de avisar.
