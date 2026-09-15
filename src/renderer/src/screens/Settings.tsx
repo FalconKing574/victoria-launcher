@@ -24,10 +24,20 @@ const RAM_SLIDER_MAX_MB = 16384
 export interface SettingsProps {
   username?: string
   accountType?: 'premium' | 'offline'
+  /** El Discord vinculado a la cuenta de Victoria. */
+  discord?: string
   onLogout?: () => void
+  /** Vuelve a abrir el recorrido y la configuración guiada. */
+  onVerTutorial?: () => void
 }
 
-export default function Settings({ username, accountType, onLogout }: SettingsProps): JSX.Element {
+export default function Settings({
+  username,
+  accountType,
+  discord,
+  onLogout,
+  onVerTutorial
+}: SettingsProps): JSX.Element {
   const [settings, setSettings] = useState<SettingsType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [switching, setSwitching] = useState(false)
@@ -124,8 +134,9 @@ export default function Settings({ username, accountType, onLogout }: SettingsPr
                   }}
                 >
                   {accountType === 'premium'
-                    ? 'Cuenta premium de Microsoft'
-                    : 'Cuenta sin premium (modo offline)'}
+                    ? 'Cuenta de Victoria con Minecraft original'
+                    : 'Cuenta de Victoria sin Minecraft original'}
+                  {discord ? ` · Discord: ${discord}` : ''}
                 </div>
               </div>
               <button
@@ -146,6 +157,23 @@ export default function Settings({ username, accountType, onLogout }: SettingsPr
                 {switching ? 'Cerrando...' : 'Cambiar cuenta'}
               </button>
             </div>
+            {onVerTutorial && (
+              <button
+                onClick={onVerTutorial}
+                style={{
+                  justifySelf: 'start',
+                  padding: '8px 13px',
+                  borderRadius: 9,
+                  border: '1px solid var(--stroke-strong)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'var(--text)',
+                  fontSize: 12.5,
+                  cursor: 'pointer'
+                }}
+              >
+                Ver el tutorial de nuevo
+              </button>
+            )}
             <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.6 }}>
               {accountType === 'premium'
                 ? 'Cambiar de cuenta cierra la sesión de Microsoft guardada y te devuelve a la pantalla de inicio.'

@@ -54,6 +54,7 @@ export default function SideNav({
           return (
             <button
               key={item.key}
+              data-recorrido={item.key}
               onClick={() => onSelect(item.key)}
               style={{
                 position: 'relative',
