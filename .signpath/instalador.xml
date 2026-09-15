@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Artifact configuration "instalador" de SignPath (vuelta 2 del workflow).
+  Se copia tal cual en SignPath -> proyecto -> Artifact Configurations, con el
+  slug "instalador".
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="Victoria Kingdom Setup *.exe" product-name="Victoria Kingdom" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

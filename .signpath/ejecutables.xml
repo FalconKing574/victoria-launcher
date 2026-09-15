@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Artifact configuration "ejecutables" de SignPath (vuelta 1 del workflow).
+  Se copia tal cual en SignPath -> proyecto -> Artifact Configurations, con el
+  slug "ejecutables". El artefacto de GitHub llega como zip.
+
+  Las restricciones de metadatos hacen que SignPath se niegue a firmar cualquier
+  otro .exe que alguien meta en el artefacto.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="Victoria Kingdom.exe" product-name="Victoria Kingdom" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
+    <pe-file path="__uninstaller-nsis-*.exe" product-name="Victoria Kingdom" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

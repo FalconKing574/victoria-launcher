@@ -1,0 +1,210 @@
+# Compila, firma con SignPath y publica el launcher.
+#
+# Se dispara con un tag `v<versión>` (el mismo número que package.json) o a mano
+# desde la pestaña Actions.
+#
+# ## Por qué la firma va en dos vueltas
+#
+# SignPath Foundation sólo firma archivos subidos como artefacto de este
+# workflow: así prueba que el binario salió de este repositorio. Pero
+# electron-builder mete el desinstalador adentro del instalador en el mismo paso,
+# así que no alcanza con firmar el instalador al final:
+#
+#   1. se arma la app y un instalador descartable, y el hook (scripts/firma.cjs)
+#      recolecta Victoria Kingdom.exe y el desinstalador;
+#   2. SignPath los firma;
+#   3. se arma el instalador de nuevo con esos dos ya firmados adentro;
+#   4. SignPath firma el instalador;
+#   5. se rehace latest.yml con el sha512 del instalador firmado (si no, el
+#      actualizador rechaza la descarga por corrupta).
+#
+# Sin la variable SIGNPATH_ORGANIZATION_ID (antes de que SignPath apruebe el
+# proyecto) se saltean los pasos de firma y se publica sin firmar, como hasta hoy.
+
+name: Publicar launcher
+
+on:
+  push:
+    tags: ['v*']
+    # Una rama prueba-ci/* corre todo el armado sin publicar: sirve para probar
+    # el workflow sin sacar una versión.
+    branches: ['prueba-ci/**']
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: 'Crear la release en GitHub (si no, sólo deja los archivos como artefacto)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar-launcher
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: windows-latest
+    timeout-minutes: 300
+    env:
+      VICTORIA_MANIFEST_URL: https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json
+      FIRMAR: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dependencias
+        run: npm ci
+
+      - name: Versión del tag igual a package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") { throw "El tag ${{ github.ref_name }} no coincide con package.json ($version)" }
+
+      - name: Typecheck y tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Compilar
+        run: npx electron-vite build
+
+      # ---------------------------------------------------------- vuelta 1
+      - name: App sin empaquetar (recolecta Victoria Kingdom.exe)
+        env:
+          FIRMA_MODO: recolectar
+          FIRMA_DIR: ${{ github.workspace }}\firma\archivos
+        run: npx electron-builder --win --dir --publish never
+
+      - name: Instalador descartable (recolecta el desinstalador)
+        env:
+          FIRMA_MODO: recolectar
+          FIRMA_DIR: ${{ github.workspace }}\firma\archivos
+        run: npx electron-builder --win nsis --publish never --prepackaged release/win-unpacked
+
+      - name: El instalador descartable no se firma
+        shell: pwsh
+        run: |
+          Remove-Item "firma/archivos/Victoria Kingdom Setup *.exe" -ErrorAction SilentlyContinue
+          Remove-Item "release/Victoria Kingdom Setup *" -ErrorAction SilentlyContinue
+          Get-ChildItem firma/archivos | Format-Table Name, Length
+
+      - name: Subir ejecutables para firmar
+        id: archivos
+        if: env.FIRMAR == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ejecutables-sin-firmar
+          path: firma/archivos/
+
+      - name: Firmar ejecutables (SignPath, requiere aprobación)
+        if: env.FIRMAR == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ejecutables
+          github-artifact-id: ${{ steps.archivos.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 14400
+          output-artifact-directory: firma/firmados
+
+      # ---------------------------------------------------------- vuelta 2
+      - name: Launcher firmado en su lugar
+        if: env.FIRMAR == 'true'
+        shell: pwsh
+        run: Copy-Item "firma/firmados/Victoria Kingdom.exe" "release/win-unpacked/Victoria Kingdom.exe" -Force
+
+      - name: Instalador con los ejecutables firmados adentro
+        env:
+          FIRMA_MODO: ${{ env.FIRMAR == 'true' && 'reemplazar' || '' }}
+          FIRMA_DIR: ${{ github.workspace }}\firma\firmados
+        run: npx electron-builder --win nsis --publish never --prepackaged release/win-unpacked
+
+      - name: Separar el instalador
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force firma/instalador | Out-Null
+          Copy-Item "release/Victoria Kingdom Setup *.exe" firma/instalador/
+
+      - name: Subir instalador para firmar
+        id: instalador
+        if: env.FIRMAR == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: instalador-sin-firmar
+          path: firma/instalador/
+
+      - name: Firmar instalador (SignPath, requiere aprobación)
+        if: env.FIRMAR == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: instalador
+          github-artifact-id: ${{ steps.instalador.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 14400
+          output-artifact-directory: firma/instalador-firmado
+
+      # ------------------------------------------------------ verificación
+      - name: Verificar que TODO quedó firmado
+        if: env.FIRMAR == 'true'
+        shell: pwsh
+        run: |
+          $instalador = Get-ChildItem "firma/instalador-firmado/*.exe" | Select-Object -First 1
+          $revisar = @($instalador.FullName)
+          # El instalador NSIS se abre con 7-Zip: adentro están el desinstalador y la app.
+          7z x $instalador.FullName -ofirma/abierto -y | Out-Null
+          $app7z = Get-ChildItem -Recurse firma/abierto -Filter "app-64.7z" | Select-Object -First 1
+          7z x $app7z.FullName -ofirma/abierto/app -y | Out-Null
+          $revisar += (Get-ChildItem -Recurse firma/abierto -Include "*.exe").FullName
+          $mal = @()
+          foreach ($f in $revisar) {
+            $s = Get-AuthenticodeSignature -LiteralPath $f
+            "{0,-8} {1}  {2}" -f $s.Status, (Split-Path $f -Leaf), $s.SignerCertificate.Subject
+            if ($s.Status -ne 'Valid') { $mal += $f }
+          }
+          if ($mal.Count -gt 0) { throw "Sin firma válida: $($mal -join ', ')" }
+
+      - name: latest.yml con el instalador final
+        shell: pwsh
+        run: |
+          $origen = if ("${{ env.FIRMAR }}" -eq "true") { "firma/instalador-firmado" } else { "firma/instalador" }
+          $instalador = Get-ChildItem "$origen/*.exe" | Select-Object -First 1
+          node scripts/latest-yml.mjs --instalador $instalador.FullName --salida publicar
+
+      - name: Archivos de la release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: publicar/
+
+      - name: Publicar en GitHub Releases
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $tag = "v$version"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title $version --notes "Launcher de Victoria Kingdom $version" (Get-ChildItem publicar).FullName
+          } else {
+            gh release upload $tag (Get-ChildItem publicar).FullName --clobber
+          }
+          # Un borrador es invisible para el actualizador.
+          gh release edit $tag --draft=false

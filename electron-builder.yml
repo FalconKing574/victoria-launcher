@@ -1,6 +1,9 @@
 # electron-builder.yml
 appId: com.victoriakingdom.launcher
 productName: Victoria Kingdom
+# Va a los metadatos de cada .exe. Un ejecutable sin empresa, descripción ni
+# copyright suma sospecha en los antivirus.
+copyright: © 2026 Victoria Kingdom
 directories:
   output: release
   buildResources: build
@@ -14,6 +17,12 @@ win:
   icon: build/icon.ico
   legalTrademarks: Victoria Kingdom
   requestedExecutionLevel: asInvoker
+  # La firma la hace SignPath en GitHub Actions; este hook sólo recolecta y
+  # reemplaza archivos. Sin FIRMA_MODO no hace nada. Ver scripts/firma.cjs.
+  signtoolOptions:
+    sign: ./scripts/firma.cjs
+    # Una sola pasada por archivo: con sha1 + sha256 el hook corre dos veces.
+    signingHashAlgorithms: [sha256]
   # The build is not code-signed, so the updater must not demand a signature on
   # what it downloads. This defaulted to on because `publisherName` was set --
   # added to soften antivirus heuristics -- and electron-updater then refused
@@ -22,6 +31,18 @@ win:
   # Set this back to true the day the installer is genuinely signed.
   verifyUpdateCodeSignature: false
 nsis:
+  # Instalación por usuario, sin pedir administrador: pedir elevación es de lo
+  # que más empeora la heurística de los antivirus, y el launcher no la necesita
+  # (todo vive en AppData del jugador).
+  perMachine: false
+  allowElevation: false
+  # elevate.exe es un programa ajeno de 2007 sin firma que electron-updater usa
+  # sólo para instalaciones por máquina. Acá no hay ninguna, y un .exe viejo sin
+  # firmar adentro del paquete es un falso positivo esperando pasar.
+  packElevateHelper: false
+  # Se muestra durante la instalación: licencia, marca y privacidad. SignPath
+  # pide que la política de privacidad se vea al instalar.
+  license: build/instalador-licencia.txt
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true

@@ -1,0 +1,45 @@
+VICTORIA KINGDOM - LAUNCHER OFICIAL
+
+Launcher del servidor de rol de Minecraft Victoria Kingdom. Instala y actualiza
+Minecraft 1.20.1, Forge y el modpack del servidor, y maneja tu cuenta de
+Victoria.
+
+----------------------------------------------------------------------
+PRIVACIDAD
+----------------------------------------------------------------------
+
+El launcher NO tiene telemetria, analiticas ni publicidad, y no lee tus archivos
+personales.
+
+Para poder jugar en Victoria Kingdom manda:
+
+- Tu cuenta (nombre, contrasena cifrada y correo, o tu sesion de Microsoft) al
+  servidor de cuentas de Victoria Kingdom.
+- Tu usuario de Discord, cuando lo vinculas.
+- Una huella del equipo (un codigo derivado del identificador de Windows, que no
+  permite saber quien sos) y tu IP, para que las sanciones del servidor
+  alcancen a quien las recibio.
+- Pedidos de descarga a Cloudflare, Mojang, Adoptium y Forge para instalar el
+  juego.
+
+Las sesiones se guardan cifradas con el llavero de Windows en AppData.
+
+Detalle completo: https://github.com/FalconKing574/victoria-launcher/blob/main/PRIVACIDAD.md
+
+----------------------------------------------------------------------
+LICENCIA
+----------------------------------------------------------------------
+
+El codigo del launcher es software libre bajo la licencia MIT.
+Copyright (c) 2026 Victoria Kingdom
+
+El nombre "Victoria Kingdom", el logo y el arte NO estan bajo esa licencia:
+son la marca del servidor.
+
+Minecraft es una marca de Mojang Studios y Microsoft. Este proyecto no esta
+afiliado a Mojang ni a Microsoft.
+
+Firma de codigo gratuita provista por SignPath.io, certificado de SignPath
+Foundation.
+
+EL SOFTWARE SE PROVEE "TAL CUAL", SIN GARANTIAS DE NINGUN TIPO.

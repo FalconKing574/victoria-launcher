@@ -7,3 +7,10 @@ release/
 *.log
 dist-modpack/
 release-prueba/
+
+# Pruebas locales del armado firmado
+release-firma/
+firma-prueba/
+firma-sim/
+firma/
+publicar/

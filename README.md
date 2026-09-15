@@ -1,148 +1,69 @@
 # Victoria Kingdom Launcher
 
-Launcher de escritorio para el servidor de Minecraft **Victoria Kingdom**
-(1.20.1 con Forge 47.4.0).
+Launcher oficial del servidor de rol de Minecraft **Victoria Kingdom**
+(Minecraft 1.20.1 con Forge 47.4.0).
 
-No hay nada que configurar. Se instala y funciona.
-
-## Cómo se entra
-
-- **Con cuenta Microsoft**: sesión real de Minecraft. Necesaria para servidores
-  en modo premium (`online-mode=true`).
-- **Sin cuenta premium**: el jugador escribe su nick y juega. Solo sirve si el
-  servidor está en `online-mode=false`.
-
-La sesión de Microsoft se recuerda entre arranques, cifrada con el llavero del
-sistema operativo. La siguiente vez entra sola.
+**Descarga:** [última versión](https://github.com/FalconKing574/victoria-launcher/releases/latest)
+(`Victoria Kingdom Setup <versión>.exe`, Windows 10/11 de 64 bits).
 
 ## Qué hace
 
-- Instala y lanza Forge 47.4.0 sobre Minecraft 1.20.1.
-- Reutiliza la instancia de CurseForge tal cual, así que sus mods, `config/`,
-  `saves/` y `resourcepacks/` se aplican sin copiar nada:
-  `C:\Users\FalconKingman\curseforge\minecraft\Instances\Victoria Bien Hecho`
-- Detecta Java solo. Prefiere el Java 17 que ya trae CurseForge.
-- Permite activar y desactivar mods moviendo los `.jar` entre `mods/` y
-  `disabled_mods/`.
-- Ajustes de memoria, ruta de Java y música.
+- **Instala todo solo** en una PC vacía: Java 17, Minecraft 1.20.1, Forge
+  47.4.0 y el modpack del servidor, que baja de Cloudflare R2 y verifica archivo
+  por archivo.
+- **Se actualiza solo**, él y el modpack. Si el modpack está atrasado, JUGAR lo
+  pone al día antes de abrir el juego.
+- **Cuentas de Victoria:**
+  - con Minecraft original, entrando con Microsoft;
+  - sin Minecraft original, con nombre, contraseña y correo verificado con un
+    código.
+  La sesión dura 30 días y se guarda cifrada con el llavero de Windows: no hay
+  que escribir `/login` adentro del juego.
+- **Vincula tu Discord** al de Victoria Kingdom y te da tus roles.
+- **Tutorial de primera vez:** normas del servidor, recorrido por el launcher y
+  configuración guiada (memoria, shaders según tu placa, mods opcionales,
+  prueba de micrófono).
+- Shaders (Oculus), mods opcionales, ajustes de memoria y Java, y un diagnóstico
+  legible cuando el juego se cierra.
+
+## Seguridad y privacidad
+
+- El instalador no pide permisos de administrador: todo vive en tu `AppData`.
+- No hay telemetría. Qué datos se mandan y para qué: [PRIVACIDAD.md](PRIVACIDAD.md).
+- Los binarios se compilan en GitHub Actions desde este repositorio y se firman:
+  [FIRMA-DE-CODIGO.md](FIRMA-DE-CODIGO.md).
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate
+by [SignPath Foundation](https://signpath.org).
 
 ## Desarrollo
 
 ```bash
 npm install
-npm run dev
-```
-
-Otros comandos:
-
-```bash
-npm test          # 19 tests sobre la lógica pura
+npm run dev          # launcher en modo desarrollo
 npm run typecheck
-npm run build
-npm run dist      # genera release/Victoria Kingdom Setup 1.0.0.exe
+npm test             # vitest
+npm run build && node scripts/preview-renderer.mjs   # interfaz en http://localhost:4310, sin abrir la app
 ```
 
-### Si `npm run dist` falla con "Cannot create symbolic link"
-
-electron-builder descarga un paquete de firma que contiene dos symlinks de
-macOS. Crearlos en Windows requiere un privilegio que las cuentas normales no
-tienen, así que 7-Zip aborta y tumba el build — aunque esos archivos no sirvan
-de nada en Windows.
-
-Se arregla sin permisos de administrador:
-
-```bash
-node scripts/fix-wincodesign.mjs
-```
-
-Luego vuelve a lanzar `npm run dist`. Solo hace falta una vez por máquina.
-
-## Actualizaciones
-
-Hay dos cosas que se actualizan por separado, y cada una tiene su release.
-
-### El modpack
-
-Cuando cambies mods en la instancia:
-
-```bash
-node scripts/build-manifest.mjs --repo TU_USUARIO/TU_REPO --version 1.1.0
-```
-
-Crea una release con la etiqueta `v1.1.0` y sube `dist-modpack/manifest.json` y
-todos los `.jar` de `dist-modpack/mods/`.
-
-Apunta el launcher al manifest con la variable `VICTORIA_MANIFEST_URL`:
+Publicar una versión: sube `version` en `package.json`, hace commit y crea el tag
+`v<versión>`; el workflow `.github/workflows/publicar.yml` compila, firma y
+publica la release. El detalle, las trampas conocidas y cómo publicar el modpack
+están en [`docs/mantenimiento/`](docs/mantenimiento/README.md).
 
 ```
-https://github.com/TU_USUARIO/TU_REPO/releases/latest/download/manifest.json
+src/main/        proceso principal: disco, red, lanzar el juego, cuentas
+src/preload/     puente tipado (api.d.ts es el contrato)
+src/renderer/    interfaz React
+scripts/         manifiesto del modpack, firma, latest.yml, vista previa
+tests/           vitest
 ```
 
-`latest/download` siempre resuelve a la release más nueva, así que publicar una
-release nueva actualiza a todos sin tocar el launcher.
+## Licencia
 
-**Jugar queda bloqueado** mientras el modpack esté por detrás: el botón pasa a
-decir ACTUALIZAR. Es a propósito — entrar con mods distintos a los del servidor
-provoca un rechazo al conectar con un error que nadie sabe leer.
+El código es libre bajo la [licencia MIT](LICENSE). El nombre, el logo y el arte
+de Victoria Kingdom son marca del servidor y no entran en esa licencia: ver
+[MARCA.md](MARCA.md).
 
-Si el manifest no se puede alcanzar (sin internet, GitHub caído, o todavía no has
-publicado nada), **no se bloquea**. Un fallo de red no puede dejar sin jugar a
-todo el servidor.
-
-### El launcher
-
-Sube el número de versión en `package.json` y lanza:
-
-```bash
-npm run release
-```
-
-Eso compila, crea la release en GitHub y sube los dos archivos solo. No tienes
-que tocar ninguno a mano.
-
-Requiere un token de GitHub con permiso sobre el repo, una sola vez:
-
-```bash
-setx GH_TOKEN "tu_token"
-```
-
-(Lo generas en GitHub → Settings → Developer settings → Personal access tokens.)
-
-Si prefieres hacerlo a mano, `npm run dist` deja ambos en `release/` y los subes
-tú a la release.
-
-**Por qué son dos archivos y no se pueden juntar.** Tus jugadores solo descargan
-el `.exe`; el `latest.yml` no lo ve nadie. Existe porque el launcher *que ya está
-instalado* necesita consultar algo pequeño para enterarse de que hay una versión
-nueva y comprobar su hash. No puede ir dentro del `.exe` nuevo, porque en ese
-momento aún no lo ha descargado — justo lo que el `latest.yml` dispara.
-
-Cada launcher busca actualizaciones a los pocos segundos de abrirse. Si hay una,
-la descarga sola y la instala al cerrar, así que todo el que abra el launcher
-después de tu release acaba en la versión nueva sin hacer nada.
-
-Aviso: el ejecutable no está firmado, así que Windows SmartScreen puede avisar la
-primera vez. Firmarlo requiere un certificado de pago.
-
-## Control de acceso
-
-El launcher **no** decide quién puede entrar al servidor, y no debería: alguien
-puede abrir el mismo modpack con MultiMC o Prism y conectarse directo a la IP.
-
-Quien controla el acceso es el servidor de Minecraft, con su `whitelist.json`
-de vanilla o un plugin equivalente. Ahí es donde hay que añadir y quitar
-jugadores.
-
-## Estructura
-
-```
-src/main/          proceso principal de Electron
-  config.ts        rutas e identificadores de versión
-  lib/             java, ajustes, mods, UUID offline, rutas
-  ipc/             window, auth (Microsoft), mods, launch
-src/preload/       puente contextBridge tipado
-src/renderer/      interfaz React
-  screens/         Splash, Login, Home, Mods, Settings
-  components/      TitleBar, PanoramaBg, Button, GlassCard, ...
-tests/             Vitest sobre la lógica pura
-```
+Minecraft es una marca de Mojang Studios y Microsoft. Este proyecto no está
+afiliado a Mojang ni a Microsoft.
