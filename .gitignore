@@ -6,3 +6,4 @@ release/
 .env
 *.log
 dist-modpack/
+release-prueba/
