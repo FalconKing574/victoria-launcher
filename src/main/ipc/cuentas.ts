@@ -1,4 +1,4 @@
-import { app, ipcMain, safeStorage, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, safeStorage, shell } from 'electron'
 import { execFile } from 'child_process'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { totalmem } from 'os'
@@ -121,6 +121,18 @@ export async function pedirValeCuenta(): Promise<Respuesta> {
   }
 }
 
+/**
+ * Después de autorizar, el jugador queda mirando el navegador. El launcher pasa
+ * adelante solo para que no tenga que buscarlo en la barra de tareas.
+ */
+function traerAlFrente(): void {
+  const win = BrowserWindow.getAllWindows()[0]
+  if (!win || win.isDestroyed()) return
+  if (win.isMinimized()) win.restore()
+  win.show()
+  win.focus()
+}
+
 function tipoDeGpu(vendorId: number | undefined): 'nvidia' | 'amd' | 'intel' | 'otra' {
   if (vendorId === 0x10de) return 'nvidia'
   if (vendorId === 0x1002) return 'amd'
@@ -167,8 +179,10 @@ export function registerCuentasHandlers(): void {
           abrir: (url) => shell.openExternal(url)
         })
       } catch (e) {
+        traerAlFrente()
         return { ok: false, error: 'discord_cancelado', mensaje: (e as Error).message }
       }
+      traerAlFrente()
       return conSesion('discord', { code })
     })
   )

@@ -1,5 +1,6 @@
 import { createServer } from 'http'
 import { randomBytes } from 'crypto'
+import { paginaDiscord } from './pagina-discord'
 
 /**
  * Vincular Discord sin dominio: Discord vuelve a una escucha en la propia PC.
@@ -39,11 +40,6 @@ export interface OpcionesDiscord {
   esperaMs?: number
 }
 
-const PAGINA = (texto: string): string =>
-  `<!doctype html><meta charset="utf-8"><title>Victoria Kingdom</title>` +
-  `<body style="font-family:system-ui;background:#0d0d14;color:#eee;display:grid;place-items:center;height:100vh;margin:0">` +
-  `<div style="text-align:center"><h1 style="color:#f2a71b">Victoria Kingdom</h1><p>${texto}</p></div>`
-
 export function esperarCodigoDiscord(o: OpcionesDiscord): Promise<string> {
   const redirect = `http://127.0.0.1:${o.puerto}/discord`
   const state = randomBytes(16).toString('hex')
@@ -58,16 +54,14 @@ export function esperarCodigoDiscord(o: OpcionesDiscord): Promise<string> {
         return
       }
       if (url.searchParams.get('state') !== state) {
-        res
-          .writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' })
-          .end(PAGINA('Este enlace no es el que abrió el launcher. Volvé al launcher y probá de nuevo.'))
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' }).end(paginaDiscord('ajeno'))
         return
       }
       const code = url.searchParams.get('code')
       const error = url.searchParams.get('error')
       res
         .writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-        .end(PAGINA(code ? 'Listo. Ya podés volver al launcher de Victoria.' : 'No se vinculó. Volvé al launcher.'))
+        .end(paginaDiscord(code ? 'ok' : error === 'access_denied' ? 'cancelado' : 'error'))
       if (code) terminar(null, code)
       else
         terminar(

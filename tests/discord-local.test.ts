@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { get } from 'http'
 import { createServer } from 'net'
 import { esperarCodigoDiscord, urlAutorizar } from '../src/main/lib/discord-local'
+import { paginaDiscord } from '../src/main/lib/pagina-discord'
 
 function pedir(url: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -23,6 +24,16 @@ function puertoLibre(): Promise<number> {
 }
 
 describe('discord-local', () => {
+  it('la página de vuelta dice qué hacer y no promete el vínculo antes de tiempo', () => {
+    const ok = paginaDiscord('ok')
+    expect(ok).toContain('Volvé al launcher')
+    expect(ok).not.toContain('vinculado')
+    // Que el logo quede en base64 lo decide el build (`?inline`), no vitest:
+    // se comprobó en out/main/index.js. Acá sólo que la imagen tenga origen.
+    expect(ok).toMatch(/<img class="logo" src="[^"]+"/)
+    expect(paginaDiscord('cancelado')).toContain('Cancelaste')
+  })
+
   it('arma la URL de autorización', () => {
     const u = new URL(urlAutorizar('123', 'http://127.0.0.1:53682/discord', 'abc'))
     expect(u.origin + u.pathname).toBe('https://discord.com/oauth2/authorize')

@@ -76,8 +76,19 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
         stream.getTracks().forEach((t) => t.stop())
         void ctx.close()
       }
-    } catch {
-      setErrorMic('No se pudo abrir el micrófono. Revisá en Windows → Privacidad → Micrófono que las apps puedan usarlo.')
+    } catch (e) {
+      // Cada motivo tiene su arreglo; un mensaje único mandaba a mirar Windows
+      // cuando el que lo bloqueaba era el propio launcher.
+      const nombre = (e as DOMException)?.name
+      setErrorMic(
+        nombre === 'NotFoundError' || nombre === 'OverconstrainedError'
+          ? 'No encontramos ningún micrófono. Conectá uno y probá de nuevo.'
+          : nombre === 'NotReadableError'
+            ? 'El micrófono está ocupado por otra aplicación (Discord, OBS…). Cerrala o soltalo y probá de nuevo.'
+            : nombre === 'NotAllowedError' || nombre === 'SecurityError'
+              ? 'Windows no deja usar el micrófono. Abrí Configuración → Privacidad y seguridad → Micrófono y activá «Permitir que las aplicaciones de escritorio accedan al micrófono».'
+              : `No se pudo abrir el micrófono (${nombre ?? 'error desconocido'}).`
+      )
     }
   }
 

@@ -11,6 +11,7 @@ import { registerShaderHandlers } from './ipc/shaders'
 import { registerUpdaterHandlers } from './ipc/updater'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
 import { crashLogPath } from './lib/paths'
+import { permisoPermitido } from './lib/permisos'
 
 /**
  * Appends to a log next to the app's data. A packaged Electron app has no
@@ -42,26 +43,17 @@ process.on('unhandledRejection', (reason) => {
   logCrash('Promesa rechazada sin gestionar.', String(reason))
 })
 
-/**
- * Electron grants several permissions to renderer content by default. The
- * launcher never needs the camera, the microphone, the user's location or
- * notifications, and a request for any of them can only come from something
- * that has no business asking — so deny the lot rather than let Windows show
- * the user a prompt the launcher cannot justify.
- */
+/** Ver `lib/permisos.ts`: todo cerrado salvo pantalla completa y micrófono (sólo audio). */
 function lockDownPermissions(win: BrowserWindow): void {
-  const ALLOWED = new Set(['fullscreen'])
-
-  win.webContents.session.setPermissionRequestHandler((_contents, permission, callback) => {
-    callback(ALLOWED.has(permission))
+  win.webContents.session.setPermissionRequestHandler((_contents, permission, callback, details) => {
+    callback(permisoPermitido(permission, details as { mediaTypes?: string[] }))
   })
 
-  win.webContents.session.setPermissionCheckHandler((_contents, permission) =>
-    ALLOWED.has(permission)
+  win.webContents.session.setPermissionCheckHandler((_contents, permission, _origin, details) =>
+    permisoPermitido(permission, details as { mediaType?: string })
   )
 
-  // Blocks getUserMedia outright, which is what triggers the camera and
-  // microphone prompts, without relying on the permission handler alone.
+  // Compartir pantalla, nunca: esto es getDisplayMedia, no el micrófono.
   win.webContents.session.setDisplayMediaRequestHandler?.((_request, callback) => {
     callback({})
   })
