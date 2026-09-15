@@ -79,6 +79,32 @@ if (!auth) {
 }
 
 /**
+ * Las normas del tutorial. Mismo criterio que `auth`: de `_deploy/normas.json`
+ * si está, y si no, arrastradas del manifiesto vivo. Sin normas en el
+ * manifiesto nadie puede terminar el paso de normas y nadie juega.
+ */
+let normas
+const NORMAS_LOCAL = join(RAIZ_RP, '_deploy', 'normas.json')
+if (existsSync(NORMAS_LOCAL)) {
+  const { _comment, ...resto } = JSON.parse(readFileSync(NORMAS_LOCAL, 'utf8'))
+  normas = resto
+  console.log(`  normas: version ${normas.version} (de _deploy/normas.json)`)
+} else {
+  try {
+    const vivo = await fetch('https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json', { cache: 'no-store' }).then((r) => r.json())
+    if (vivo.normas) {
+      normas = vivo.normas
+      console.log(`  normas: version ${normas.version} (arrastradas del manifiesto vivo)`)
+    }
+  } catch {
+    // Sin red se publica sin normas. Se avisa abajo.
+  }
+}
+if (!normas) {
+  console.log('  ⚠ Sin normas: con VictoriaAuth 2 nadie puede completar el paso de normas.')
+}
+
+/**
  * Required mods that are not installed in the instance yet.
  *
  * The whole performance stack (Embeddium, ModernFix, FerriteCore, EntityCulling,
@@ -456,7 +482,8 @@ const manifest = {
   optional,
   ...(overrides ? { overrides } : {}),
   ...(siembra ? { siembra } : {}),
-  ...(auth ? { auth } : {})
+  ...(auth ? { auth } : {}),
+  ...(normas ? { normas } : {})
 }
 
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8')
