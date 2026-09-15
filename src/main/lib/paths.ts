@@ -32,15 +32,24 @@ export function msTokenPath(): string {
 }
 
 /**
- * La contrasenia de Victoria, cifrada con el llavero del sistema.
+ * La sesión de la cuenta de Victoria (30 días), cifrada con el llavero del sistema.
  *
- * Es la de AuthMe: la misma que el jugador escribia con `/login` adentro del
- * juego. Se guarda para no volver a pedirsela, igual que el token de Microsoft
- * y con el mismo `safeStorage`. Si el llavero no esta disponible, no se guarda
- * nada y se le pide cada vez -- que es molesto pero no inseguro.
+ * Reemplaza a `victoria-pass.bin`, que guardaba la contraseña de AuthMe: una
+ * sesión se puede revocar desde el servidor y sólo sirve desde esta PC; una
+ * contraseña guardada no.
  */
-export function victoriaPasswordPath(): string {
+export function victoriaSesionPath(): string {
+  return join(app.getPath('userData'), 'victoria-sesion.bin')
+}
+
+/** El archivo de contraseña del flujo viejo. Sólo para borrarlo si quedó. */
+export function victoriaPasswordViejaPath(): string {
   return join(app.getPath('userData'), 'victoria-pass.bin')
+}
+
+/** Id al azar de este equipo, si el registro de Windows no se pudo leer. Ver `lib/huella.ts`. */
+export function equipoIdPath(): string {
+  return join(app.getPath('userData'), 'equipo.id')
 }
 
 /** Where startup failures are recorded; a packaged app has no console. */

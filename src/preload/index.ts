@@ -18,9 +18,24 @@ const api: VictoriaApi = {
   auth: {
     microsoftLogin: () => ipcRenderer.invoke('auth:microsoft-login'),
     microsoftRestore: () => ipcRenderer.invoke('auth:microsoft-restore'),
-    microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout'),
-    needsVictoriaPassword: () => ipcRenderer.invoke('auth:needs-victoria-password'),
-    forgetVictoriaPassword: () => ipcRenderer.invoke('auth:forget-victoria-password')
+    microsoftLogout: () => ipcRenderer.invoke('auth:microsoft-logout')
+  },
+  cuentas: {
+    estado: () => ipcRenderer.invoke('cuentas:estado'),
+    registrar: (datos) => ipcRenderer.invoke('cuentas:registrar', datos),
+    confirmar: (datos) => ipcRenderer.invoke('cuentas:confirmar', datos),
+    reenviar: (datos) => ipcRenderer.invoke('cuentas:reenviar', datos),
+    entrar: (datos) => ipcRenderer.invoke('cuentas:entrar', datos),
+    premium: (mcToken) => ipcRenderer.invoke('cuentas:premium', mcToken),
+    discord: () => ipcRenderer.invoke('cuentas:discord'),
+    normas: (version) => ipcRenderer.invoke('cuentas:normas', version),
+    tutorial: () => ipcRenderer.invoke('cuentas:tutorial'),
+    recuperar: (correo) => ipcRenderer.invoke('cuentas:recuperar', correo),
+    restablecer: (datos) => ipcRenderer.invoke('cuentas:restablecer', datos),
+    salir: () => ipcRenderer.invoke('cuentas:salir')
+  },
+  sistema: {
+    equipo: () => ipcRenderer.invoke('sistema:equipo')
   },
   mods: {
     list: () => ipcRenderer.invoke('mods:list'),

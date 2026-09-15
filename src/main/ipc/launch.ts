@@ -30,13 +30,8 @@ import {
   PREFERENCIA_GPU_ALTO_RENDIMIENTO
 } from '../lib/graficos'
 import { writeProperties } from '../lib/shaders-core'
-import {
-  restoreMicrosoft,
-  readVictoriaPassword,
-  saveVictoriaPassword,
-  clearVictoriaPassword
-} from './auth'
-import { pedirVale } from '../lib/victoria-auth'
+import { restoreMicrosoft } from './auth'
+import { pedirValeCuenta } from './cuentas'
 import { fetchManifest } from './sync'
 
 export interface LaunchRequest {
@@ -44,14 +39,6 @@ export interface LaunchRequest {
   mclcUser?: IUser
   /** Custom accounts pass their nick; MCLC builds an offline user from it. */
   offlineUsername?: string
-  /**
-   * La contrasenia de Victoria (la de AuthMe), para no escribir `/login` adentro.
-   *
-   * Opcional en los dos sentidos: si no viene, se prueba con la que haya
-   * guardada; si tampoco hay, el juego arranca igual y AuthMe la pide adentro,
-   * que es el camino de siempre.
-   */
-  victoriaPassword?: string
 }
 
 let running = false
@@ -264,6 +251,9 @@ async function ensureForgeInstaller(): Promise<string> {
   return target
 }
 
+/** Prefijo del error que el renderer reconoce para mostrar la sanción o los pasos. */
+export const PREFIJO_BLOQUEO = 'VICTORIA_BLOQUEO:'
+
 /**
  * Consigue el vale y lo deja en el entorno, para que el mod lo mande al entrar.
  *
@@ -278,43 +268,28 @@ async function ensureForgeInstaller(): Promise<string> {
  * - Un archivo hay que acordarse de borrarlo, y el dia que el juego se cierre
  *   mal queda ahi.
  *
- * ## Nunca frena el arranque
+ * ## Ahora SI frena el arranque
  *
- * Si no hay servidor de autenticacion configurado, si esta caido, o si la
- * contrasenia no era, esto no dice nada y el juego arranca igual: AuthMe le pide
- * `/login` adentro. Convertir un atajo que fallo en un error que no deja jugar
- * seria cambiar una molestia por un problema.
+ * Hasta la 1.5 el vale era un atajo para no escribir `/login`, y si fallaba el
+ * juego arrancaba igual. Desde las cuentas de Victoria el launcher es
+ * obligatorio: sin vale el servidor saca al jugador a los 20 segundos. Arrancar
+ * igual seria hacerle esperar dos minutos de carga para un kick. Se frena aca y
+ * se le dice por que: sancion, pasos de la cuenta o servidor caido.
+ *
+ * Sin `auth` en el manifiesto (un modpack sin servidor de cuentas) no se pide
+ * nada, como antes.
  */
-async function conseguirVale(nombre: string, contrasena?: string): Promise<void> {
+async function conseguirVale(): Promise<void> {
   delete process.env.VICTORIA_VALE
-  const guardada = contrasena ? null : readVictoriaPassword()
-  const clave = contrasena ?? guardada
-  if (!clave || !nombre) return
-  try {
-    const manifest = await fetchManifest()
-    if (!manifest.auth) return
-    const vale = await pedirVale(manifest.auth, nombre, clave)
-    if (vale) {
-      process.env.VICTORIA_VALE = vale
-      // Solo se guarda la que FUNCIONO. Guardarla antes de saberlo dejaria
-      // pegada una contrasenia equivocada que hay que borrar a mano.
-      if (contrasena) saveVictoriaPassword(contrasena)
-      return
-    }
-    // 🔴 Si fallo una GUARDADA, se olvida.
-    //
-    // Sin esto, el que cambia su contrasenia de AuthMe queda pegado a la vieja
-    // para siempre: el vale falla en silencio, entra escribiendo `/login`, y el
-    // launcher nunca le vuelve a preguntar porque cree que ya la tiene. La
-    // proxima vez se la pide de nuevo, que es lo correcto.
-    //
-    // La que acaba de escribir NO se borra: puede haber fallado porque el
-    // servidor estaba caido, y en ese caso pedirsela otra vez seria echarle a
-    // el la culpa de una caida.
-    if (guardada) clearVictoriaPassword()
-  } catch {
-    // Manifiesto inalcanzable, red caida: el juego arranca igual.
+  const manifest = await fetchManifest().catch(() => null)
+  if (!manifest?.auth) return
+  const r = await pedirValeCuenta()
+  if (r.ok && r.vale) {
+    process.env.VICTORIA_VALE = r.vale
+    return
   }
+  const { sesion: _s, vale: _v, ...publico } = r
+  throw new Error(PREFIJO_BLOQUEO + JSON.stringify(publico))
 }
 
 export async function launchGame(request: LaunchRequest): Promise<void> {
@@ -447,7 +422,7 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     //
     // Aca y no al abrir el launcher porque dura sesenta segundos: pedirlo antes
     // de instalar Java y bajar mods seria pedirlo para que venza esperando.
-    await conseguirVale(authorization.name, request.victoriaPassword)
+    await conseguirVale()
 
     // La ventana de carga temprana de Forge va apagada SIEMPRE, no sólo después de un cierre.
     // Abre un segundo contexto OpenGL antes que Minecraft y es la causa más común de

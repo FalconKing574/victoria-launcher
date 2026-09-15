@@ -23,6 +23,55 @@ export interface Manifest {
   forge: string
   mods: Array<{ filename: string; sizeBytes: number }>
   optional: OptionalMod[]
+  normas?: Normas
+}
+
+/** Las normas que se aceptan en el tutorial. Vienen del manifiesto. */
+export interface Normas {
+  version: number
+  titulo: string
+  secciones: Array<{ titulo: string; texto: string }>
+}
+
+export type PasoCuenta = 'discord' | 'normas' | 'tutorial'
+
+/** La cuenta de Victoria tal como la ve el renderer. El token de sesión nunca llega acá. */
+export interface EstadoCuenta {
+  nombre: string
+  tipo: 'PREMIUM' | 'NO_PREMIUM'
+  discord?: string
+  correo?: string
+  pasos: PasoCuenta[]
+}
+
+export interface SancionInfo {
+  /** false: la sanción es de otra cuenta con la que se comparte IP o equipo. */
+  propia: boolean
+  mensaje: string
+  motivo?: string
+  desde?: number
+  hasta?: number
+  permanente?: boolean
+}
+
+/**
+ * Lo que contesta el servidor de cuentas. `error: 'caido'` lo agrega el launcher
+ * cuando el servidor no respondió.
+ */
+export interface RespuestaCuenta {
+  ok: boolean
+  error?: string
+  mensaje?: string
+  cuenta?: EstadoCuenta
+  paso?: 'codigo'
+  correo?: string
+  pasos?: PasoCuenta[]
+  sancion?: SancionInfo
+}
+
+export interface EquipoInfo {
+  memoriaMb: number
+  gpu: 'nvidia' | 'amd' | 'intel' | 'otra'
 }
 
 /**
@@ -146,10 +195,24 @@ export interface VictoriaApi {
       { status: 'ok'; session: PremiumSession } | { status: 'expired' } | { status: 'none' }
     >
     microsoftLogout(): Promise<boolean>
-    /** Si hay que pedirle la contrasenia de Victoria antes de jugar. */
-    needsVictoriaPassword(): Promise<boolean>
-    /** La olvida: para cambiarla, o cuando dejo de servir. */
-    forgetVictoriaPassword(): Promise<boolean>
+  }
+  /** La cuenta de Victoria. Ver `ipc/cuentas.ts`. */
+  cuentas: {
+    estado(): Promise<RespuestaCuenta>
+    registrar(datos: { nombre: string; contrasena: string; correo: string }): Promise<RespuestaCuenta>
+    confirmar(datos: { correo: string; codigo: string }): Promise<RespuestaCuenta>
+    reenviar(datos: { correo: string; proposito: 'registro' | 'recuperar' }): Promise<RespuestaCuenta>
+    entrar(datos: { nombre: string; contrasena: string }): Promise<RespuestaCuenta>
+    premium(mcToken: string): Promise<RespuestaCuenta>
+    discord(): Promise<RespuestaCuenta>
+    normas(version: number): Promise<RespuestaCuenta>
+    tutorial(): Promise<RespuestaCuenta>
+    recuperar(correo: string): Promise<RespuestaCuenta>
+    restablecer(datos: { correo: string; codigo: string; contrasena: string }): Promise<RespuestaCuenta>
+    salir(): Promise<RespuestaCuenta>
+  }
+  sistema: {
+    equipo(): Promise<EquipoInfo>
   }
   mods: {
     list(): Promise<ModEntry[]>
@@ -188,17 +251,11 @@ export interface VictoriaApi {
   }
   launch: {
     /**
-     * `victoriaPassword` es la de AuthMe, y sólo hace falta la primera vez.
-     *
-     * El launcher la guarda cifrada con el llavero del sistema y después la
-     * reusa sola. Si no viene y no hay ninguna guardada, el juego arranca igual
-     * y AuthMe la pide adentro, como siempre.
+     * Antes de lanzar pide el vale a la cuenta de Victoria. Si no se lo dan
+     * (sanción, pasos pendientes, servidor caído) rechaza con un mensaje que
+     * empieza con `VICTORIA_BLOQUEO:` — ver `renderer/src/lib/bloqueo.ts`.
      */
-    start(request: {
-      mclcUser?: IUser
-      offlineUsername?: string
-      victoriaPassword?: string
-    }): Promise<void>
+    start(request: { mclcUser?: IUser; offlineUsername?: string }): Promise<void>
     isRunning(): Promise<boolean>
     onProgress(cb: (progress: LaunchProgress) => void): () => void
     onStatus(cb: (status: LaunchStatus) => void): () => void

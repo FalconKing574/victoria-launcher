@@ -51,7 +51,7 @@ export function overridesFingerprint(parts: ManifestOverrides): string {
  *
  * Viene en el manifiesto y no escrito en el launcher a proposito: asi rotar la
  * llave es editar un archivo en R2 y no publicar una version nueva de la app y
- * esperar a que le llegue a todos. Ver `lib/victoria-auth.ts`.
+ * esperar a que le llegue a todos. Ver `lib/cuentas-api.ts`.
  *
  * Opcional: sin esto el launcher se comporta como siempre y el jugador escribe
  * `/login` adentro del juego.
@@ -61,6 +61,21 @@ export interface ManifestAuth {
   puerto: number
   /** Llave publica DER/SPKI en base64. */
   llave: string
+  /** Para vincular Discord: el client id (público) y el puerto de la escucha local. */
+  discord?: { clientId: string; puerto: number }
+}
+
+/**
+ * Las normas que se aceptan en el tutorial.
+ *
+ * Viven en el manifiesto y no en el launcher para poder cambiarlas sin publicar
+ * una versión nueva. `version` tiene que coincidir con `normas-version` de
+ * VictoriaAuth: subirla hace que todos vuelvan a aceptarlas.
+ */
+export interface ManifestNormas {
+  version: number
+  titulo: string
+  secciones: Array<{ titulo: string; texto: string }>
 }
 
 /**
@@ -108,6 +123,7 @@ export interface Manifest {
   optional: OptionalMod[]
   overrides?: ManifestOverrides
   auth?: ManifestAuth
+  normas?: ManifestNormas
   /** Lo que se instala solo en la primera instalacion. Ver {@link ManifestSeed}. */
   siembra?: ManifestSeed[]
 }

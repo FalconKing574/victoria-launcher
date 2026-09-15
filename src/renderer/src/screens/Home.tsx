@@ -10,8 +10,15 @@ import heroBandera from '../assets/hero-bandera.png'
 import newsServidor from '../assets/news/servidor.jpg'
 import newsComunidad from '../assets/news/comunidad.jpg'
 import newsModpack from '../assets/news/modpack.jpg'
-import type { LaunchProgress, LaunchStatus, SyncCheck, UpdaterState } from '@shared/api'
+import type {
+  LaunchProgress,
+  LaunchStatus,
+  RespuestaCuenta,
+  SyncCheck,
+  UpdaterState
+} from '@shared/api'
 import { shouldBlockPlay } from '../lib/play-gate'
+import { leerBloqueo } from '../lib/bloqueo'
 import type { NavKey } from '../components/SideNav'
 import type { IUser } from 'minecraft-launcher-core'
 
@@ -43,6 +50,11 @@ export interface HomeProps {
   offlineUsername?: string
   /** Lets the update notice send the player straight to Ajustes. */
   onNavigate?: (key: NavKey) => void
+  /**
+   * El servidor de cuentas no dio el vale: sanción o pasos pendientes. La
+   * pantalla que corresponde la decide `App`, que es quien las tiene.
+   */
+  onBloqueo?: (respuesta: RespuestaCuenta) => void
 }
 
 const NEWS = [
@@ -70,7 +82,8 @@ export default function Home({
   username,
   mclcUser,
   offlineUsername,
-  onNavigate
+  onNavigate,
+  onBloqueo
 }: HomeProps): JSX.Element {
   const [progress, setProgress] = useState<LaunchProgress | null>(null)
   const [status, setStatus] = useState<LaunchStatus | null>(null)
@@ -89,15 +102,6 @@ export default function Home({
   const [updating, setUpdating] = useState(false)
   const [updateNote, setUpdateNote] = useState<string | null>(null)
 
-  // La contrasenia de Victoria (la de AuthMe), para no escribir `/login` adentro
-  // del juego. Se pide UNA vez: despues el launcher la guarda cifrada con el
-  // llavero del sistema y la reusa sola.
-  //
-  // `pideClave` no es "mostrar el formulario": es "el jugador apreto JUGAR y
-  // hace falta". Asi el formulario no aparece nunca solo, y el que no lo quiera
-  // usar aprieta Omitir y sigue como siempre.
-  const [pideClave, setPideClave] = useState(false)
-  const [clave, setClave] = useState('')
   // How many files are still queued, so the label is a real count.
   const [remaining, setRemaining] = useState<number | null>(null)
 
@@ -116,22 +120,10 @@ export default function Home({
    * the game, so nobody has to know a modpack screen exists or understand what
    * "sincronizar" means — they press play and it works.
    */
-  async function handlePlay(contrasena?: string): Promise<void> {
+  async function handlePlay(): Promise<void> {
     setError(null)
     setUpdateNote(null)
 
-    // Antes de nada: si hace falta la contrasenia y no la tenemos, se pide y se
-    // corta aca. El jugador la escribe y vuelve a entrar por este mismo camino,
-    // ya con ella.
-    if (contrasena === undefined && !pideClave) {
-      const hace = await window.api.auth.needsVictoriaPassword().catch(() => false)
-      if (hace) {
-        setPideClave(true)
-        return
-      }
-    }
-
-    setPideClave(false)
     setLaunching(true)
 
     try {
@@ -147,16 +139,30 @@ export default function Home({
         refreshPending()
       }
 
-      await window.api.launch.start({
-        mclcUser,
-        offlineUsername,
-        victoriaPassword: contrasena || undefined
-      })
+      await window.api.launch.start({ mclcUser, offlineUsername })
     } catch (caught) {
-      setError((caught as Error).message)
+      mostrarError((caught as Error).message)
       setLaunching(false)
       setUpdating(false)
     }
+  }
+
+  /**
+   * Un error de lanzamiento puede ser un bloqueo de la cuenta. Ese no se
+   * muestra como texto rojo: va a la pantalla de sanción o a los pasos.
+   */
+  function mostrarError(mensaje: string): void {
+    const bloqueo = leerBloqueo(mensaje)
+    if (!bloqueo) {
+      setError(mensaje)
+      return
+    }
+    if ((bloqueo.error === 'sancion' || bloqueo.error === 'pasos' || bloqueo.error === 'sesion') && onBloqueo) {
+      setError(null)
+      onBloqueo(bloqueo)
+      return
+    }
+    setError(bloqueo.mensaje ?? 'El servidor de Victoria no dejó entrar. Probá de nuevo.')
   }
 
   useEffect(() => {
@@ -239,7 +245,9 @@ export default function Home({
     const offProgress = window.api.launch.onProgress(setProgress)
     const offStatus = window.api.launch.onStatus(setStatus)
     const offError = window.api.launch.onError((payload) => {
-      setError(payload.message)
+      // El mismo error llega también por el rechazo de `launch.start`; con
+      // bloqueo, sólo lo trata ese camino para no abrir la pantalla dos veces.
+      if (!leerBloqueo(payload.message)) setError(payload.message)
       setLaunching(false)
     })
     const offClosed = window.api.launch.onClosed((info) => {
@@ -399,15 +407,10 @@ export default function Home({
               flexWrap: 'wrap'
             }}
           >
-            <div style={{ width: 208, flexShrink: 0 }}>
+            <div data-recorrido="jugar" style={{ width: 208, flexShrink: 0 }}>
               {/* `updating` counts too: after a tab change the install may be
                   one this mount never started, so `launching` is false while a
                   download is very much in progress. */}
-              {/* Envuelto y no `onClick={handlePlay}`: el boton le pasa el
-                  evento del click como primer argumento, que ahora es la
-                  contrasenia. Sin esto, el objeto del evento viajaria como
-                  contrasenia y --peor-- saltearia el paso que la pide, porque
-                  no seria `undefined`. */}
               <Button full loading={launching || updating} onClick={() => void handlePlay()}>
                 {updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
               </Button>
@@ -455,71 +458,6 @@ export default function Home({
                   {pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}. Se instalan solos
                   al pulsar JUGAR.
                 </p>
-              ) : pideClave ? (
-                // El formulario va ACA, en el mismo hueco donde el boton ya
-                // cuenta lo que esta pasando, y no en una ventana aparte: el
-                // jugador apreto JUGAR, y una ventana encima convertiria un paso
-                // del arranque en una interrupcion.
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    void handlePlay(clave)
-                  }}
-                  style={{ display: 'grid', gap: 6 }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 12.5,
-                      color: 'var(--text-faint)',
-                      lineHeight: 1.4
-                    }}
-                  >
-                    Tu contraseña de Victoria — la misma de <code>/login</code>. Se guarda
-                    cifrada y no te la volvemos a pedir.
-                  </p>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input
-                      type="password"
-                      value={clave}
-                      autoFocus
-                      onChange={(e) => setClave(e.target.value)}
-                      placeholder="contraseña"
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        background: 'var(--bg-2, #12151c)',
-                        border: '1px solid var(--line, #2a2f3a)',
-                        borderRadius: 6,
-                        color: 'var(--text, #e8ecf3)',
-                        fontSize: 13,
-                        padding: '7px 9px'
-                      }}
-                    />
-                    <button type="submit" className="btn" style={{ fontSize: 12.5 }}>
-                      Entrar
-                    </button>
-                  </div>
-                  {/* Omitir no es un escape de emergencia: es un camino valido.
-                      El que no la quiera guardar juega igual y escribe /login
-                      adentro, que es lo que hacia hasta ayer. */}
-                  <button
-                    type="button"
-                    onClick={() => void handlePlay('')}
-                    style={{
-                      background: 'none',
-                      border: 0,
-                      padding: 0,
-                      color: 'var(--text-faint)',
-                      fontSize: 12,
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                      justifySelf: 'start'
-                    }}
-                  >
-                    Omitir: la escribo adentro del juego
-                  </button>
-                </form>
               ) : updateNote ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ok)', lineHeight: 1.5 }}>
                   {updateNote}

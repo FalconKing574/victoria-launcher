@@ -5,7 +5,7 @@ import { Auth } from 'msmc'
 // 'msmc/types/types' does not resolve. The same type is reachable through the
 // `types` namespace that msmc re-exports from its entry point.
 import type { types } from 'msmc'
-import { msTokenPath, victoriaPasswordPath } from '../lib/paths'
+import { msTokenPath } from '../lib/paths'
 
 type MclcUser = types.MclcUser
 
@@ -62,40 +62,6 @@ export function clearRefreshToken(): void {
   if (existsSync(msTokenPath())) rmSync(msTokenPath())
 }
 
-/**
- * La contrasenia de Victoria (la de AuthMe), guardada con el llavero del sistema.
- *
- * Es el mismo mecanismo que el token de Microsoft, y por el mismo motivo: para
- * no volver a pedirsela. La diferencia es que esto SI es una contrasenia --el
- * token de Microsoft es un vale renovable-- asi que si el llavero no esta
- * disponible **no se guarda nada** y se le pide cada vez. Escribir una
- * contrasenia en claro en el disco del jugador para ahorrarle un tipeo no vale
- * la pena.
- */
-export function saveVictoriaPassword(contrasena: string): void {
-  if (!safeStorage.isEncryptionAvailable()) return
-  try {
-    writeFileSync(victoriaPasswordPath(), safeStorage.encryptString(contrasena))
-  } catch {
-    // Recordar la contrasenia es una comodidad. Un disco lleno no puede
-    // convertir un inicio de sesion que ya salio bien en un error.
-  }
-}
-
-export function readVictoriaPassword(): string | null {
-  if (!existsSync(victoriaPasswordPath())) return null
-  if (!safeStorage.isEncryptionAvailable()) return null
-  try {
-    return safeStorage.decryptString(readFileSync(victoriaPasswordPath()))
-  } catch {
-    return null
-  }
-}
-
-export function clearVictoriaPassword(): void {
-  if (existsSync(victoriaPasswordPath())) rmSync(victoriaPasswordPath())
-}
-
 async function toSession(xbox: Awaited<ReturnType<Auth['launch']>>): Promise<PremiumSession> {
   const minecraft = await xbox.getMinecraft()
   if (!minecraft.profile) {
@@ -149,31 +115,6 @@ export async function restoreMicrosoft(): Promise<RestoreResult> {
 }
 
 export function registerAuthHandlers(): void {
-  /**
-   * Si hace falta pedirle la contrasenia de Victoria al jugador.
-   *
-   * Dos condiciones: que el servidor de autenticacion este configurado en el
-   * manifiesto --si no, todo esto esta apagado y pedirla seria pedir algo que no
-   * se usa-- y que no haya ninguna guardada.
-   *
-   * Ante cualquier duda contesta false: no pedirla cuando habria que pedirla
-   * cuesta que el jugador escriba `/login` una vez; pedirla cuando no hace falta
-   * es un formulario que aparece sin motivo y no se puede sacar de encima.
-   */
-  ipcMain.handle('auth:needs-victoria-password', async () => {
-    if (readVictoriaPassword()) return false
-    try {
-      const { fetchManifest } = await import('./sync')
-      const manifest = await fetchManifest()
-      return manifest.auth !== undefined
-    } catch {
-      return false
-    }
-  })
-  ipcMain.handle('auth:forget-victoria-password', () => {
-    clearVictoriaPassword()
-    return true
-  })
   ipcMain.handle('auth:microsoft-login', () => loginMicrosoft())
   ipcMain.handle('auth:microsoft-restore', () => restoreMicrosoft())
   ipcMain.handle('auth:microsoft-logout', () => {

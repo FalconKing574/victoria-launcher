@@ -3,6 +3,7 @@ import { appendFileSync } from 'fs'
 import { join } from 'path'
 import { registerWindowHandlers } from './ipc/window'
 import { registerAuthHandlers } from './ipc/auth'
+import { registerCuentasHandlers } from './ipc/cuentas'
 import { registerModHandlers } from './ipc/mods'
 import { registerLaunchHandlers } from './ipc/launch'
 import { registerSyncHandlers } from './ipc/sync'
@@ -152,6 +153,7 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     registerWindowHandlers()
     registerAuthHandlers()
+    registerCuentasHandlers()
     registerModHandlers()
     registerLaunchHandlers()
     registerSyncHandlers()
