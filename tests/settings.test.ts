@@ -45,7 +45,23 @@ describe('jvmPerformanceArgs', () => {
   it('selects G1 and caps the pause target', () => {
     const args = jvmPerformanceArgs(RAM_RECOMMENDED_MB)
     expect(args).toContain('-XX:+UseG1GC')
-    expect(args).toContain('-XX:MaxGCPauseMillis=200')
+    // 50 ms, no los 200 de los flags de servidor: a 60 FPS, 200 ms de pausa
+    // son doce cuadros perdidos de una, que es exactamente el tiron que se
+    // reportaba.
+    expect(args).toContain('-XX:MaxGCPauseMillis=50')
+  })
+
+  it('no toca el heap entero al arrancar', () => {
+    // AlwaysPreTouch deja 7 u 8 GB ocupados de verdad desde el primer segundo.
+    // En una PC de 16 GB con el launcher y el navegador abiertos, Windows
+    // empieza a paginar y el tiron pasa a ser de disco, mucho peor.
+    expect(jvmPerformanceArgs(8192)).not.toContain('-XX:+AlwaysPreTouch')
+  })
+
+  it('apaga el archivo de depuracion de Forge', () => {
+    // logs/debug.log llego a 24 MB en una sesion corta y se escribe desde el
+    // hilo que loguea, frenando el juego. latest.log sigue estando.
+    expect(jvmPerformanceArgs(8192)).toContain('-Dforge.logging.debugFile.level=off')
   })
 
   it('every argument is a JVM flag, never a bare value', () => {
@@ -62,7 +78,7 @@ describe('jvmPerformanceArgs', () => {
     const large = jvmPerformanceArgs(16384)
     expect(small).toContain('-XX:G1HeapRegionSize=8M')
     expect(large).toContain('-XX:G1HeapRegionSize=16M')
-    expect(small).toContain('-XX:G1NewSizePercent=30')
-    expect(large).toContain('-XX:G1NewSizePercent=40')
+    expect(small).toContain('-XX:G1NewSizePercent=20')
+    expect(large).toContain('-XX:G1NewSizePercent=30')
   })
 })

@@ -67,27 +67,38 @@ export function mergeSettings(stored: Partial<Settings>): Settings {
 }
 
 /**
- * G1 garbage collector tuning derived from Aikar's widely used Minecraft flags.
+ * Ajuste del recolector de basura G1, pensado para el cliente.
  *
- * The instance was launching with no JVM arguments at all, which leaves G1 on
- * its defaults: it lets the young generation grow large, then pays for it with
- * long collection pauses that land as visible stutter. These raise the young-gen
- * floor, cap the pause target, and pre-touch the heap so the pauses are short
- * and even rather than rare and long.
+ * La instancia arrancaba sin ningún argumento de JVM, y G1 por defecto deja
+ * crecer la generación joven y después lo paga con pausas largas, que se
+ * sienten como tirones. Estos argumentos suben el piso de la generación joven,
+ * limitan cuánto puede durar una pausa y reparten el trabajo del recolector.
+ *
+ * No son los flags de Aikar tal cual: esos están hechos para un servidor
+ * dedicado, donde una pausa de 200 ms no se ve y la RAM de la máquina es toda
+ * del juego. En el cliente las dos cosas molestan:
+ *
+ * - `MaxGCPauseMillis=200` permite pausas de 200 ms, que a 60 FPS son doce
+ *   cuadros perdidos de un saque: el bajón clásico al girar la cámara. Con 50
+ *   la pausa entra en tres cuadros y G1 recolecta más seguido a cambio.
+ * - `AlwaysPreTouch` toca todo el heap al arrancar. En un servidor eso es
+ *   bueno; en una PC de 16 GB con Windows, el launcher, Discord y el navegador
+ *   abiertos significa dejar 7 u 8 GB ocupados de verdad desde el primer
+ *   segundo, y el sistema empieza a mandar cosas al archivo de paginación. Un
+ *   tirón por leer del disco dura muchísimo más que uno del recolector.
  */
 export function jvmPerformanceArgs(maxMemoryMb: number): string[] {
-  // Aikar's guidance splits at 12 GB; past that a bigger region size and a more
-  // aggressive young gen keep pauses in check.
+  // Pasados los 12 GB conviene una región más grande y una generación joven más
+  // holgada para que la cantidad de regiones no se dispare.
   const large = maxMemoryMb >= 12288
 
   return [
     '-XX:+UseG1GC',
     '-XX:+ParallelRefProcEnabled',
-    '-XX:MaxGCPauseMillis=200',
+    '-XX:MaxGCPauseMillis=50',
     '-XX:+UnlockExperimentalVMOptions',
     '-XX:+DisableExplicitGC',
-    '-XX:+AlwaysPreTouch',
-    `-XX:G1NewSizePercent=${large ? 40 : 30}`,
+    `-XX:G1NewSizePercent=${large ? 30 : 20}`,
     `-XX:G1MaxNewSizePercent=${large ? 50 : 40}`,
     `-XX:G1HeapRegionSize=${large ? 16 : 8}M`,
     `-XX:G1ReservePercent=${large ? 15 : 20}`,
@@ -98,6 +109,13 @@ export function jvmPerformanceArgs(maxMemoryMb: number): string[] {
     '-XX:G1RSetUpdatingPauseTimePercent=5',
     '-XX:SurvivorRatio=32',
     '-XX:+PerfDisableSharedMem',
-    '-XX:MaxTenuringThreshold=1'
+    '-XX:MaxTenuringThreshold=1',
+    // Forge escribe dos registros a la vez: logs/latest.log (info) y
+    // logs/debug.log (todo). El segundo llegó a 24 MB en una sesión corta, y
+    // 72.000 de sus líneas las escribió un solo mod en dos segundos. Escribir
+    // eso frena al hilo que lo pide, que muchas veces es el del juego. Se apaga
+    // el archivo de debug; latest.log queda igual, así que para diagnosticar un
+    // problema no se pierde nada.
+    '-Dforge.logging.debugFile.level=off'
   ]
 }
