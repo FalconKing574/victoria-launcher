@@ -6,6 +6,7 @@ import { equipoIdPath, victoriaPasswordViejaPath, victoriaSesionPath } from '../
 import { obtenerHuella } from '../lib/huella'
 import { llamar, ServidorCaido, type AuthManifest, type Respuesta } from '../lib/cuentas-api'
 import { esperarCodigoDiscord } from '../lib/discord-local'
+import { pedirCertificado } from '../lib/certificado-mojang'
 import { fetchManifest } from './sync'
 
 /**
@@ -163,7 +164,13 @@ export function registerCuentasHandlers(): void {
   ipcMain.handle('cuentas:entrar', (_e, d: { nombre: string; contrasena: string }) =>
     envolver(() => sinSesion('entrar', d))
   )
-  ipcMain.handle('cuentas:premium', (_e, mcToken: string) => envolver(() => sinSesion('premium', { mcToken })))
+  // El certificado va siempre, no sólo cuando el servidor falla: si el hosting
+  // se quedó sin internet, un segundo pedido tampoco llegaría a Mojang. Ver
+  // lib/certificado-mojang.ts. Si no se pudo pedir, va null y el servidor usa
+  // el camino de siempre.
+  ipcMain.handle('cuentas:premium', (_e, mcToken: string) =>
+    envolver(async () => sinSesion('premium', { mcToken, cert: await pedirCertificado(mcToken, await huella()) }))
+  )
   ipcMain.handle('cuentas:discord', () =>
     envolver(async () => {
       const manifest = await fetchManifest()

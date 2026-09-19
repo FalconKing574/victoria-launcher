@@ -67,8 +67,13 @@ describe('discord-local', () => {
     const promesa = esperarCodigoDiscord({ clientId: '1', puerto, abrir: (u) => void (abierta = u) })
     await new Promise((r) => setTimeout(r, 50))
     const state = new URL(abierta).searchParams.get('state')!
+    // La expectativa se engancha ANTES de pedir: la promesa se rechaza mientras
+    // `pedir` todavía espera la respuesta, y un rechazo sin nadie escuchando es
+    // un "Unhandled Rejection" que hace salir a vitest con error aunque el test
+    // pase (y con eso frena el workflow de publicación).
+    const rechazo = expect(promesa).rejects.toThrow(/Cancelaste/)
     await pedir(`http://127.0.0.1:${puerto}/discord?error=access_denied&state=${state}`)
-    await expect(promesa).rejects.toThrow(/Cancelaste/)
+    await rechazo
   })
 
   it('se rinde si pasa el tiempo', async () => {
