@@ -308,10 +308,18 @@ El instalador no está firmado, así que salta SmartScreen y algunos antivirus.
 No es un fallo del código y no se arregla con elevación de permisos — pedir
 administrador empeora la heurística.
 
-Lo único que lo arregla es un certificado de firma. La opción barata es Certum
-Open Source (~100-130 € el primer año, el repo tiene que ser público — y lo es).
-Mientras tanto: reportar el falso positivo a los motores que lo marquen, y las
-instrucciones de exclusión que ya están en `LEEME.txt`.
+**«Windows protegió tu PC» no es un antivirus**: es SmartScreen avisando que el
+archivo no tiene reputación. La reputación va atada al hash, así que **el
+instalador que se reparte no se cambia en cada versión** (desde el 27-09-2026 es
+siempre `Victoria-Kingdom-Setup.exe` de la release `instalador`, mandado a
+revisar a Microsoft). Copiar el `.exe` de cada versión a la carpeta de reparto,
+como se hacía antes, tiraba la reputación a cero cada vez. Ver
+[`05-firma-de-codigo.md`](05-firma-de-codigo.md) §4.
+
+Lo que lo cierra del todo es una firma: SignPath (gratis, preparado y sin
+pedir) o Certum Open Source (~100-130 € el primer año). Si algún motor de
+verdad lo marca: reportar el falso positivo a ese motor, y las instrucciones de
+exclusión que ya están en `LEEME.txt`.
 
 ## Trabajando con el usuario
 

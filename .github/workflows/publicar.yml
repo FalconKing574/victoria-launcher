@@ -93,8 +93,8 @@ jobs:
       - name: El instalador descartable no se firma
         shell: pwsh
         run: |
-          Remove-Item "firma/archivos/Victoria Kingdom Setup *.exe" -ErrorAction SilentlyContinue
-          Remove-Item "release/Victoria Kingdom Setup *" -ErrorAction SilentlyContinue
+          Remove-Item "firma/archivos/Victoria-Kingdom-actualizacion-*.exe" -ErrorAction SilentlyContinue
+          Remove-Item "release/Victoria-Kingdom-actualizacion-*" -ErrorAction SilentlyContinue
           Get-ChildItem firma/archivos | Format-Table Name, Length
 
       - name: Subir ejecutables para firmar
@@ -135,7 +135,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force firma/instalador | Out-Null
-          Copy-Item "release/Victoria Kingdom Setup *.exe" firma/instalador/
+          Copy-Item "release/Victoria-Kingdom-actualizacion-*.exe" firma/instalador/
 
       - name: Subir instalador para firmar
         id: instalador
@@ -208,3 +208,12 @@ jobs:
           }
           # Un borrador es invisible para el actualizador.
           gh release edit $tag --draft=false
+
+      # El botón «Descargar» del Discord apunta a /releases/latest: ahí tiene que
+      # estar el instalador fijo, que es el que tiene reputación en SmartScreen.
+      # Ver scripts/instalador-fijo.mjs.
+      - name: Instalador fijo en la release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/instalador-fijo.mjs

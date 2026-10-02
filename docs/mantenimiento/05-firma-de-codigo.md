@@ -82,7 +82,37 @@ se puede pasar a `true` con `publisherName: SignPath Foundation`, **pero sólo
 cuando los jugadores ya tengan una versión firmada**: un launcher sin firma que
 exige firma al actualizarse queda trabado.
 
-## 4. Reputación: lo que hace que deje de avisar
+## 4. Mientras no haya firma: el instalador fijo (lo que está en uso)
+
+El 27-09-2026 el usuario eligió no depender de SignPath por ahora. Lo que se
+hizo en su lugar:
+
+- **Un único instalador para todos**: `Victoria-Kingdom-Setup.exe` (launcher
+  1.6.1, SHA-256 `f3853e7b7be46de9b542c7e32111ffa20251bc4b628b1ede924ea672683ea3e5`)
+  en la release `instalador` (prerelease) y en `Desktop/Victoria Kingdom Launcher/`.
+  SmartScreen ata la reputación al hash: si el archivo no cambia, la reputación
+  que junte no se pierde.
+- **Cada versión lleva una copia** del fijo (`scripts/instalador-fijo.mjs`, que
+  corre solo al final de `npm run release` y del workflow), así el botón
+  «Descargar» del Discord, que apunta a `/releases/latest`, entrega el fijo.
+- **El `.exe` de cada versión** se llama `Victoria-Kingdom-actualizacion-<versión>.exe`:
+  lo baja el actualizador, no los jugadores. El actualizador no pasa por
+  SmartScreen (no le pone la marca de «descargado de internet»).
+- **Enviado a Microsoft** como «Software developer» → producto «Microsoft
+  Defender Smartscreen» → «Incorrectly detected as malware/malicious». El envío
+  del 27-09 no llegó a salir (el historial estaba vacío el 01-10); el que vale es
+  el del 01-10-2026. El resultado se ve en
+  https://www.microsoft.com/en-us/wdsi/submissionhistory (cuenta Microsoft del
+  usuario; guarda 30 días).
+
+**Reemplazar el fijo** (sólo si hace falta, ver `02-actualizar-launcher.md` §6):
+subir el nuevo a la release `instalador` con `gh release upload instalador
+<archivo> --clobber` (con el nombre `Victoria-Kingdom-Setup.exe`), copiarlo a la
+carpeta de reparto, actualizar el SHA-256 de este documento y de las notas de la
+release, y **volver a mandarlo a Microsoft**: la reputación del viejo no pasa
+al nuevo.
+
+## 5. Reputación: lo que hace que deje de avisar
 
 La firma sola no apaga SmartScreen el primer día: la reputación se junta con
 descargas. Para acelerarla, con cada versión firmada:

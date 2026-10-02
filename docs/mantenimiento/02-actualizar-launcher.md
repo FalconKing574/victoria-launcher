@@ -57,6 +57,9 @@ VICTORIA_MANIFEST_URL="https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manif
 Sin ella el launcher sale sin URL de modpack y no descarga nada: una app
 empaquetada no tiene `.env` ni shell de donde leerla.
 
+`npm run release` termina con `scripts/instalador-fijo.mjs`, que copia el
+instalador fijo a la release nueva (ver el paso 6). Necesita `gh` en el PATH.
+
 ## 5. Verifica — no te saltes esto
 
 ```bash
@@ -65,7 +68,8 @@ gh release view v1.3.2 --repo FalconKing574/victoria-launcher --json isDraft,ass
 
 Comprueba:
 - [ ] `draft: false` — **un borrador es invisible para el actualizador**
-- [ ] están los tres: `latest.yml`, el `.exe` y el `.blockmap`
+- [ ] están los cuatro: `latest.yml`, `Victoria-Kingdom-actualizacion-<versión>.exe`,
+      su `.blockmap` y `Victoria-Kingdom-Setup.exe` (el fijo)
 
 `latest.yml` es el archivo que el actualizador consulta. Sin él nadie se entera
 de que hay versión nueva.
@@ -79,16 +83,30 @@ cat release/win-unpacked/resources/app-update.yml
 Tiene que decir `owner: FalconKing574`. Si dice otra cosa, mira
 [`04-trampas.md`](04-trampas.md).
 
-## 6. Actualiza la carpeta de reparto
+## 6. El instalador que se reparte NO cambia
 
-Para quien instala por primera vez (el auto-update solo sirve a quien ya lo tiene):
+Desde el 27-09-2026 a los jugadores se les da siempre el mismo archivo:
+`Victoria-Kingdom-Setup.exe` (launcher 1.6.1, SHA-256 `f3853e7b…3ea3e5`), que
+vive en la release `instalador` (prerelease, para que el actualizador no la tome
+como la última) y en `Desktop/Victoria Kingdom Launcher/`. **No lo reemplaces al
+publicar.** El launcher se actualiza solo al abrirse, así que instalar uno viejo
+no importa.
 
-```bash
-cd "/c/Users/FalconKingman/Desktop"
-rm -f "Victoria Kingdom Launcher/Victoria Kingdom Setup 1.3.1.exe"
-cp "VictoriaLauncher/release/Victoria Kingdom Setup 1.3.2.exe" "Victoria Kingdom Launcher/"
-sed -i 's/Setup 1\.3\.1\.exe/Setup 1.3.2.exe/' "Victoria Kingdom Launcher/LEEME.txt"
-```
+Por qué: «Windows protegió tu PC» es SmartScreen avisando que un archivo sin
+firma no tiene reputación, y la reputación va atada al hash. Un instalador nuevo
+por versión arranca de cero cada vez; el fijo es el que se mandó a revisar a
+Microsoft. Por eso el `.exe` de cada versión se llama
+`Victoria-Kingdom-actualizacion-<versión>.exe` (`electron-builder.yml` →
+`nsis.artifactName`): que nadie lo baje por error de la página de la release.
+
+Link permanente para el Discord o donde sea:
+`https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe`
+
+Cuándo sí se cambia el fijo (a mano, y se vuelve a mandar a Microsoft, ver
+[`05-firma-de-codigo.md`](05-firma-de-codigo.md)):
+- si el instalador viejo deja de poder instalar algo que funcione (por ejemplo,
+  un updater tan viejo que ya no sabe actualizarse);
+- con la primera versión firmada, que trae su propia reputación.
 
 `LEEME.txt` son las instrucciones para los jugadores. Si has cambiado algo que
 les afecta (mods opcionales, shaders, avisos del antivirus), actualízalo.

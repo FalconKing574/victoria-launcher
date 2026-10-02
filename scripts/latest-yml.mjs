@@ -12,7 +12,7 @@
  * (las diferencias para bajar sólo lo que cambió) con el mismo `app-builder`
  * que usa electron-builder, y se escribe el `latest.yml` con el mismo formato.
  *
- *     node scripts/latest-yml.mjs --instalador "release/Victoria Kingdom Setup 1.6.0.exe" --salida publicar
+ *     node scripts/latest-yml.mjs --instalador "release/Victoria-Kingdom-actualizacion-1.6.0.exe" --salida publicar
  *
  * Deja en `--salida` los tres archivos con los nombres que espera el
  * actualizador (espacios → guiones, como los sube electron-builder).
