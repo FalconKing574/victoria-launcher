@@ -101,9 +101,13 @@ hizo en su lugar:
 - **Enviado a Microsoft** como «Software developer» → producto «Microsoft
   Defender Smartscreen» → «Incorrectly detected as malware/malicious». El envío
   del 27-09 no llegó a salir (el historial estaba vacío el 01-10); el que vale es
-  el del 01-10-2026. El resultado se ve en
-  https://www.microsoft.com/en-us/wdsi/submissionhistory (cuenta Microsoft del
-  usuario; guarda 30 días).
+  el del 01-10-2026, ID `fe36e6ff-1531-48d6-83ef-a48a4de46ea9`:
+  https://www.microsoft.com/en-us/wdsi/submission/fe36e6ff-1531-48d6-83ef-a48a4de46ea9
+  (cuenta Microsoft del usuario; el historial guarda 30 días).
+- **En el navegador integrado de Claude**: ya logueado, entrar directo a
+  `filesubmission?persona=SoftwareDeveloper` (el botón «Continue» de la
+  portada deja una página en blanco). No deja adjuntar archivos de la PC ni
+  pasar el captcha final: eso lo hace el usuario.
 
 **Reemplazar el fijo** (sólo si hace falta, ver `02-actualizar-launcher.md` §6):
 subir el nuevo a la release `instalador` con `gh release upload instalador
