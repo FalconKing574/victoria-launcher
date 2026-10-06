@@ -1,7 +1,8 @@
 # Actualizar el launcher
 
 El launcher es la aplicación de escritorio. Se publica en GitHub Releases y se
-actualiza sola: comprueba al arrancar, descarga, y se reinstala reiniciándose.
+actualiza sola: comprueba al arrancar, descarga e instala en silencio, y se
+vuelve a abrir.
 
 ## Requisitos
 
@@ -108,25 +109,54 @@ Cuándo sí se cambia el fijo (a mano, y se vuelve a mandar a Microsoft, ver
   un updater tan viejo que ya no sabe actualizarse);
 - con la primera versión firmada, que trae su propia reputación.
 
+Lo que cuesta mantener el 1.6.1: quien lo instala pasa por **una** actualización
+con el código viejo (busca en segundo plano y cierra la ventana cuando termina
+de bajar; desde la 1.8.0 al menos sin asistente y reabriéndose solo), y su
+asistente todavía pregunta «¿Para quién instalar?». Un fijo de la 1.8.0 o
+posterior se salta las dos cosas: la primera apertura ya trae la pantalla de
+carga nueva, y el asistente es Licencia → Carpeta → Instalar.
+
 `LEEME.txt` son las instrucciones para los jugadores. Si has cambiado algo que
 les afecta (mods opcionales, shaders, avisos del antivirus), actualízalo.
 
 ## Cómo llega la actualización
 
-`src/main/ipc/updater.ts`:
+Rehecho el 06-10-2026 (1.8.0). Antes buscaba a los 4 segundos, en segundo
+plano, y al terminar de bajar cerraba la ventana en medio de lo que el jugador
+estuviera haciendo y le volvía a mostrar el asistente del instalador. Eso era
+el «retrocede y vuelve a la etapa de instalación» — ver
+[`04-trampas.md`](04-trampas.md).
 
-1. Comprueba 4 segundos después de arrancar — en cada apertura.
-2. Descarga sola (`autoDownload = true`).
-3. Al terminar se reinicia e instala, **salvo** que esté descargando el modpack
-   o arrancando Minecraft: cortar eso dejaría medio pack en disco o mataría el
-   juego. En ese caso se instala al cerrar (`autoInstallOnAppQuit = true`).
+`src/main/ipc/updater.ts` + `src/renderer/src/screens/Splash.tsx`:
 
-El jugador también lo ve en Ajustes → Launcher, y la pantalla de Jugar avisa si
-hay algo pendiente.
+1. **Busca en cuanto abre**, y la pantalla de carga espera la respuesta (como
+   mucho 8 s; sin conexión entra igual). Reglas en `lib/arranque.ts`.
+2. **Si hay versión nueva, se actualiza desde la pantalla de carga**: barra de
+   descarga, «Instalando…», el launcher se cierra y el instalador lo vuelve a
+   abrir. Sin asistente (`quitAndInstall(true, true)`). Si tarda, a los 6 s sale
+   «Entrar sin esperar».
+3. **Si la encuentra con el launcher ya en uso**, no corta nada: se instala al
+   cerrarlo (`autoInstallOnAppQuit`, en silencio) o con «Reiniciar ahora» del
+   aviso de Jugar. Nunca durante una descarga del modpack ni un arranque de
+   Minecraft.
+4. **Si el instalador no llega a correr** (casi siempre el antivirus), no
+   entra en un ciclo: cada intento se anota en `actualizacion-launcher.json`
+   y, si al volver a abrir la versión no cambió, el intento falló. Después de
+   2 fallos con la misma versión deja de instalarla sola y Jugar/Ajustes
+   explican qué hacer, con el enlace al instalador completo. Lógica en
+   `lib/actualizacion.ts`, con tests.
 
-Consecuencia práctica: **un cambio en el updater no llega por el updater viejo**.
-Quien está en una versión anterior al cambio se actualiza con el comportamiento
-antiguo. La versión nueva ya se comporta como toca.
+**El instalador también se pone en silencio solo** cuando lo abren con
+`--updated` (`build/installer.nsh`). Eso es lo que cubre a los launchers
+viejos, incluido el 1.6.1 del instalador fijo: su código abre el instalador sin
+`/S`, pero el instalador que abren es el de la versión nueva. Comprobado con
+Wine: el de la 1.7.1 se queda en la página «¿Para quién instalar?»; el nuevo
+termina solo en ~11 s y reabre el launcher.
+
+Consecuencia práctica: **un cambio en el código del updater no llega por el
+updater viejo** — quien está en una versión anterior se actualiza con el
+comportamiento antiguo. Lo que sí llega siempre es lo de `build/installer.nsh`,
+porque corre dentro del instalador nuevo.
 
 ## Dónde se configura qué
 

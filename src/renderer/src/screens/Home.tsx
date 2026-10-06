@@ -19,6 +19,7 @@ import type {
 } from '@shared/api'
 import { shouldBlockPlay } from '../lib/play-gate'
 import { leerBloqueo } from '../lib/bloqueo'
+import { avisoLauncher } from '../lib/aviso-launcher'
 import type { NavKey } from '../components/SideNav'
 import type { IUser } from 'minecraft-launcher-core'
 
@@ -315,15 +316,16 @@ export default function Home({
   // button does the work — but the label should say what is about to happen.
   const willInstall = shouldBlockPlay(pending)
 
-  // One line covering both updates. The launcher's comes first: it installs
-  // itself and restarts, which would interrupt a modpack download anyway.
-  const launcherPending = updater?.phase === 'available' || updater?.phase === 'ready'
-  const updateNotice = launcherPending
-    ? `Hay una versión nueva del launcher${updater?.version ? ` (${updater.version})` : ''}. Se instala sola al reiniciar.`
-    : willInstall
+  // Un solo aviso para las dos actualizaciones. La del launcher va primero: dice
+  // cuándo se instala, que es lo que confundía (ver lib/aviso-launcher.ts).
+  const aviso = avisoLauncher(updater)
+  const updateNotice =
+    aviso?.texto ??
+    (willInstall
       ? `Hay una actualización del modpack pendiente: ${pending?.toDownload ?? 0} archivos` +
         `${pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}.`
-      : null
+      : null)
+  const alerta = aviso?.tono === 'alerta'
 
   return (
     <motion.div
@@ -341,7 +343,8 @@ export default function Home({
       }}
     >
       {/* Aviso de actualizaciones pendientes. Sale sólo cuando hay algo que
-          hacer, y lleva a Ajustes, que es donde están los dos botones. */}
+          contar. El botón hace lo que se pueda hacer desde acá; el resto
+          lleva a Ajustes. */}
       {updateNotice && !updating && (
         <div
           className="row"
@@ -350,29 +353,33 @@ export default function Home({
             alignItems: 'center',
             gap: 12,
             padding: '11px 14px',
-            border: '1px solid rgba(230,180,34,0.35)',
-            background: 'rgba(230,180,34,0.07)'
+            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid rgba(230,180,34,0.35)',
+            background: alerta ? 'rgba(255,92,108,0.07)' : 'rgba(230,180,34,0.07)'
           }}
         >
-          <span style={{ color: 'var(--gold-bright)', display: 'flex', flexShrink: 0 }}>
-            <Icon name="download" size={17} />
-          </span>
-          <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.5 }}>{updateNotice}</span>
-          <button
-            onClick={() => onNavigate?.('settings')}
+          <span
             style={{
-              padding: '8px 13px',
-              borderRadius: 8,
-              border: '1px solid var(--stroke-strong)',
-              background: 'rgba(230,180,34,0.12)',
-              color: 'var(--gold-bright)',
-              fontSize: 12.5,
-              flexShrink: 0,
-              cursor: 'pointer'
+              color: alerta ? 'var(--err)' : 'var(--gold-bright)',
+              display: 'flex',
+              flexShrink: 0
             }}
           >
-            Ir a Ajustes
-          </button>
+            <Icon name={alerta ? 'warning' : 'download'} size={17} />
+          </span>
+          <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.5 }}>{updateNotice}</span>
+          {aviso?.accion && (
+            <button
+              onClick={() => void window.api.updater.install().catch(() => undefined)}
+              style={avisoBoton}
+            >
+              {aviso.accion === 'reiniciar' ? 'Reiniciar ahora' : 'Reintentar'}
+            </button>
+          )}
+          {(!aviso || aviso.tono === 'alerta') && (
+            <button onClick={() => onNavigate?.('settings')} style={avisoBoton}>
+              {aviso ? 'Qué hacer' : 'Ir a Ajustes'}
+            </button>
+          )}
         </div>
       )}
 
@@ -693,4 +700,15 @@ function StatTile({
       <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{hint}</span>
     </div>
   )
+}
+
+const avisoBoton: React.CSSProperties = {
+  padding: '8px 13px',
+  borderRadius: 8,
+  border: '1px solid var(--stroke-strong)',
+  background: 'rgba(230,180,34,0.12)',
+  color: 'var(--gold-bright)',
+  fontSize: 12.5,
+  flexShrink: 0,
+  cursor: 'pointer'
 }

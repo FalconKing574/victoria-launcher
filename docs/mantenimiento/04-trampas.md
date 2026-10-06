@@ -302,6 +302,60 @@ teléfono, eyemod + victoriarp) y `Texture not loaded yet` (iv-paint).
 Si alguien reporta un cierre al cambiar idioma o resource pack, mira por ahí
 antes que por la memoria.
 
+## Actualizaciones del launcher
+
+### La actualización volvía a mostrar el asistente del instalador
+
+**Síntoma:** «cuando uno ya instaló el launcher, a veces retrocede y vuelve a la
+etapa de instalación». Reportado el 06-10-2026.
+**Causa:** el actualizador abría el instalador nuevo con `--updated --force-run`
+pero **sin `/S`** (`quitAndInstall(false, true)`). Con `oneClick: false`, eso
+muestra el asistente otra vez: la página «¿Para quién instalar? Todos los
+usuarios / Sólo para mí» (que `skipPageIfUpdated` no salta), la barra de
+instalación y «Finalizar» con la casilla de abrir el launcher. Y como el
+asistente sólo reabre el launcher si se deja esa casilla, cerrar la ventana
+dejaba al jugador sin launcher. Encima pasaba sin aviso, en cuanto terminaba la
+descarga: en medio de crear la cuenta o vincular Discord.
+**Cómo se vio:** con Wine, abriendo el instalador de la 1.7.1 como lo abre el
+updater: se queda en la página de «¿Para quién instalar?».
+**Ya está puesto:**
+- `build/installer.nsh` → `customInit`: con `--updated`, `SetSilent silent`.
+  Cubre también a los launchers viejos (el 1.6.1 del instalador fijo incluido),
+  porque el instalador que abren es el nuevo. En silencio, electron-builder
+  reabre el launcher solo (`--force-run`).
+- `build/installer.nsh` → `customInstallMode`: el asistente de una instalación
+  nueva ya no pregunta para quién instalar (siempre es por usuario).
+- El launcher busca en cuanto abre y se actualiza desde la pantalla de carga; lo
+  que encuentra después se instala al cerrar. Ver `02-actualizar-launcher.md`.
+**No lo quites:** `tests/instalador.test.ts` falla si `installer.nsh` deja de
+silenciar `--updated`.
+
+### Un instalador bloqueado dejaba el launcher cerrándose solo
+
+**Síntoma (evitado antes de que llegara):** el antivirus bloquea el instalador
+de la actualización. El launcher ya se cerró para dejarlo correr, así que no
+queda nada abierto. Al volver a abrirlo, la actualización sigue descargada, se
+intenta otra vez y se vuelve a cerrar: en cada apertura.
+**Ya está puesto:** cada intento se anota en `actualizacion-launcher.json`
+(en `userData`) antes de cerrar. Al abrir, si la versión no cambió, el intento
+falló; después de `MAX_INTENTOS_AUTOMATICOS` (2) con la misma versión deja de
+instalarla sola, Jugar avisa en rojo y Ajustes → Launcher explica qué hacer
+(cuarentena del antivirus, Reintentar, bajar el instalador completo con el
+navegador). Una versión más nueva vuelve a intentarse sola. Lógica en
+`src/main/lib/actualizacion.ts`, con tests.
+
+### La pantalla de carga tapaba la barra de título
+
+La ventana no tiene marco. Cuando el splash duraba 2 segundos daba igual; ahora
+puede quedarse mientras baja una actualización, así que empieza debajo de la
+barra de título para que siempre se pueda mover, minimizar y cerrar.
+
+### Los errores del updater salían crudos
+
+«sha512 checksum mismatch» o «ENOENT: no such file or directory, rename …» no le
+dicen nada a un jugador. `diagnosticarErrorActualizacion()` los traduce y marca
+cuáles parecen del antivirus, que son los únicos que muestran la ayuda.
+
 ## Antivirus
 
 El instalador no está firmado, así que salta SmartScreen y algunos antivirus.
@@ -320,6 +374,13 @@ Lo que lo cierra del todo es una firma: SignPath (gratis, preparado y sin
 pedir) o Certum Open Source (~100-130 € el primer año). Si algún motor de
 verdad lo marca: reportar el falso positivo a ese motor, y las instrucciones de
 exclusión que ya están en `LEEME.txt`.
+
+Lo que sí depende del código es que el antivirus no deje al jugador atascado
+**después** de instalar: cada actualización del launcher es otro `.exe` nuevo
+y sin firma que se abre desde AppData, que es justo lo que miran los antivirus.
+Desde la 1.8.0 eso pasa una sola vez por versión, en silencio, y si se bloquea
+el launcher sigue funcionando y explica qué hacer (ver «Actualizaciones del
+launcher» arriba).
 
 ## Trabajando con el usuario
 

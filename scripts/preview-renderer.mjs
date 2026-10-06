@@ -183,11 +183,47 @@ const STUB = `<script>
         }
       }
     })(),
-    updater: {
-      check: async () => ({ phase: 'none', version: '1.3.1', percent: 0, message: null }),
-      state: async () => ({ phase: 'none', version: '1.3.1', percent: 0, message: null }),
-      install: async () => false, onState: noop
-    },
+    // ?launcher=al-dia (por defecto), descarga, lenta, lista, bloqueada o sin-red.
+    // Imita al proceso principal: con la pantalla de carga delante, lo que baja
+    // se instala en el acto; después de «posponer», queda lista para el cierre.
+    updater: (() => {
+      const escenarioLauncher = new URLSearchParams(location.search).get('launcher') ?? 'al-dia'
+      const MANUAL = 'https://github.com/FalconKing574/victoria-launcher/releases/download/v1.8.0/Victoria-Kingdom-actualizacion-1.8.0.exe'
+      const oyentes = new Set()
+      let modo = 'arranque'
+      let upd = { phase: 'checking', version: null, current: '1.7.1', percent: 0, message: null, manualUrl: null, antivirus: false }
+      const emitir = (p) => { upd = { ...upd, ...p }; oyentes.forEach((cb) => cb(upd)) }
+      const bajar = (paso) => {
+        emitir({ phase: 'available', version: '1.8.0', percent: 0, manualUrl: MANUAL })
+        const reloj = setInterval(() => {
+          const percent = Math.min(100, upd.percent + paso)
+          if (percent < 100) return emitir({ phase: 'downloading', percent })
+          clearInterval(reloj)
+          emitir({ phase: 'ready', percent: 100 })
+          if (modo === 'arranque') emitir({ phase: 'installing' })
+        }, 400)
+      }
+      setTimeout(() => {
+        if (escenarioLauncher === 'al-dia') emitir({ phase: 'none', version: '1.7.1' })
+        else if (escenarioLauncher === 'sin-red') emitir({ phase: 'error', message: 'No se pudo conectar con GitHub para buscar actualizaciones. Puedes jugar igual; se volverá a buscar al abrir el launcher.' })
+        else if (escenarioLauncher === 'bloqueada') emitir({ phase: 'blocked', version: '1.8.0', percent: 100, manualUrl: MANUAL, antivirus: true, message: 'La versión 1.8.0 del launcher no se pudo instalar después de varios intentos. Casi siempre es el antivirus bloqueando el instalador. Puedes seguir jugando con esta versión.' })
+        else if (escenarioLauncher === 'lenta') bajar(1)
+        else if (escenarioLauncher === 'descarga') bajar(9)
+      }, 900)
+      // «lista»: la respuesta llega tarde, cuando la pantalla de carga ya pasó.
+      if (escenarioLauncher === 'lista') setTimeout(() => bajar(25), 9000)
+      return {
+        check: async () => upd,
+        state: async () => upd,
+        install: async () => {
+          if (upd.phase !== 'ready' && upd.phase !== 'blocked') return false
+          emitir({ phase: 'installing', message: null, antivirus: false })
+          return true
+        },
+        posponer: async () => { modo = 'fondo'; return upd },
+        onState: (cb) => { oyentes.add(cb); return () => oyentes.delete(cb) }
+      }
+    })(),
     settings: { get: async () => settings, save: async (p) => Object.assign(settings, p) },
     launch: {
       start: async () => {}, isRunning: async () => false,

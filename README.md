@@ -3,8 +3,9 @@
 Launcher oficial del servidor de rol de Minecraft **Victoria Kingdom**
 (Minecraft 1.20.1 con Forge 47.4.0).
 
-**Descarga:** [última versión](https://github.com/FalconKing574/victoria-launcher/releases/latest)
-(`Victoria Kingdom Setup <versión>.exe`, Windows 10/11 de 64 bits).
+**Descarga:** [`Victoria-Kingdom-Setup.exe`](https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe)
+(Windows 10/11 de 64 bits). Es siempre el mismo archivo: al abrirlo por primera
+vez, el launcher se actualiza solo a la última versión.
 
 ## Qué hace
 

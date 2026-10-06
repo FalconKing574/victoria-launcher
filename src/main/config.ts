@@ -18,3 +18,11 @@ declare const __MANIFEST_URL__: string | undefined
 export const MANIFEST_URL =
   process.env.VICTORIA_MANIFEST_URL ??
   (typeof __MANIFEST_URL__ === 'undefined' ? '' : __MANIFEST_URL__)
+
+/**
+ * Dónde se publica el launcher. Tiene que ser lo mismo que `publish` en
+ * electron-builder.yml (lo comprueba `tests/instalador.test.ts`): con esto se
+ * arma el enlace para bajar a mano el instalador de una versión nueva cuando el
+ * antivirus bloquea el que abre el actualizador.
+ */
+export const LAUNCHER_REPO = 'FalconKing574/victoria-launcher'

@@ -297,9 +297,11 @@ const PHASE_TEXT: Record<UpdaterState['phase'], string> = {
   checking: 'Buscando actualizaciones...',
   available: 'Hay una versión nueva. Descargando...',
   downloading: 'Descargando la actualización...',
-  ready: 'Actualización lista. Se aplica al reiniciar.',
+  ready: 'Actualización lista. Se instala sola al cerrar el launcher.',
+  installing: 'Instalando... el launcher se cerrará y se volverá a abrir solo.',
   none: 'Estás en la última versión.',
-  error: 'No se pudo comprobar.',
+  error: 'No se pudo actualizar.',
+  blocked: 'No se pudo instalar la actualización.',
   dev: 'Las actualizaciones solo funcionan en el launcher instalado.'
 }
 
@@ -309,6 +311,9 @@ const PHASE_TEXT: Record<UpdaterState['phase'], string> = {
  * The updater already ran in the background; this exists so the state is
  * visible instead of silent, and so a player who wants the new version now can
  * restart without waiting for the next launch.
+ *
+ * Cuando el instalador no llega a abrirse (casi siempre el antivirus), acá está
+ * qué hacer, con el enlace al instalador completo como salida.
  */
 function UpdaterRow(): JSX.Element {
   const [state, setState] = useState<UpdaterState | null>(null)
@@ -324,22 +329,27 @@ function UpdaterRow(): JSX.Element {
 
   const phase = state?.phase ?? 'idle'
   const ready = phase === 'ready'
+  const blocked = phase === 'blocked'
+  const fallo = phase === 'error' || blocked
+  const deshabilitado = busy || phase === 'checking' || phase === 'installing' || phase === 'dev'
 
   return (
     <div className="row" style={{ display: 'grid', gap: 10, padding: '12px 13px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>
-            Versión {state?.version ?? '—'}
+            Versión {state?.current ?? '—'}
           </div>
           <div
             style={{
               fontSize: 11.5,
-              color: ready ? 'var(--ok)' : phase === 'error' ? 'var(--err)' : 'var(--text-faint)',
+              color: ready ? 'var(--ok)' : fallo ? 'var(--err)' : 'var(--text-faint)',
               lineHeight: 1.5
             }}
           >
-            {phase === 'downloading' && state ? `Descargando... ${state.percent}%` : PHASE_TEXT[phase]}
+            {phase === 'downloading' && state
+              ? `Descargando la versión ${state.version ?? 'nueva'}... ${state.percent}%`
+              : PHASE_TEXT[phase]}
           </div>
         </div>
 
@@ -347,7 +357,7 @@ function UpdaterRow(): JSX.Element {
           onClick={async () => {
             setBusy(true)
             try {
-              if (ready) await window.api.updater.install()
+              if (ready || blocked) await window.api.updater.install()
               else setState(await window.api.updater.check())
             } catch {
               // The phase already reports failure; nothing useful to add here.
@@ -355,7 +365,7 @@ function UpdaterRow(): JSX.Element {
               setBusy(false)
             }
           }}
-          disabled={busy || phase === 'checking' || phase === 'dev'}
+          disabled={deshabilitado}
           style={{
             padding: '9px 14px',
             borderRadius: 9,
@@ -364,18 +374,79 @@ function UpdaterRow(): JSX.Element {
             color: ready ? 'var(--ok)' : 'var(--text)',
             fontSize: 12.5,
             flexShrink: 0,
-            opacity: busy || phase === 'checking' || phase === 'dev' ? 0.5 : 1,
+            opacity: deshabilitado ? 0.5 : 1,
             cursor: busy || phase === 'dev' ? 'not-allowed' : 'pointer'
           }}
         >
-          {ready ? 'Reiniciar e instalar' : busy ? 'Buscando...' : 'Buscar actualizaciones'}
+          {ready ? 'Reiniciar e instalar' : blocked ? 'Reintentar' : busy ? 'Buscando...' : 'Buscar actualizaciones'}
         </button>
       </div>
 
-      {state?.message && phase === 'error' && (
+      {state?.message && fallo && (
         <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
           {state.message}
         </p>
+      )}
+
+      {fallo && state?.antivirus && <AyudaAntivirus manualUrl={state.manualUrl} />}
+    </div>
+  )
+}
+
+/**
+ * Qué hacer cuando el antivirus no deja instalar la actualización.
+ *
+ * El jugador no tiene por qué saber dónde mirar, y «añádelo a las excepciones»
+ * sin más no le dice nada. La salida que siempre funciona es la última: bajar el
+ * instalador con el navegador e instalar encima, que no borra la cuenta, los
+ * mods ni los mundos (viven en otra carpeta).
+ */
+function AyudaAntivirus({ manualUrl }: { manualUrl: string | null }): JSX.Element {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: 8,
+        padding: '10px 12px',
+        borderRadius: 9,
+        border: '1px solid var(--stroke)',
+        background: 'rgba(255,255,255,0.03)',
+        fontSize: 12,
+        lineHeight: 1.55,
+        color: 'var(--text-dim)'
+      }}
+    >
+      <div style={{ fontWeight: 600, color: 'var(--text)' }}>Si es el antivirus</div>
+      <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>
+        <li>
+          Abre tu antivirus y busca «Victoria Kingdom» en la cuarentena o en el historial de
+          amenazas. Restáuralo y márcalo como permitido.
+        </li>
+        <li>Vuelve aquí y pulsa Reintentar.</li>
+        {manualUrl && (
+          <li>
+            Si sigue sin instalarse, descarga el instalador y ábrelo: se instala encima y no se
+            pierde nada (tu cuenta, los mods y los mundos se quedan).
+          </li>
+        )}
+      </ol>
+      {manualUrl && (
+        <div>
+          <button
+            onClick={() => void window.api.window.openExternal(manualUrl).catch(() => undefined)}
+            style={{
+              padding: '7px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--stroke-strong)',
+              background: 'rgba(230,180,34,0.12)',
+              color: 'var(--gold-bright)',
+              fontSize: 12,
+              cursor: 'pointer'
+            }}
+          >
+            Descargar el instalador
+          </button>
+        </div>
       )}
     </div>
   )

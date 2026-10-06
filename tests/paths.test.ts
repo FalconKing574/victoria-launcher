@@ -8,6 +8,7 @@ vi.mock('electron', () => ({
 }))
 
 import {
+  actualizacionPath,
   crashLogPath,
   hashCachePath,
   instanceDir,
@@ -54,7 +55,8 @@ describe('rutas del launcher', () => {
       msTokenPath(),
       crashLogPath(),
       syncStatePath(),
-      hashCachePath()
+      hashCachePath(),
+      actualizacionPath()
     ]) {
       expect(ruta.startsWith(USER_DATA)).toBe(true)
     }
@@ -87,7 +89,14 @@ describe('rutas del launcher', () => {
   })
 
   it('cada archivo tiene su propio nombre', () => {
-    const rutas = [settingsPath(), msTokenPath(), crashLogPath(), syncStatePath(), hashCachePath()]
+    const rutas = [
+      settingsPath(),
+      msTokenPath(),
+      crashLogPath(),
+      syncStatePath(),
+      hashCachePath(),
+      actualizacionPath()
+    ]
     expect(new Set(rutas).size).toBe(rutas.length)
   })
 })

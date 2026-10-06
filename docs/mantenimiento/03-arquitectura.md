@@ -182,7 +182,8 @@ npm test
 Casi todo es lógica pura, sin Electron. Por eso los módulos están partidos:
 `java.ts` (puro) frente a `java-runtime.ts` (descarga, usa Electron);
 `settings-core.ts` frente a `settings.ts`; `sync-plan.ts` y `hash-cache.ts`
-frente a `ipc/sync.ts`.
+frente a `ipc/sync.ts`; `actualizacion.ts` (el freno contra el ciclo de
+instaladores bloqueados) frente a `ipc/updater.ts`.
 
 Si escribes algo que valga la pena probar, ponlo del lado puro.
 
