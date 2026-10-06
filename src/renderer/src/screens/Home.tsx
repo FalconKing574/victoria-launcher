@@ -108,6 +108,10 @@ export default function Home({
   // The launcher's own update, so the notice can cover both.
   const [updater, setUpdater] = useState<UpdaterState | null>(null)
 
+  // VALIDAR ARCHIVOS (02-10-2026): primero se explica qué hace, después se hace.
+  const [confirmarValidar, setConfirmarValidar] = useState(false)
+  const [validando, setValidando] = useState(false)
+
   const refreshPending = useCallback((): void => {
     window.api.modpack
       .check()
@@ -144,6 +148,38 @@ export default function Home({
       mostrarError((caught as Error).message)
       setLaunching(false)
       setUpdating(false)
+    }
+  }
+
+  /**
+   * VALIDAR ARCHIVOS: vuelve a instalar los mods y la configuración del pack tal
+   * como vienen. Es lo que se le pide a alguien a quien «algo no le anda»: un jar
+   * dañado, una config tocada a mano, un mod de más. No toca mundos, capturas,
+   * teclas ni los mods que el jugador agregó por su cuenta (sólo se los nombra,
+   * porque suelen ser la causa).
+   */
+  async function handleValidar(): Promise<void> {
+    setConfirmarValidar(false)
+    setError(null)
+    setUpdateNote(null)
+    setUpdating(true)
+    setValidando(true)
+    try {
+      const report = await window.api.modpack.validate()
+      const propios = report.keptOwn.length
+      setUpdateNote(
+        `Archivos validados: ${report.downloaded === 0 ? 'todos los mods estaban bien' : `${report.downloaded} reinstalados`}` +
+          (report.configuracion ? ' y la configuración del pack, restablecida.' : '.') +
+          (propios > 0
+            ? ` Tenés ${propios} ${propios === 1 ? 'mod propio' : 'mods propios'} fuera del pack (${report.keptOwn.slice(0, 3).join(', ')}${propios > 3 ? '…' : ''}): si algo sigue fallando, probá sacándolos.`
+            : '')
+      )
+      refreshPending()
+    } catch (caught) {
+      setError((caught as Error).message)
+    } finally {
+      setUpdating(false)
+      setValidando(false)
     }
   }
 
@@ -412,7 +448,22 @@ export default function Home({
                   one this mount never started, so `launching` is false while a
                   download is very much in progress. */}
               <Button full loading={launching || updating} onClick={() => void handlePlay()}>
-                {updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
+                {validando ? 'VALIDANDO...' : updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
+              </Button>
+            </div>
+
+            {/* Al lado de JUGAR, como lo pidió el usuario: el arreglo de «a mí no me
+                anda» sin tener que explicar qué es una instancia. */}
+            <div style={{ flexShrink: 0 }}>
+              <Button
+                variant="ghost"
+                disabled={launching || updating}
+                onClick={() => setConfirmarValidar(true)}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="shield" size={16} />
+                  VALIDAR ARCHIVOS
+                </span>
               </Button>
             </div>
 
@@ -434,6 +485,45 @@ export default function Home({
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-dim)' }}>
                   {status.message}
                 </p>
+              ) : confirmarValidar ? (
+                <div style={{ display: 'grid', gap: 9 }}>
+                  <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.5, color: 'var(--text)' }}>
+                    Vuelve a instalar los mods y la configuración del modpack tal como vienen.
+                    No toca tus mundos, capturas, teclas ni los mods que agregaste vos. Puede
+                    bajar varios cientos de MB.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => void handleValidar()}
+                      style={{
+                        padding: '8px 13px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(230,180,34,0.5)',
+                        background: 'rgba(230,180,34,0.16)',
+                        color: 'var(--gold-bright)',
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Validar ahora
+                    </button>
+                    <button
+                      onClick={() => setConfirmarValidar(false)}
+                      style={{
+                        padding: '8px 13px',
+                        borderRadius: 8,
+                        border: '1px solid var(--stroke-strong)',
+                        background: 'transparent',
+                        color: 'var(--text-dim)',
+                        fontSize: 12.5,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               ) : error ? (
                 // pre-wrap: el diagnóstico del crash viene en varias líneas
                 // (qué pasó, qué mod, dónde está el archivo) y en una sola

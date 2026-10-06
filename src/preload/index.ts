@@ -37,12 +37,16 @@ const api: VictoriaApi = {
   sistema: {
     equipo: () => ipcRenderer.invoke('sistema:equipo')
   },
+  graficos: {
+    aplicar: (preset) => ipcRenderer.invoke('graficos:aplicar', preset)
+  },
   mods: {
     list: () => ipcRenderer.invoke('mods:list'),
     toggle: (filename, enable) => ipcRenderer.invoke('mods:toggle', filename, enable)
   },
   modpack: {
     sync: () => ipcRenderer.invoke('sync:run'),
+    validate: () => ipcRenderer.invoke('sync:validate'),
     check: () => ipcRenderer.invoke('sync:check'),
     manifest: () => ipcRenderer.invoke('sync:manifest'),
     state: () => ipcRenderer.invoke('sync:state'),

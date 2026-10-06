@@ -4,6 +4,7 @@ import Button from './Button'
 import { Switch } from './Toggle'
 import { RAM_ABSOLUTE_MIN_MB, RAM_MIN_RECOMMENDED_MB, RAM_RECOMMENDED_MB } from '@shared/tuning'
 import type { EquipoInfo, OptionalMod } from '@shared/api'
+import { INFO_PRESETS, presetSugerido, type PresetGrafico } from '@shared/opciones-graficas'
 
 /**
  * El último paso del tutorial: dejar el juego configurado para esta PC.
@@ -32,6 +33,9 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
   const [equipo, setEquipo] = useState<EquipoInfo | null>(null)
   const [memoria, setMemoria] = useState<number | null>(null)
   const [shaders, setShaders] = useState(false)
+  // La configuración gráfica de arranque (02-10-2026): la sugerida según la PC.
+  const [preset, setPreset] = useState<PresetGrafico>('equilibrada')
+  const [sugerido, setSugerido] = useState<PresetGrafico | null>(null)
   const [opcionales, setOpcionales] = useState<OptionalMod[]>([])
   const [activos, setActivos] = useState<string[]>([])
   const [guardando, setGuardando] = useState(false)
@@ -40,15 +44,22 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
   const detener = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    void window.api.sistema.equipo().then((e) => {
+    void Promise.all([window.api.sistema.equipo(), window.api.modpack.state().catch(() => null)]).then(([e, estado]) => {
       setEquipo(e)
       setMemoria(memoriaSugerida(e.memoriaMb))
+      const dedicada = e.gpu === 'nvidia' || e.gpu === 'amd'
       // Shaders sólo con placa dedicada: en una integrada de Intel el juego
       // pasa de jugable a diapositivas, y el jugador cree que el servidor anda mal.
-      setShaders(e.gpu === 'nvidia' || e.gpu === 'amd')
+      setShaders(dedicada)
+      const p = presetSugerido(e.gpu, e.memoriaMb)
+      setPreset(p)
+      setSugerido(p)
+      // Distant Horizons viene prendido; con video integrado se sugiere apagado (es lo
+      // que más pide a la placa). Se puede volver a prender acá mismo o en Mods.
+      const activosAhora = estado?.enabledOptional ?? []
+      setActivos(dedicada ? activosAhora : activosAhora.filter((id) => id !== 'distant-horizons'))
     })
     void window.api.modpack.manifest().then((m) => setOpcionales(m.optional ?? [])).catch(() => undefined)
-    void window.api.modpack.state().then((s) => setActivos(s.enabledOptional)).catch(() => undefined)
     return () => detener.current?.()
   }, [])
 
@@ -97,6 +108,7 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
     try {
       if (memoria) await window.api.settings.save({ maxMemoryMb: memoria })
       await window.api.shaders.setEnabled(shaders).catch(() => undefined)
+      await window.api.graficos.aplicar(preset).catch(() => undefined)
       const estado = await window.api.modpack.state().catch(() => null)
       for (const mod of opcionales) {
         const quiere = activos.includes(mod.id)
@@ -149,6 +161,44 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
           ) : (
             <p style={texto}>Midiendo tu PC…</p>
           )}
+        </Bloque>
+
+        <Bloque titulo="Gráficos">
+          <p style={texto}>
+            Una configuración de video pensada para el modpack. Se cambia cuando quieras en Opciones → Video
+            del juego.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {INFO_PRESETS.map((info) => {
+              const elegido = info.id === preset
+              return (
+                <button
+                  key={info.id}
+                  onClick={() => setPreset(info.id)}
+                  style={{
+                    textAlign: 'left',
+                    padding: '10px 11px',
+                    borderRadius: 10,
+                    border: elegido ? '1px solid var(--gold-bright)' : '1px solid var(--stroke)',
+                    background: elegido ? 'rgba(230,180,34,0.10)' : 'var(--surface-3)',
+                    color: 'var(--text)',
+                    cursor: 'pointer',
+                    display: 'grid',
+                    gap: 4,
+                    alignContent: 'start'
+                  }}
+                >
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: elegido ? 'var(--gold-bright)' : 'var(--text)' }}>
+                    {info.nombre}
+                  </span>
+                  {sugerido === info.id && (
+                    <span style={{ fontSize: 10.5, color: 'var(--ok)', fontWeight: 600 }}>Recomendada para tu PC</span>
+                  )}
+                  <span style={{ fontSize: 11.5, color: 'var(--text-dim)', lineHeight: 1.45 }}>{info.detalle}</span>
+                </button>
+              )
+            })}
+          </div>
         </Bloque>
 
         <Bloque titulo="Shaders (luces y sombras realistas)">

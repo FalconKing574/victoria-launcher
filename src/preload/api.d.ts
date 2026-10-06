@@ -122,6 +122,10 @@ export interface SyncReport {
   removed: number
   keptOwn: string[]
   packVersion: string
+  /** Si fue VALIDAR ARCHIVOS y no una actualización común. */
+  validado?: boolean
+  /** Si se volvió a aplicar la configuración del pack. */
+  configuracion?: boolean
 }
 
 export interface ShaderPack {
@@ -214,12 +218,18 @@ export interface VictoriaApi {
   sistema: {
     equipo(): Promise<EquipoInfo>
   }
+  graficos: {
+    /** Pone el preset en options.txt (sólo las líneas de video). */
+    aplicar(preset: import('./opciones-graficas').PresetGrafico): Promise<boolean>
+  }
   mods: {
     list(): Promise<ModEntry[]>
     toggle(filename: string, enable: boolean): Promise<ModEntry[]>
   }
   modpack: {
     sync(): Promise<SyncReport>
+    /** VALIDAR ARCHIVOS: reinstala mods y configuración del pack; no toca mundos ni mods propios. */
+    validate(): Promise<SyncReport>
     check(): Promise<SyncCheck>
     manifest(): Promise<Manifest>
     state(): Promise<SyncState>

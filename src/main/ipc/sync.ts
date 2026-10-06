@@ -17,6 +17,7 @@ import { MANIFEST_URL } from '../config'
 import { launcherRoot, instanceDir } from '../lib/paths'
 import { downloadVerified } from '../lib/download'
 import { writeJsonAtomic } from '../lib/write-atomic'
+import { aplicarOpciones, esPreset, PRESETS, type PresetGrafico } from '../../preload/opciones-graficas'
 import { isFresh, parseCache, pruneCache, type FileStamp, type HashCache } from '../lib/hash-cache'
 import { pruneDeletedShaders } from './shaders'
 import { hashCachePath, syncStatePath } from '../lib/paths'
@@ -114,12 +115,14 @@ async function hashFile(path: string): Promise<string> {
  * the main process, so the whole window stopped responding on every tab change.
  * Now an unchanged jar costs one statSync.
  */
-async function scanLocal(): Promise<LocalMod[]> {
+async function scanLocal(sinCache = false): Promise<LocalMod[]> {
   const dir = modsDir()
   if (!existsSync(dir)) return []
 
   const files = readdirSync(dir).filter((file) => file.toLowerCase().endsWith('.jar'))
-  const cache = loadHashCache()
+  // Validar archivos vuelve a leer cada jar: un archivo dañado puede conservar
+  // su tamaño y su fecha, y la caché lo daría por bueno.
+  const cache = sinCache ? {} : loadHashCache()
   const next: HashCache = {}
   const mods: LocalMod[] = []
   let recomputed = 0
@@ -394,7 +397,17 @@ export function ensureResourcePack(): void {
     // every other setting on first launch and leaves this one alone.
     if (!existsSync(path)) {
       mkdirSync(instanceDir(), { recursive: true })
-      writeFileSync(path, `resourcePacks:["vanilla","${VICTORIA_RESOURCE_PACK}"]\n`, 'utf8')
+      // El jugador nuevo arranca con la configuración gráfica equilibrada (02-10-2026)
+      // y no con la de fábrica de Minecraft. Si pasó por el tutorial, ya eligió la
+      // suya y este archivo existe: no se toca. Ver preload/opciones-graficas.ts.
+      writeFileSync(
+        path,
+        aplicarOpciones(null, {
+          ...PRESETS.equilibrada,
+          resourcePacks: `["vanilla","${VICTORIA_RESOURCE_PACK}"]`
+        }),
+        'utf8'
+      )
       return
     }
 
@@ -430,6 +443,19 @@ export function ensureResourcePack(): void {
     // A malformed options.txt is the game's problem, not something to crash the
     // install over. The pack simply stays off until the player enables it.
   }
+}
+
+/**
+ * Pone el preset gráfico en `options.txt` sin tocar ninguna otra línea (teclas,
+ * sonido, idioma). Crea el archivo si todavía no existe, con el resource pack
+ * prendido, igual que {@link ensureResourcePack}.
+ */
+export function aplicarPreset(preset: PresetGrafico): void {
+  const path = join(instanceDir(), 'options.txt')
+  mkdirSync(instanceDir(), { recursive: true })
+  const original = existsSync(path) ? readFileSync(path, 'utf8') : null
+  writeFileSync(path, aplicarOpciones(original, PRESETS[preset]), 'utf8')
+  ensureResourcePack()
 }
 
 export interface SyncCheck {
@@ -504,6 +530,10 @@ export interface SyncReport {
   removed: number
   keptOwn: string[]
   packVersion: string
+  /** Si fue VALIDAR ARCHIVOS y no una actualización común. */
+  validado?: boolean
+  /** Si se volvió a aplicar la configuración del pack (los overrides). */
+  configuracion?: boolean
 }
 
 /**
@@ -528,15 +558,19 @@ function ensureInstanceDir(): void {
   }
 }
 
-async function performSync(): Promise<SyncReport> {
-  sendStatus('Comprobando actualizaciones...')
+async function performSync(validar = false): Promise<SyncReport> {
+  sendStatus(validar ? 'Revisando los archivos uno por uno...' : 'Comprobando actualizaciones...')
   ensureInstanceDir()
 
   const manifest = await fetchManifest()
-  const state = loadState()
+  // Validar archivos (02-10-2026): se hace como si nunca se hubieran aplicado los
+  // overrides —se bajan y extraen todos de nuevo— y cada jar se vuelve a leer.
+  // Lo que no está en `overrideParts` ni en la caché no existe para el plan.
+  const guardado = loadState()
+  const state = validar ? { ...guardado, overridesSha1: null, overrideParts: {} } : guardado
   const plan = planSync({
     manifest,
-    local: await scanLocal(),
+    local: await scanLocal(validar),
     managed: state.managed,
     enabledOptional: state.enabledOptional
   })
@@ -624,7 +658,9 @@ async function performSync(): Promise<SyncReport> {
     downloaded: plan.download.length,
     removed: plan.remove.length,
     keptOwn: plan.keep,
-    packVersion: manifest.packVersion
+    packVersion: manifest.packVersion,
+    validado: validar,
+    configuracion: overridesApplied
   }
   send('sync:done', report)
   return report
@@ -640,7 +676,7 @@ let inFlight: Promise<SyncReport> | null = null
  * screen's progress state, so coming back showed an idle button and a second
  * press started a second sync on top of the first.
  */
-export function runSync(): Promise<SyncReport> {
+export function runSync(validar = false): Promise<SyncReport> {
   if (inFlight) return inFlight
 
   live = {
@@ -648,10 +684,10 @@ export function runSync(): Promise<SyncReport> {
     percent: 0,
     done: 0,
     total: 0,
-    message: 'Comprobando actualizaciones...'
+    message: validar ? 'Revisando los archivos uno por uno...' : 'Comprobando actualizaciones...'
   }
 
-  inFlight = performSync()
+  inFlight = performSync(validar)
     .catch((error: Error) => {
       // Broadcast as well as reject: whoever pressed PLAY may have navigated
       // away, and the screen that comes back has no promise to catch.
@@ -668,6 +704,16 @@ export function runSync(): Promise<SyncReport> {
 
 export function registerSyncHandlers(): void {
   ipcMain.handle('sync:run', () => runSync())
+  // VALIDAR ARCHIVOS (02-10-2026): vuelve a dejar los mods y la configuración del
+  // pack como vienen de fábrica. No toca mundos, capturas, options.txt (salvo la
+  // línea del resource pack) ni los mods que el jugador agregó por su cuenta.
+  ipcMain.handle('sync:validate', () => runSync(true))
+  // La configuración gráfica que eligió en el tutorial (o en Ajustes).
+  ipcMain.handle('graficos:aplicar', (_event, preset: unknown) => {
+    if (!esPreset(preset)) return false
+    aplicarPreset(preset)
+    return true
+  })
   ipcMain.handle('sync:live', () => live)
   ipcMain.handle('sync:check', () => checkForUpdates())
   ipcMain.handle('sync:manifest', () => fetchManifest())
