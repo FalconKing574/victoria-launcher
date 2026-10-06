@@ -18,9 +18,18 @@
  * la instancia se AÑADE al manifiesto como requerido y se sube, sin tocar los
  * overrides. Un mod nuevo no cambia ninguna config del pack (si la cambiara,
  * sería build-manifest), y hacerles bajar 697 MB a todos por 18 MB de jar es
- * lo que esto evita. Retirar un mod sigue siendo build-manifest.
+ * lo que esto evita.
  *
  *   node scripts/update-mods-only.mjs --version 1.64.0 --agregar --publish
+ *
+ * Y con `--retirar`: un jar que estaba publicado y ya no está en la instancia sale del
+ * manifiesto, también sin tocar los overrides. El launcher borra de la carpeta del jugador
+ * los jars del pack que dejaron de estar en el manifiesto (sólo los que instaló él, ver
+ * `managed` en sync.ts), así que no hace falta más. Las configs del mod retirado quedan en
+ * los overrides sin molestar; sacarlas sí es build-manifest. Pasó el 17-09-2026: salieron
+ * 11 mods y hacerles bajar 685 MB a todos por eso no tenía sentido.
+ *
+ *   node scripts/update-mods-only.mjs --version 1.89.0 --retirar --publish
  */
 import { createHash } from 'crypto'
 import { copyFileSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
@@ -101,10 +110,11 @@ console.log(`\n${bumps.length} mods suben de versión:`)
 for (const { viejo, nuevo } of bumps) console.log(`   ${viejo}\n   -> ${nuevo}`)
 
 const agregados = args.agregar ? nuevos : []
-if ((nuevos.length && !args.agregar) || retirados.length) {
+const quitados = args.retirar ? retirados : []
+if ((nuevos.length && !args.agregar) || (retirados.length && !args.retirar)) {
   console.error('\nEsto NO es solo una subida de versiones:')
   nuevos.forEach((f) => console.error('  MOD NUEVO:', f, '(se puede con --agregar)'))
-  retirados.forEach((f) => console.error('  MOD RETIRADO:', f))
+  retirados.forEach((f) => console.error('  MOD RETIRADO:', f, '(se puede con --retirar)'))
   console.error('\nUsa scripts/build-manifest.mjs para eso. Abortado.')
   process.exit(1)
 }
@@ -113,7 +123,13 @@ if (agregados.length) {
   agregados.forEach((f) => console.log('   +', f))
 }
 
-if (bumps.length === 0 && agregados.length === 0) {
+if (quitados.length) {
+  console.log(`
+${quitados.length} mods retirados (--retirar):`)
+  quitados.forEach((f) => console.log('   -', f))
+}
+
+if (bumps.length === 0 && agregados.length === 0 && quitados.length === 0) {
   console.log('\nNada que actualizar.')
   process.exit(0)
 }
@@ -135,6 +151,30 @@ next.mods = live.mods.map((entry) => {
     url: `${BASE}/mods/${encodeURIComponent(nuevo)}`
   }
 })
+
+// Los opcionales también suben de versión (02-10-2026, Distant Horizons 3.2.0-b -> 3.3.3). Antes
+// sólo se reescribía `mods`: el opcional quedaba apuntando al jar viejo y el nuevo no se subía.
+// Se conservan id, nombre, resumen e imagen; cambia el archivo.
+next.optional = (live.optional ?? []).map((entry) => {
+  const nuevo = replaced.get(entry.filename)
+  if (!nuevo) return entry
+  const source = join(modsDir, nuevo)
+  copyFileSync(source, join(OUT, 'mods', nuevo))
+  return {
+    ...entry,
+    filename: nuevo,
+    sha1: sha1(source),
+    sizeBytes: statSync(source).size,
+    url: `${BASE}/mods/${encodeURIComponent(nuevo)}`
+  }
+})
+
+if (quitados.length) {
+  const fuera = new Set(quitados)
+  next.mods = next.mods.filter((entry) => !fuera.has(entry.filename))
+  next.optional = (next.optional ?? []).filter((entry) => !fuera.has(entry.filename))
+  for (const f of quitados) rmSync(join(OUT, 'mods', f), { force: true })
+}
 
 for (const nuevo of agregados) {
   const source = join(modsDir, nuevo)

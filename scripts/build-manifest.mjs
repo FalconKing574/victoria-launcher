@@ -176,7 +176,7 @@ const OPTIONAL = [
     summary:
       'Renderiza el terreno lejano en baja resolución, así que ves muchísimo más lejos sin hundir los FPS. Viene activado.',
     category: 'visual',
-    filename: 'DistantHorizons-3.2.0-b-1.20.1-fabric-forge.jar'
+    filename: 'DistantHorizons-3.3.3-1.20.1-fabric-forge.jar'
   },
   {
     id: 'forgematica',
