@@ -52,22 +52,48 @@ incluidas.
 
 ## Publicarla
 
-La primera vez (lo hace el dueño: una IA no debe pedir ni escribir la
-contraseña de Cloudflare):
+Gratis, en Cloudflare Pages conectado al repo de GitHub: cada cambio que llega a
+`main` se publica solo, sin comandos. Lo configura el dueño con su cuenta de
+Cloudflare (la misma del bucket R2); una IA no debe pedir ni escribir esa
+contraseña.
+
+1. La web tiene que estar en `main`, que es la rama que publica Cloudflare.
+   Pasar cambios a `main` no publica el launcher: eso sólo lo hace un tag `v*`
+   (`.github/workflows/publicar.yml`).
+2. En dash.cloudflare.com: Workers & Pages → Create → Pages → Connect to Git →
+   autorizar GitHub → elegir `FalconKing574/victoria-launcher`.
+3. Configuración del proyecto:
+
+   | Campo | Valor |
+   |---|---|
+   | Project name | `victoriakingdom` (el mismo `name` de `web/wrangler.toml`) |
+   | Production branch | `main` |
+   | Framework preset | None |
+   | Build command | vacío (si obliga a poner algo: `exit 0`) |
+   | Build output directory | `public` |
+   | Root directory (en Advanced) | `web` |
+
+4. Save and Deploy. En un minuto queda en https://victoriakingdom.pages.dev.
+
+Después, cada push a `main` la vuelve a publicar (el plan gratis da 500
+publicaciones por mes). Las demás ramas generan una vista previa con su propia
+dirección; si no hace falta, se apaga en Settings → Builds → Branch control.
+
+**No mezclar los dos caminos:** un proyecto creado desde la consola (abajo) no
+se puede conectar a GitHub después; habría que crear otro, con otra dirección.
+
+### Desde la consola (alternativa)
+
+Sin conectar GitHub, desde la PC del dueño:
 
 ```bash
 npx wrangler login                                                 # abre el navegador
 npx wrangler pages project create victoriakingdom --production-branch main
+npm run web:publicar                                               # cada vez que cambie algo
 ```
 
-Después, cada vez:
-
-```bash
-npm run web:publicar
-```
-
-Publica `web/public` y `web/functions` en producción (`--branch main`, aunque
-estés en otra rama de git). Queda en https://victoriakingdom.pages.dev.
+`web:publicar` sube `web/public` y `web/functions` a producción (`--branch main`,
+aunque estés en otra rama de git).
 
 **Verifica lo publicado**, no el archivo local:
 
