@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Página no encontrada — Victoria Kingdom</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#d7263d" />
+    <link rel="icon" type="image/png" href="/img/icono.png" />
+    <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/estilos.css" />
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
+    <script src="/app.js" defer></script>
+  </head>
+
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="cabecera">
+      <div class="contenedor cabecera__interior">
+        <a class="marca" href="/" aria-label="Victoria Kingdom, inicio">
+          <img src="/img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+        </a>
+        <nav class="nav" aria-label="Principal">
+          <a href="/#empezar">Cómo empezar</a>
+          <a href="/#ciudad">La ciudad</a>
+          <a href="/#novedades">Novedades</a>
+          <a href="/guia">Guía</a>
+          <a href="/normas">Normas</a>
+        </nav>
+        <div class="cabecera__acciones">
+          <div class="en-linea" data-servidor data-estado="cargando" title="Jugadores conectados ahora">
+            <span class="punto"></span>
+            <span class="en-linea__numero" data-jugadores>—</span>
+            <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
+          </div>
+          <a
+            class="boton boton--principal"
+            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+            data-descarga
+            aria-label="Descargar el launcher"
+          >
+            <svg class="icono" aria-hidden="true"><use href="/iconos.svg#download" /></svg>
+            <span>Descargar</span>
+          </a>
+          <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir el menú">
+            <svg class="icono" aria-hidden="true"><use href="/iconos.svg#menu" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="menu-movil" id="menu-movil" inert>
+      <a class="menu-movil__enlace" style="--i: 0" href="/#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="/#ciudad">La ciudad <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="/#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="/guia">Guía <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="/normas">Normas <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <div class="menu-movil__acciones">
+        <a
+          class="boton boton--principal boton--grande"
+          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+          data-descarga
+        >
+          <svg class="icono" aria-hidden="true"><use href="/iconos.svg#download" /></svg>Descargar launcher
+        </a>
+        <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+          <svg class="icono" aria-hidden="true"><use href="/iconos.svg#discord" /></svg>Unirse al Discord
+        </a>
+      </div>
+    </div>
+
+    <main id="contenido">
+      <section class="perdido" style="position: relative; isolation: isolate; overflow: hidden">
+        <div class="cabecera-pagina__fondo" aria-hidden="true" style="inset: 0; background-image: url('/img/capturas/captura-07.jpg'); opacity: 0.35"></div>
+        <div class="contenedor">
+          <div class="perdido__numero" aria-hidden="true"><span>404</span><span>404</span><span>404</span></div>
+          <h1 class="titulo-seccion" style="margin-top: 28px">Esta calle no existe <span class="rojo">en Victoria</span></h1>
+          <p class="bajada" style="margin: 0 auto 32px">La página que buscas se mudó o nunca existió. Vuelve al inicio o mira la guía.</p>
+          <div class="portada__acciones" style="justify-content: center">
+            <a class="boton boton--principal boton--grande" href="/"><svg class="icono" aria-hidden="true"><use href="/iconos.svg#home" /></svg>Volver al inicio</a>
+            <a class="boton boton--fantasma boton--grande" href="/guia"><svg class="icono" aria-hidden="true"><use href="/iconos.svg#book" /></svg>Ver la guía</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

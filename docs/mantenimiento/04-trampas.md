@@ -389,6 +389,12 @@ Desde la 1.8.0 eso pasa una sola vez por versión, en silencio, y si se bloquea
 el launcher sigue funcionando y explica qué hacer (ver «Actualizaciones del
 launcher» arriba).
 
+## La web
+
+Las de la web (el ping que colgaba la página, lo que no puede ser más ancho que
+la pantalla, la fecha de compatibilidad de wrangler) están en
+[`06-web.md`](06-web.md) § Trampas.
+
 ## Trabajando con el usuario
 
 - **No lances sus aplicaciones GUI** para probar. Depura leyendo el código o con

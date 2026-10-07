@@ -13,6 +13,7 @@ Atajos:
 - Actualizar mods, configs o shaders → [`01-actualizar-modpack.md`](docs/mantenimiento/01-actualizar-modpack.md)
 - Publicar una versión del launcher → [`02-actualizar-launcher.md`](docs/mantenimiento/02-actualizar-launcher.md)
 - Qué hay dónde → [`03-arquitectura.md`](docs/mantenimiento/03-arquitectura.md)
+- Cambiar o publicar la web → [`06-web.md`](docs/mantenimiento/06-web.md)
 - **Trampas conocidas** → [`04-trampas.md`](docs/mantenimiento/04-trampas.md)
 
 Reglas que no dependen de la tarea:

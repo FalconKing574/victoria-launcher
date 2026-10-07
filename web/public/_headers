@@ -1,0 +1,19 @@
+# Cabeceras de Cloudflare Pages (https://developers.cloudflare.com/pages/configuration/headers/).
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Las fuentes no cambian nunca.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Las imágenes cambian rara vez (al importar capturas nuevas): una semana.
+/img/*
+  Cache-Control: public, max-age=604800
+
+# Novedades y lista de capturas: que se vean al rato de publicarlas.
+/datos/*
+  Cache-Control: public, max-age=300

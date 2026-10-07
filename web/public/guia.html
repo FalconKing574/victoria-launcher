@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guía de instalación — Victoria Kingdom</title>
+    <meta
+      name="description"
+      content="Cómo instalar el launcher de Victoria Kingdom, crear tu cuenta y qué hacer si Windows SmartScreen o el antivirus bloquean el instalador."
+    />
+    <meta name="theme-color" content="#d7263d" />
+    <link rel="icon" type="image/png" href="img/icono.png" />
+    <link rel="apple-touch-icon" href="img/icono-180.png" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Victoria Kingdom" />
+    <meta property="og:title" content="Guía de instalación — Victoria Kingdom" />
+    <meta property="og:description" content="Instala el launcher, crea tu cuenta y soluciona los avisos de Windows y del antivirus." />
+    <meta property="og:image" content="https://victoriakingdom.pages.dev/img/capturas/captura-05.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="estilos.css" />
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
+    <script src="app.js" defer></script>
+  </head>
+
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="cabecera">
+      <div class="contenedor cabecera__interior">
+        <a class="marca" href="./" aria-label="Victoria Kingdom, inicio">
+          <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+        </a>
+        <nav class="nav" aria-label="Principal">
+          <a href="./#empezar">Cómo empezar</a>
+          <a href="./#ciudad">La ciudad</a>
+          <a href="./#novedades">Novedades</a>
+          <a href="guia" aria-current="page">Guía</a>
+          <a href="normas">Normas</a>
+        </nav>
+        <div class="cabecera__acciones">
+          <div class="en-linea" data-servidor data-estado="cargando" title="Jugadores conectados ahora">
+            <span class="punto"></span>
+            <span class="en-linea__numero" data-jugadores>—</span>
+            <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
+          </div>
+          <a
+            class="boton boton--principal"
+            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+            data-descarga
+            aria-label="Descargar el launcher"
+          >
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>
+            <span>Descargar</span>
+          </a>
+          <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir el menú">
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#menu" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="menu-movil" id="menu-movil" inert>
+      <a class="menu-movil__enlace" style="--i: 0" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="./#ciudad">La ciudad <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="./#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <div class="menu-movil__acciones">
+        <a
+          class="boton boton--principal boton--grande"
+          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+          data-descarga
+        >
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
+        </a>
+        <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Unirse al Discord
+        </a>
+      </div>
+    </div>
+
+    <main id="contenido">
+      <section class="cabecera-pagina" aria-labelledby="titulo-guia">
+        <div class="cabecera-pagina__fondo" aria-hidden="true" style="background-image: url('img/capturas/captura-05.jpg')"></div>
+        <div class="contenedor">
+          <ol class="migas aparecer" aria-label="Estás en">
+            <li><a href="./">Inicio</a></li>
+            <li aria-hidden="true"><svg class="icono"><use href="iconos.svg#chevron" /></svg></li>
+            <li aria-current="page">Guía</li>
+          </ol>
+          <span class="eyebrow aparecer" style="--retraso: 100ms">Guía</span>
+          <h1 id="titulo-guia" style="margin-top: 16px">
+            <span class="linea"><span style="--i: 0">Instalar y</span></span>
+            <span class="linea"><span class="rojo" style="--i: 1">jugar</span></span>
+          </h1>
+          <p class="bajada aparecer" style="--retraso: 500ms">
+            Todo lo que necesitas para entrar a Victoria, y qué hacer si Windows o el antivirus se ponen en el medio.
+          </p>
+        </div>
+      </section>
+
+      <div class="contenedor wiki">
+        <nav class="wiki__lateral" aria-label="Contenido de la guía">
+          <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Empezar</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#requisitos"><svg class="icono" aria-hidden="true"><use href="iconos.svg#monitor" /></svg>Requisitos</a></li>
+              <li><a class="wiki__enlace" href="#descargar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar</a></li>
+              <li><a class="wiki__enlace" href="#instalar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#package" /></svg>Instalar</a></li>
+              <li><a class="wiki__enlace" href="#cuenta"><svg class="icono" aria-hidden="true"><use href="iconos.svg#user" /></svg>Tu cuenta</a></li>
+              <li><a class="wiki__enlace" href="#jugar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#play" /></svg>Primera partida</a></li>
+            </ul>
+          </div>
+          <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Si algo falla</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#smartscreen"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield" /></svg>Windows protegió su PC</a></li>
+              <li><a class="wiki__enlace" href="#antivirus"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield-check" /></svg>El antivirus lo bloquea</a></li>
+              <li><a class="wiki__enlace" href="#actualizaciones"><svg class="icono" aria-hidden="true"><use href="iconos.svg#refresh" /></svg>Actualizaciones</a></li>
+              <li><a class="wiki__enlace" href="#lento"><svg class="icono" aria-hidden="true"><use href="iconos.svg#gauge" /></svg>Va lento o se cierra</a></li>
+              <li><a class="wiki__enlace" href="#archivos"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wrench" /></svg>Faltan archivos</a></li>
+              <li><a class="wiki__enlace" href="#conectar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wifi" /></svg>No puedo entrar</a></li>
+            </ul>
+          </div>
+          <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Comunidad</p>
+            <ul>
+              <li><a class="wiki__enlace" href="normas"><svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>Normas</a></li>
+              <li>
+                <a class="wiki__enlace" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener"><svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Discord</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <article class="articulo">
+          <section id="requisitos" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#monitor" /></svg></span>Requisitos</h2>
+            <p>
+              Victoria Kingdom anda en cualquier PC con Windows que pueda mover Minecraft con mods. No hace falta tener Java ni Minecraft
+              instalados: el launcher baja todo.
+            </p>
+            <div class="requisitos">
+              <div class="requisito">
+                <span class="requisito__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#windows" /></svg></span>
+                <div><strong>Windows 10 u 11</strong><span>de 64 bits</span></div>
+              </div>
+              <div class="requisito">
+                <span class="requisito__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#chip" /></svg></span>
+                <div><strong>8 GB de RAM como mínimo</strong><span>con 16 GB va mejor: el juego usa hasta 8</span></div>
+              </div>
+              <div class="requisito">
+                <span class="requisito__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#disk" /></svg></span>
+                <div><strong>Unos 4 GB libres</strong><span>para Minecraft, los mods y los shaders</span></div>
+              </div>
+              <div class="requisito">
+                <span class="requisito__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wifi" /></svg></span>
+                <div><strong>Internet</strong><span>la primera vez se baja el modpack entero</span></div>
+              </div>
+            </div>
+            <div class="nota nota--consejo">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#info" /></svg>
+              <p>¿Tu PC es justa? Se puede jugar sin shaders y con menos memoria: mira <a href="#lento">Va lento o se cierra</a>.</p>
+            </div>
+          </section>
+
+          <section id="descargar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg></span>Descargar</h2>
+            <p>
+              El instalador es siempre el mismo archivo, <code>Victoria-Kingdom-Setup.exe</code>. Lo bajas una vez: después el launcher se
+              actualiza solo.
+            </p>
+            <p>
+              <a
+                class="boton boton--principal boton--grande boton--brillo"
+                href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+                data-descarga
+              >
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#windows" /></svg>Descargar para Windows
+              </a>
+            </p>
+            <div class="nota nota--aviso">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#warning" /></svg>
+              <p>Bájalo solo desde esta web o desde el Discord oficial. Si alguien te pasa otro archivo «del launcher», no lo abras.</p>
+            </div>
+          </section>
+
+          <section id="instalar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#package" /></svg></span>Instalar</h2>
+            <ol class="lista-pasos">
+              <li>Abre <code>Victoria-Kingdom-Setup.exe</code> desde tus descargas.</li>
+              <li>
+                Si aparece el aviso azul «Windows protegió su PC», toca <strong>Más información</strong> y después
+                <strong>Ejecutar de todas formas</strong>. <a href="#smartscreen">Por qué sale</a>.
+              </li>
+              <li>Acepta la licencia y elige dónde instalarlo. La carpeta que viene propuesta está bien.</li>
+              <li>Al terminar se abre Victoria Kingdom. Las próximas veces, ábrelo desde el acceso directo del escritorio.</li>
+            </ol>
+            <div class="nota nota--consejo">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg>
+              <p>No pide permisos de administrador: se instala solo para tu usuario de Windows.</p>
+            </div>
+          </section>
+
+          <section id="cuenta" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#user" /></svg></span>Tu cuenta</h2>
+            <p>Al abrir el launcher eliges cómo entrar. Hay dos caminos:</p>
+            <div class="dos-caminos">
+              <div class="camino camino--microsoft">
+                <h3><svg class="icono" aria-hidden="true"><use href="iconos.svg#windows" /></svg>Con Minecraft original</h3>
+                <p>Toca <strong>Tengo Minecraft original (Microsoft)</strong> y entra con la cuenta de Microsoft con la que compraste el juego.</p>
+              </div>
+              <div class="camino camino--victoria">
+                <h3><svg class="icono" aria-hidden="true"><use href="iconos.svg#user" /></svg>Sin Minecraft original</h3>
+                <p>Toca <strong>Crear cuenta</strong> y completa:</p>
+                <ul>
+                  <li>Tu nombre en el juego: de 3 a 16 letras, números o guion bajo.</li>
+                  <li>Una contraseña de 8 caracteres o más.</li>
+                  <li>Tu correo: te llega un código de 6 números para confirmarlo.</li>
+                </ul>
+              </div>
+            </div>
+            <p>Después el launcher te lleva por unos pasos cortos, una sola vez:</p>
+            <ul class="lista-check">
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg><span>Vincular tu Discord: te suma al servidor de Victoria con el rol de Jugador.</span></li>
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg><span>Aceptar las <a href="normas">normas</a>.</span></li>
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg><span>Un recorrido rápido antes de empezar.</span></li>
+            </ul>
+            <figure class="figura">
+              <img src="img/launcher/cuenta.jpg" alt="La pantalla de cuenta del launcher" width="1120" height="647" loading="lazy" />
+              <figcaption>¿Ya tienes cuenta? Toca «Ya tengo cuenta» y entra con tu nombre y contraseña.</figcaption>
+            </figure>
+          </section>
+
+          <section id="jugar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#play" /></svg></span>Primera partida</h2>
+            <p>
+              En la pantalla Jugar toca el botón verde <strong>JUGAR</strong>. La primera vez el launcher baja Minecraft 1.20.1, Forge,
+              Java y el modpack completo; según tu conexión puede tardar unos minutos. Las siguientes veces solo baja lo que cambió.
+            </p>
+            <figure class="figura">
+              <img src="img/launcher/jugar.jpg" alt="La pantalla Jugar del launcher" width="1120" height="647" loading="lazy" />
+              <figcaption>Arriba ves si el servidor está en línea y cuánta gente hay.</figcaption>
+            </figure>
+            <div class="nota nota--consejo">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#sparkles" /></svg>
+              <p>En la pestaña <strong>Mods</strong> activas o quitas los mods opcionales, y en <strong>Shaders</strong> eliges cómo se ve el juego.</p>
+            </div>
+          </section>
+
+          <section id="smartscreen" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield" /></svg></span>«Windows protegió su PC»</h2>
+            <p>
+              Es el aviso de Microsoft Defender SmartScreen. Sale con los programas nuevos que todavía no tienen una firma digital paga:
+              <strong>no quiere decir que tenga un virus</strong>. Para seguir:
+            </p>
+            <div class="smartscreen" aria-hidden="true">
+              <p class="smartscreen__titulo">Windows protegió su PC</p>
+              <p class="smartscreen__texto">
+                Microsoft Defender SmartScreen impidió el inicio de una aplicación no reconocida. Ejecutar esta aplicación puede poner en riesgo
+                su PC.
+              </p>
+              <span class="smartscreen__mas">Más información</span>
+              <p class="smartscreen__detalle">Aplicación: Victoria-Kingdom-Setup.exe<br />Editor: Editor desconocido</p>
+              <div class="smartscreen__botones">
+                <span class="smartscreen__ejecutar">Ejecutar de todas formas</span>
+                <span>No ejecutar</span>
+              </div>
+              <svg class="smartscreen__cursor" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.6L10 19z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round" /></svg>
+            </div>
+            <ol class="lista-pasos">
+              <li>Toca <strong>Más información</strong>, el texto subrayado.</li>
+              <li>Aparece el botón <strong>Ejecutar de todas formas</strong>: tócalo.</li>
+              <li>Sigue con la instalación como siempre.</li>
+            </ol>
+            <div class="nota">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#info" /></svg>
+              <p>El instalador está enviado a revisión a Microsoft. A medida que más jugadores lo instalan, el aviso deja de salir.</p>
+            </div>
+          </section>
+
+          <section id="antivirus" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield-check" /></svg></span>El antivirus lo bloquea</h2>
+            <p>
+              Algunos antivirus desconfían de cualquier programa nuevo y lo borran o lo ponen en cuarentena, a veces sin avisar. Si el instalador
+              o el launcher desaparecen, o una actualización no termina nunca:
+            </p>
+            <ol class="lista-pasos">
+              <li>Abre tu antivirus y busca «Victoria Kingdom» en la <strong>cuarentena</strong> o en el <strong>historial de amenazas</strong>.</li>
+              <li>Restáuralo y márcalo como <strong>permitido</strong>.</li>
+              <li>
+                Si vuelve a pasar, agrega una exclusión para la carpeta del launcher:
+                <code>%LOCALAPPDATA%\Programs\Victoria Kingdom</code>
+              </li>
+              <li>
+                Descarga de nuevo el instalador y ábrelo: se instala encima y <strong>no pierdes nada</strong> (tu cuenta, los mods y los mundos se
+                quedan).
+              </li>
+            </ol>
+            <h3>En Windows Defender</h3>
+            <p>
+              Inicio → <strong>Seguridad de Windows</strong> → <strong>Protección antivirus y contra amenazas</strong> →
+              <strong>Historial de protección</strong>. Ahí aparece lo que se bloqueó, con la opción de restaurarlo.
+            </p>
+            <div class="nota nota--aviso">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#warning" /></svg>
+              <p>Haz esto solo con el instalador oficial que bajaste de esta web. Nunca apagues el antivirus entero.</p>
+            </div>
+          </section>
+
+          <section id="actualizaciones" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#refresh" /></svg></span>Actualizaciones</h2>
+            <p>
+              El launcher se actualiza solo: al abrirlo busca si hay una versión nueva, la baja y se reinicia. Los mods y la configuración del
+              modpack también se ponen al día solos antes de jugar.
+            </p>
+            <p>
+              Si una actualización no termina nunca, casi siempre es el antivirus: sigue los pasos de <a href="#antivirus">El antivirus lo bloquea</a>,
+              o descarga el instalador otra vez, que se instala encima sin perder nada.
+            </p>
+          </section>
+
+          <section id="lento" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#gauge" /></svg></span>Va lento o se cierra</h2>
+            <h3>Memoria</h3>
+            <p>
+              En <strong>Ajustes</strong> eliges cuánta memoria usa el juego. Lo ideal son 8 GB; con menos de 6 GB puede haber tirones al
+              explorar, y más de 10 GB lo empeora en vez de mejorarlo.
+            </p>
+            <h3>Shaders</h3>
+            <p>Son lo que más le exige a la tarjeta de video. En la pestaña <strong>Shaders</strong> puedes elegir otro o apagarlos.</p>
+            <h3>Distant Horizons</h3>
+            <p>Dibuja el paisaje lejano. Si tu PC sufre, desactívalo en la pestaña <strong>Mods</strong>.</p>
+            <div class="nota nota--consejo">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#zap" /></svg>
+              <p>Cierra el navegador y otros programas pesados mientras juegas.</p>
+            </div>
+          </section>
+
+          <section id="archivos" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wrench" /></svg></span>Faltan archivos o no abre</h2>
+            <p>
+              En la pantalla Jugar toca <strong>Validar archivos</strong>: vuelve a dejar los mods y la configuración del modpack como vienen.
+              No toca tus mundos, tus capturas ni tus teclas.
+            </p>
+          </section>
+
+          <section id="conectar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wifi" /></svg></span>No puedo entrar al servidor</h2>
+            <p>
+              Mira primero si el servidor está en línea: lo dice la ficha de esta página y la pantalla Jugar del launcher. Si no responde, puede
+              ser un reinicio o un mantenimiento: los avisos salen en el Discord.
+            </p>
+            <p>¿Sigues con problemas? Escribe en el Discord con una captura del error y te ayudamos.</p>
+            <p>
+              <a class="boton boton--discord" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Pedir ayuda en Discord
+              </a>
+            </p>
+          </section>
+        </article>
+
+        <aside class="wiki__ficha" data-servidor data-estado="cargando" aria-label="El servidor">
+          <div class="ficha__portada" style="background-image: url('img/capturas/captura-01-chica.jpg')">
+            <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+          </div>
+          <ul class="ficha__filas">
+            <li><span>Estado</span><strong><span class="punto"></span><span data-estado-texto>Consultando…</span></strong></li>
+            <li><span>Jugadores</span><strong><span data-jugadores>—</span>&nbsp;/&nbsp;<span data-maximo>—</span></strong></li>
+            <li><span>Minecraft</span><strong data-minecraft>1.20.1</strong></li>
+            <li><span>Forge</span><strong data-forge>47.4.0</strong></li>
+            <li><span>Mods</span><strong data-mods>117</strong></li>
+          </ul>
+          <div class="ficha__acciones">
+            <a
+              class="boton boton--principal boton--ancho"
+              href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+              data-descarga
+            >
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar
+            </a>
+            <a class="boton boton--discord boton--ancho" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Discord
+            </a>
+          </div>
+          <p class="ficha__ayuda">¿Algo no está en la guía? Pregunta en el <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a>.</p>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="pie">
+      <div class="contenedor">
+        <div class="pie__grilla">
+          <div class="pie__marca">
+            <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" loading="lazy" />
+            <p>Servidor de rol de Minecraft Java 1.20.1, con launcher propio que instala todo solo.</p>
+            <div class="pie__redes">
+              <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener" aria-label="Discord de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4>Jugar</h4>
+            <ul>
+              <li><a href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>Descargar el launcher</a></li>
+              <li><a href="./#empezar">Cómo empezar</a></li>
+              <li><a href="guia">Guía de instalación</a></li>
+              <li><a href="#requisitos">Requisitos</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Comunidad</h4>
+            <ul>
+              <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
+              <li><a href="normas">Normas</a></li>
+              <li><a href="./#novedades">Novedades</a></li>
+              <li><a href="./#ciudad">Capturas</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Ayuda</h4>
+            <ul>
+              <li><a href="#smartscreen">Windows protegió su PC</a></li>
+              <li><a href="#antivirus">El antivirus lo bloquea</a></li>
+              <li><a href="#lento">El juego va lento</a></li>
+              <li><a href="#conectar">No puedo entrar</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="pie__base">
+          <span>© <span data-anio>2026</span> Victoria Kingdom</span>
+          <span>No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado con ellos.</span>
+        </div>
+      </div>
+    </footer>
+
+    <div class="tostada" role="status" aria-live="polite" data-tostada>
+      <span class="tostada__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg></span>
+      <div>
+        <strong>Bajando el instalador…</strong>
+        <p>
+          Si aparece «Windows protegió su PC», toca <b>Más información</b> y luego <b>Ejecutar de todas formas</b>.
+          <a href="#smartscreen">Ver cómo</a>
+        </p>
+      </div>
+      <button class="tostada__cerrar" type="button" aria-label="Cerrar el aviso" data-tostada-cerrar>
+        <svg class="icono" aria-hidden="true"><use href="iconos.svg#close" /></svg>
+      </button>
+    </div>
+
+    <button class="arriba" type="button" aria-label="Volver arriba" data-arriba>
+      <svg class="arriba__anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /></svg>
+      <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-up" /></svg>
+    </button>
+  </body>
+</html>

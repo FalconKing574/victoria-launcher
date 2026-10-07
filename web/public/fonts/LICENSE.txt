@@ -1,0 +1,14 @@
+Outfit
+Copyright (c) 2020 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts)
+
+Licensed under the SIL Open Font License, Version 1.1.
+Full text: https://openfontlicense.org
+
+Both files here are the same variable font (weight 300-800), split by character
+range the way Google Fonts serves it:
+
+  outfit-latin.woff2      basic Latin, covers Spanish accents and punctuation
+  outfit-latin-ext.woff2  extended Latin, for names the pack may contain
+
+They are bundled rather than fetched at runtime so the launcher opens with no
+network at all. See src/renderer/src/theme/tokens.css.

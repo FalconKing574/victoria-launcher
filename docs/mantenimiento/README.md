@@ -9,6 +9,7 @@ persona) pueda hacerlo sin conocer el historial del proyecto.
 2. [`02-actualizar-launcher.md`](02-actualizar-launcher.md) — publicar una versión nueva de la app
 3. [`03-arquitectura.md`](03-arquitectura.md) — qué hay dónde y por qué
 4. [`04-trampas.md`](04-trampas.md) — **fallos que ya han pasado**. Léelo antes de tocar nada.
+5. [`06-web.md`](06-web.md) — la web (Cloudflare Pages): verla, publicarla y cambiar su contenido
 
 ## Los dos sistemas son independientes
 
@@ -32,6 +33,7 @@ GitHub               FalconKing574/victoria-launcher
 Bucket R2            victoria-modpack
 Manifiesto           https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json
 Servidor de Minecraft 131.221.32.76:25567   (en el launcher: src/main/config.ts → SERVIDOR_MINECRAFT)
+Web                  https://victoriakingdom.pages.dev   (código en web/, ver 06-web.md)
 Minecraft / Forge    1.20.1 / 47.4.0
 ```
 

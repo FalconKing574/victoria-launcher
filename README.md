@@ -57,6 +57,7 @@ src/main/        proceso principal: disco, red, lanzar el juego, cuentas
 src/preload/     puente tipado (api.d.ts es el contrato)
 src/renderer/    interfaz React
 scripts/         manifiesto del modpack, firma, latest.yml, vista previa
+web/             la web pública (Cloudflare Pages): npm run web:ver
 tests/           vitest
 ```
 
