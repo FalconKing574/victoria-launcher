@@ -47,6 +47,26 @@ mundo que no había modpack. Sigue pasando la variable si publicas a otro sitio,
 pero olvidarla ya no rompe nada.
 **Comprueba:** `grep -o "manifest.json" out/main/index.js` después de compilar.
 
+### Un instalador sin `app-update.yml` deja al jugador sin actualizaciones para siempre
+
+**Síntoma:** la release se ve perfecta (no es borrador, tiene los cuatro
+archivos, `latest.yml` coincide con el instalador) y los jugadores se actualizan
+bien. Pero desde esa versión su launcher ya no encuentra ninguna otra: el
+actualizador lee en `resources/app-update.yml` dónde buscar, y no estaba. Pasó
+con la 1.8.0, la primera publicada con `publicar.yml` (07-10-2026); la corrige
+la 1.8.1. Quien llegó a instalar la 1.8.0 puede jugar,
+pero para volver a recibir actualizaciones tiene que reinstalar con
+`Victoria-Kingdom-Setup.exe`, que se actualiza solo a la última.
+**Causa:** electron-builder escribe ese archivo sólo cuando arma con destino
+`nsis`. El workflow armaba la app con `--dir` y el instalador con
+`--prepackaged`, y ninguno de los dos lo escribe. `npm run release` desde la PC
+sí arma con `nsis`, por eso las versiones anteriores lo traían.
+**Ya está puesto:** la primera vuelta del workflow arma con destino `nsis`, y el
+paso «El instalador lleva app-update.yml» abre el instalador final y corta antes
+de publicar si falta el archivo o no apunta a `FalconKing574/victoria-launcher`.
+**Comprueba** con lo publicado, no con la carpeta del build: el instalador por
+dentro (7-Zip lo abre; adentro, `$PLUGINSDIR/app-64.7z` → `resources/`).
+
 ### Un test que pasa en tu PC y falla en GitHub
 
 **Síntoma:** `publicar.yml` se corta en «Typecheck y tests» y no publica nada,

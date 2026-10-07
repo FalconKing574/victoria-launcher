@@ -87,6 +87,12 @@ cat release/win-unpacked/resources/app-update.yml
 Tiene que decir `owner: FalconKing574`. Si dice otra cosa, mira
 [`04-trampas.md`](04-trampas.md).
 
+Si publicaste con `publicar.yml` no hay carpeta: el paso «El instalador lleva
+app-update.yml» lo comprueba dentro del instalador final y corta antes de
+publicar. Que ese paso esté en verde en la corrida, y si no existe, **no
+publiques**: sin ese archivo quien se actualice no recibe nunca más otra
+versión (pasó con la 1.8.0).
+
 ## 6. El instalador que se reparte NO cambia
 
 Desde el 27-09-2026 a los jugadores se les da siempre el mismo archivo:
