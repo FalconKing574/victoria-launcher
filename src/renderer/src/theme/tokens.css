@@ -34,21 +34,23 @@
      los enlaces destacados. Cambiarlo es cambiar estas cuatro líneas; nada más
      en la interfaz lleva el color escrito a mano (07-10-2026).
 
-     Azul vivo y blanco, a pedido del dueño (con un logo de referencia azul
-     #0066FF y blanco) en vez del dorado, que con el estilo plano se veía
-     amarillo. El base da 3,8:1 sobre el fondo (íconos y bordes) y 4,8:1 con
-     texto blanco encima; para texto sobre fondo oscuro va el claro (7,4:1). */
-  --acento: #0066ff;
-  --acento-claro: #6aa6ff;
-  --acento-oscuro: #0047b3;
+     Rojo Victoria: el rojo del logo y de la bandera, elegido por el dueño
+     (07-10-2026) entre cuatro rojos, después de probar dorado y azul. Da 3,7:1
+     sobre el fondo (íconos y bordes) y 4,9:1 con texto blanco encima; para
+     texto sobre fondo oscuro va el claro. Como el color de error también es
+     rojo, los avisos informativos van en gris neutro y sólo los de error en
+     rojo (ver el aviso de Jugar). */
+  --acento: #d7263d;
+  --acento-claro: #ff6b7a;
+  --acento-oscuro: #8f1526;
   /* El texto que va encima del acento, en el botón principal. */
   --acento-texto: #ffffff;
 
-  /* Los botones llevan un degradado suave del mismo azul (pedido del dueño),
+  /* Los botones llevan un degradado suave del mismo rojo (pedido del dueño),
      y JUGAR va en verde, como el botón de jugar de Steam. Las dos puntas de
      cada uno dan al menos 4,5:1 con texto blanco salvo el verde claro, que se
      compensa con sombra en el texto, igual que en Steam. */
-  --boton-principal: linear-gradient(90deg, #0a6cff 0%, #0050d8 100%);
+  --boton-principal: linear-gradient(90deg, #df2f42 0%, #b81d32 100%);
   --boton-jugar: linear-gradient(90deg, #47c22f 0%, #2e9c38 100%);
 
   /* Nombres viejos del acento: medio launcher los usa. Siguen al acento. */

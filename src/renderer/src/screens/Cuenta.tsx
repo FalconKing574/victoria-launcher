@@ -483,7 +483,7 @@ function AyudaCuenta(): JSX.Element {
           textAlign: 'left'
         }}
       >
-        <span style={{ display: 'flex', color: 'var(--gold)' }}>
+        <span style={{ display: 'flex', color: 'var(--text-dim)' }}>
           <Icon name="info" size={16} />
         </span>
         <span style={{ flex: 1 }}>¿Qué cuenta uso? Hay dos formas de jugar.</span>

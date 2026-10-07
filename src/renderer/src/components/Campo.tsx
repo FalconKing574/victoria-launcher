@@ -54,7 +54,9 @@ export default function Campo({
           height: 46,
           padding: '0 12px 0 14px',
           background: foco ? 'var(--campo-hover)' : 'var(--campo)',
-          border: `1px solid ${error ? 'var(--err)' : foco ? 'var(--gold)' : 'transparent'}`,
+          // Enfocado en blanco, no en el acento: con el acento rojo, un campo
+          // enfocado se confundía con uno con error.
+          border: `1px solid ${error ? 'var(--err)' : foco ? 'rgba(255, 255, 255, 0.42)' : 'transparent'}`,
           borderRadius: 'var(--r-md)',
           transition: 'border-color 0.16s, background 0.16s'
         }}
@@ -63,7 +65,7 @@ export default function Campo({
           <span
             style={{
               display: 'flex',
-              color: foco ? 'var(--gold)' : 'var(--text-faint)',
+              color: foco ? 'var(--text)' : 'var(--text-faint)',
               transition: 'color 0.16s'
             }}
           >

@@ -59,21 +59,29 @@ export interface HomeProps {
   onBloqueo?: (respuesta: RespuestaCuenta) => void
 }
 
+/**
+ * Cada tarjeta con su color (pedido del dueño, 07-10-2026): el servidor en el
+ * rojo de Victoria, la comunidad en el azul de Discord y el modpack en el dorado
+ * del «KINGDOM» del logo.
+ */
 const NEWS = [
   {
     tag: 'Servidor',
+    color: '#e63946',
     image: NEWS_IMAGES.servidor,
     title: 'Victoria Kingdom — temporada abierta',
     body: 'Minecraft 1.20.1 con Forge 47.4.0 y el modpack completo ya instalado.'
   },
   {
     tag: 'Comunidad',
+    color: '#5865f2',
     image: NEWS_IMAGES.comunidad,
     title: 'Eventos y avisos en Discord',
     body: 'Las novedades, caídas y eventos se anuncian primero en el Discord del servidor.'
   },
   {
     tag: 'Modpack',
+    color: '#e0a526',
     image: NEWS_IMAGES.modpack,
     title: 'Mods opcionales a tu gusto',
     body: 'En la pestaña Modpack eliges qué extras instalar sin romper la partida.'
@@ -376,8 +384,10 @@ export default function Home({
             alignItems: 'center',
             gap: 12,
             padding: '11px 14px',
-            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid color-mix(in srgb, var(--gold) 35%, transparent)',
-            background: alerta ? 'rgba(255,92,108,0.07)' : 'color-mix(in srgb, var(--gold) 7%, transparent)'
+            // Lo informativo en gris neutro: el acento es rojo, igual que los
+            // errores, y una actualización lista no puede parecer una alarma.
+            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid var(--stroke-strong)',
+            background: alerta ? 'rgba(255,92,108,0.07)' : 'var(--surface-2)'
           }}
         >
           <span
@@ -672,7 +682,17 @@ export default function Home({
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
+                    background: `linear-gradient(rgba(14,14,15,0.2), color-mix(in srgb, ${item.color} 22%, rgba(14,14,15,0.9)))`
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: 3,
+                    background: item.color
                   }}
                 />
                 <span
@@ -686,8 +706,8 @@ export default function Home({
                     textTransform: 'uppercase',
                     padding: '4px 8px',
                     borderRadius: 5,
-                    background: 'color-mix(in srgb, var(--gold) 16%, transparent)',
-                    color: 'var(--gold-bright)'
+                    background: `color-mix(in srgb, ${item.color} 24%, rgba(14,14,15,0.6))`,
+                    color: `color-mix(in srgb, ${item.color} 55%, white)`
                   }}
                 >
                   {item.tag}

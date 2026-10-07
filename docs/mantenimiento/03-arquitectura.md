@@ -165,11 +165,17 @@ ingreso de un jugador nuevo (`components/BarraPasos.tsx`, la usan la pantalla
 de cuenta y la de pasos).
 
 **El color de acento está en un solo lugar:** `--acento`, `--acento-claro`,
-`--acento-oscuro` y `--acento-texto` en `theme/tokens.css`. Hoy es azul
-`#0066FF` con texto blanco (antes era dorado, y con el estilo plano se veía
-amarillo). Los `--gold*` que usa medio launcher son alias del acento; no
-escribas un color de acento a mano en una pantalla: usá esas variables, o
-`color-mix(in srgb, var(--gold) 12%, transparent)` para un tinte.
+`--acento-oscuro` y `--acento-texto` en `theme/tokens.css`. Hoy es el **rojo
+Victoria** (`#d7263d`, el del logo y la bandera) con texto blanco: el dueño lo
+eligió entre cuatro rojos después de probar el dorado (con el estilo plano se
+veía amarillo) y el azul. Los `--gold*` que usa medio launcher son alias del
+acento; no escribas un color de acento a mano en una pantalla: usá esas
+variables, o `color-mix(in srgb, var(--gold) 12%, transparent)` para un tinte.
+
+Como el error también es rojo, hay dos reglas para no confundirlos: los avisos
+informativos van en gris neutro (sólo los de error en rojo), y un campo
+enfocado se marca en blanco, no en el acento. Las tarjetas de Novedades de
+Jugar llevan cada una su color (`NEWS` en `Home.tsx`).
 
 **El botón dice qué falta.** Mientras un formulario de cuenta no se puede
 enviar, el botón va gris y su texto es lo que falta («Repetí la contraseña»).

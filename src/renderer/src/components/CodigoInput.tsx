@@ -42,7 +42,8 @@ export default function CodigoInput({
               marginLeft: i === LARGO_CODIGO / 2 ? 8 : 0,
               borderRadius: 'var(--r-md)',
               background: 'var(--campo)',
-              border: `1px solid ${activa ? 'var(--gold)' : 'transparent'}`,
+              // Blanco y no el acento, igual que los campos: rojo parecería error.
+              border: `1px solid ${activa ? 'rgba(255, 255, 255, 0.42)' : 'transparent'}`,
               display: 'grid',
               placeItems: 'center',
               fontSize: 22,
@@ -55,7 +56,7 @@ export default function CodigoInput({
                 <motion.span
                   animate={{ opacity: [1, 0, 1] }}
                   transition={{ repeat: Infinity, duration: 1.05 }}
-                  style={{ width: 2, height: 22, background: 'var(--gold)' }}
+                  style={{ width: 2, height: 22, background: 'var(--text)' }}
                 />
               ) : (
                 <span style={{ color: 'var(--text-faint)', fontSize: 14 }}>·</span>
