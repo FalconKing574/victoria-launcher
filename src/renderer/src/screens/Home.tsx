@@ -13,6 +13,7 @@ import newsModpack from '../assets/news/modpack.jpg'
 import type {
   LaunchProgress,
   LaunchStatus,
+  EstadoServidor,
   RespuestaCuenta,
   SyncCheck,
   UpdaterState
@@ -108,6 +109,10 @@ export default function Home({
 
   // The launcher's own update, so the notice can cover both.
   const [updater, setUpdater] = useState<UpdaterState | null>(null)
+
+  // En línea y cuánta gente hay, como el «Jugando ahora» de Majestic. Antes el
+  // puntito verde era fijo: decía «en línea» aunque el servidor estuviera caído.
+  const [servidor, setServidor] = useState<EstadoServidor | null>(null)
 
   // VALIDAR ARCHIVOS (02-10-2026): primero se explica qué hace, después se hace.
   const [confirmarValidar, setConfirmarValidar] = useState(false)
@@ -247,6 +252,24 @@ export default function Home({
     }
   }, [refreshPending])
 
+  useEffect(() => {
+    let vivo = true
+    const consultar = (): void => {
+      window.api.servidor
+        .estado()
+        .then((estado) => {
+          if (vivo) setServidor(estado)
+        })
+        .catch(() => undefined)
+    }
+    consultar()
+    const reloj = setInterval(consultar, 60_000)
+    return () => {
+      vivo = false
+      clearInterval(reloj)
+    }
+  }, [])
+
   // Checked on every mount, so opening the launcher always reports what is
   // pending instead of leaving it to be discovered in Ajustes.
   useEffect(() => {
@@ -353,8 +376,8 @@ export default function Home({
             alignItems: 'center',
             gap: 12,
             padding: '11px 14px',
-            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid rgba(230,180,34,0.35)',
-            background: alerta ? 'rgba(255,92,108,0.07)' : 'rgba(230,180,34,0.07)'
+            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid color-mix(in srgb, var(--gold) 35%, transparent)',
+            background: alerta ? 'rgba(255,92,108,0.07)' : 'color-mix(in srgb, var(--gold) 7%, transparent)'
           }}
         >
           <span
@@ -397,7 +420,7 @@ export default function Home({
             // Dos capas: una lateral para el bloque de texto y otra inferior
             // para que el botón y el estado se lean sobre cualquier foto.
             background:
-              'linear-gradient(0deg, rgba(9,9,14,0.94) 0%, rgba(9,9,14,0.55) 34%, rgba(9,9,14,0) 62%), linear-gradient(96deg, rgba(9,9,14,0.96) 0%, rgba(9,9,14,0.86) 40%, rgba(9,9,14,0.3) 100%)'
+              'linear-gradient(0deg, rgba(14,14,15,0.94) 0%, rgba(14,14,15,0.55) 34%, rgba(14,14,15,0) 62%), linear-gradient(96deg, rgba(14,14,15,0.96) 0%, rgba(14,14,15,0.86) 40%, rgba(14,14,15,0.3) 100%)'
           }}
         />
 
@@ -433,12 +456,23 @@ export default function Home({
                   width: 7,
                   height: 7,
                   borderRadius: '50%',
-                  background: 'var(--ok)',
-                  boxShadow: '0 0 8px var(--ok)',
+                  background: servidor?.enLinea ? 'var(--ok)' : 'var(--text-faint)',
+                  boxShadow: servidor?.enLinea ? '0 0 8px var(--ok)' : 'none',
                   flexShrink: 0
                 }}
               />
-              Minecraft 1.20.1 · Forge 47.4.0 · modpack oficial
+              {servidor === null ? (
+                'Consultando el servidor...'
+              ) : servidor.enLinea ? (
+                <span>
+                  <b style={{ color: 'var(--text)', fontWeight: 600 }}>En línea</b>
+                  {servidor.jugadores !== null &&
+                    ` · ${servidor.jugadores} ${servidor.jugadores === 1 ? 'jugador' : 'jugadores'} ahora`}
+                </span>
+              ) : (
+                'El servidor no responde'
+              )}
+              <span style={{ color: 'var(--text-faint)' }}>· Minecraft 1.20.1 · Forge 47.4.0</span>
             </div>
           </div>
 
@@ -505,8 +539,8 @@ export default function Home({
                       style={{
                         padding: '8px 13px',
                         borderRadius: 8,
-                        border: '1px solid rgba(230,180,34,0.5)',
-                        background: 'rgba(230,180,34,0.16)',
+                        border: '1px solid color-mix(in srgb, var(--gold) 50%, transparent)',
+                        background: 'color-mix(in srgb, var(--gold) 16%, transparent)',
                         color: 'var(--gold-bright)',
                         fontSize: 12.5,
                         fontWeight: 700,
@@ -622,7 +656,7 @@ export default function Home({
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(rgba(13,13,20,0.25), rgba(13,13,20,0.88))'
+                    background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
                   }}
                 />
                 <span
@@ -636,7 +670,7 @@ export default function Home({
                     textTransform: 'uppercase',
                     padding: '4px 8px',
                     borderRadius: 5,
-                    background: 'rgba(230,180,34,0.16)',
+                    background: 'color-mix(in srgb, var(--gold) 16%, transparent)',
                     color: 'var(--gold-bright)'
                   }}
                 >
@@ -706,7 +740,7 @@ const avisoBoton: React.CSSProperties = {
   padding: '8px 13px',
   borderRadius: 8,
   border: '1px solid var(--stroke-strong)',
-  background: 'rgba(230,180,34,0.12)',
+  background: 'color-mix(in srgb, var(--gold) 12%, transparent)',
   color: 'var(--gold-bright)',
   fontSize: 12.5,
   flexShrink: 0,

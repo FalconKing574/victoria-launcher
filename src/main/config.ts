@@ -26,3 +26,10 @@ export const MANIFEST_URL =
  * antivirus bloquea el que abre el actualizador.
  */
 export const LAUNCHER_REPO = 'FalconKing574/victoria-launcher'
+
+/**
+ * El servidor de Minecraft, para mostrar en Jugar si está en línea y cuánta
+ * gente hay (`lib/estado-servidor.ts`). Si cambia la IP o el puerto, se cambia
+ * acá y en docs/mantenimiento/README.md.
+ */
+export const SERVIDOR_MINECRAFT = { host: '131.221.32.76', puerto: 25567 }

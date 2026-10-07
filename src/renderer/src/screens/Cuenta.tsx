@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import ArteCapturas from '../components/ArteCapturas'
+import BarraPasos from '../components/BarraPasos'
 import Button from '../components/Button'
 import Campo from '../components/Campo'
+import CodigoInput from '../components/CodigoInput'
+import Icon from '../components/Icon'
 import logo from '../assets/logo.png'
-import art from '../assets/victoria.png'
+import {
+  etapasIngreso,
+  faltaCodigo,
+  faltaContrasenas,
+  faltaCorreo,
+  faltaEntrar,
+  faltaRegistro
+} from '../lib/formulario-cuenta'
 import type { PremiumSession, RespuestaCuenta } from '@shared/api'
 
 /**
@@ -15,8 +26,11 @@ import type { PremiumSession, RespuestaCuenta } from '@shared/api'
  * - **Crear cuenta**: nombre, contraseña y correo, y un código que llega al correo.
  * - **Ya tengo cuenta**: nombre y contraseña; desde ahí, recuperar con el correo.
  *
- * Las reglas de forma se muestran acá para ahorrar un viaje, pero las que valen
- * son las del servidor: cualquier `mensaje` que vuelva se muestra tal cual.
+ * El aspecto sigue al launcher de Majestic (07-10-2026): panel a la izquierda y
+ * capturas del servidor a la derecha, campos con ícono, código en casillas, y
+ * un botón que dice qué falta en vez de quedarse apagado sin explicar nada.
+ * Las reglas de forma están en `lib/formulario-cuenta.ts`; las que valen son las
+ * del servidor: cualquier `mensaje` que vuelva se muestra tal cual.
  */
 
 type Vista = 'inicio' | 'registro' | 'codigo' | 'entrar' | 'recuperar' | 'restablecer'
@@ -31,10 +45,14 @@ export interface CuentaProps {
   onReintentar?: () => void
 }
 
-const NOMBRE = /^[A-Za-z0-9_]{3,16}$/
-const CORREO = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/
+const ETAPAS = etapasIngreso('NO_PREMIUM')
 
-export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReintentar }: CuentaProps): JSX.Element {
+export default function Cuenta({
+  onListo,
+  sesionVencida,
+  servidorCaido,
+  onReintentar
+}: CuentaProps): JSX.Element {
   const [vista, setVista] = useState<Vista>('inicio')
   const [nombre, setNombre] = useState('')
   const [contrasena, setContrasena] = useState('')
@@ -90,17 +108,16 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
     }
   }
 
-  const problemaRegistro = ((): string | null => {
-    if (nombre && !NOMBRE.test(nombre)) return 'El nombre: de 3 a 16 caracteres, letras, números o guion bajo.'
-    if (contrasena && contrasena.length < 8) return 'La contraseña tiene que tener 8 caracteres o más.'
-    if (repetida && repetida !== contrasena) return 'Las contraseñas no coinciden.'
-    if (correo && !CORREO.test(correo.trim())) return 'Ese correo no parece válido.'
-    return null
-  })()
-  const registroCompleto = NOMBRE.test(nombre) && contrasena.length >= 8 && repetida === contrasena && CORREO.test(correo.trim())
+  const faltaReg = faltaRegistro({ nombre, contrasena, repetida, correo })
+  const faltaLogin = faltaEntrar({ nombre, contrasena })
+  const faltaCod = faltaCodigo(codigo)
+  const faltaRecuperar = faltaCorreo(correo)
+  const faltaNueva = faltaContrasenas(contrasena, repetida)
 
   async function registrar(): Promise<void> {
-    const r = await pedir(() => window.api.cuentas.registrar({ nombre, contrasena, correo: correo.trim() }))
+    const r = await pedir(() =>
+      window.api.cuentas.registrar({ nombre, contrasena, correo: correo.trim() })
+    )
     if (r?.ok) {
       setCorreoTapado(r.correo ?? '')
       setProposito('registro')
@@ -121,7 +138,7 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
       setVista('restablecer')
       return
     }
-    const r = await pedir(() => window.api.cuentas.confirmar({ correo: correo.trim(), codigo: codigo.trim() }))
+    const r = await pedir(() => window.api.cuentas.confirmar({ correo: correo.trim(), codigo }))
     if (r?.ok || r?.error === 'sancion') onListo(r)
   }
 
@@ -148,43 +165,52 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
 
   async function restablecer(): Promise<void> {
     const r = await pedir(() =>
-      window.api.cuentas.restablecer({ correo: correo.trim(), codigo: codigo.trim(), contrasena })
+      window.api.cuentas.restablecer({ correo: correo.trim(), codigo, contrasena })
     )
     if (r?.ok) onListo(r)
     else if (r?.error?.startsWith('codigo')) setVista('codigo')
   }
 
   const volver = (destino: Vista): JSX.Element => (
-    <button type="button" className="link" onClick={() => ir(destino)} style={enlace}>
-      ← Volver
-    </button>
+    <Button variant="ghost" full onClick={() => ir(destino)}>
+      Volver
+    </Button>
   )
+
+  // La barra de pasos sólo en la creación de cuenta: entrar o recuperar no son
+  // el ingreso de un jugador nuevo.
+  const etapa = vista === 'registro' ? 0 : vista === 'codigo' && proposito === 'registro' ? 1 : null
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.4 } }}
       exit={{ opacity: 0, transition: { duration: 0.25 } }}
-      style={{ display: 'grid', gridTemplateColumns: '440px 1fr', height: '100%' }}
+      style={{ display: 'grid', gridTemplateColumns: '420px 1fr', height: '100%' }}
     >
       <div
         style={{
           background: 'var(--bg-1)',
           borderRight: '1px solid var(--stroke)',
-          padding: '34px 34px',
+          padding: '24px 34px 20px',
           display: 'grid',
           gridTemplateRows: 'auto 1fr auto',
-          gap: 20,
+          gap: 16,
           overflowY: 'auto'
         }}
       >
         <img
           src={logo}
           alt="Victoria Kingdom"
-          style={{ width: '100%', maxWidth: 280, justifySelf: 'center', imageRendering: 'pixelated' }}
+          style={{
+            width: '100%',
+            maxWidth: 210,
+            justifySelf: 'center',
+            imageRendering: 'pixelated'
+          }}
         />
 
-        <div style={{ display: 'grid', gap: 16, alignContent: 'center' }}>
+        <div style={{ display: 'grid', gap: 10, alignContent: 'center' }}>
           {servidorCaido && (
             <div style={aviso}>
               El servidor de Victoria no responde. Sin él no se puede entrar ni jugar.
@@ -198,7 +224,11 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
 
           {vista === 'inicio' && (
             <>
-              <Titulo titulo="Bienvenido a Victoria" texto="Para jugar necesitás una cuenta de Victoria." />
+              <Titulo
+                titulo="Bienvenido a Victoria"
+                texto="Entrá a tu cuenta o creá una nueva para jugar."
+              />
+              <AyudaCuenta />
               <Button variant="microsoft" full loading={ocupado} onClick={() => void microsoft()}>
                 Tengo Minecraft original (Microsoft)
               </Button>
@@ -213,85 +243,180 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
           )}
 
           {vista === 'registro' && (
-            <Formulario onEnviar={() => registroCompleto && void registrar()}>
-              <Titulo titulo="Crear cuenta" texto="Te vamos a mandar un código al correo." />
-              <Campo etiqueta="Nombre en el juego" valor={nombre} onCambio={setNombre} autoFocus maxLength={16} />
-              <Campo etiqueta="Contraseña" tipo="password" valor={contrasena} onCambio={setContrasena} maxLength={72} />
-              <Campo etiqueta="Repetí la contraseña" tipo="password" valor={repetida} onCambio={setRepetida} maxLength={72} />
+            <Formulario onEnviar={() => faltaReg === null && void registrar()}>
+              <Titulo
+                titulo="Crear cuenta"
+                texto="Completá tus datos. Te mandamos un código al correo."
+              />
+              <Campo
+                etiqueta="Nombre en el juego"
+                icono="user"
+                placeholder="Así te van a ver en el servidor"
+                valor={nombre}
+                onCambio={setNombre}
+                autoFocus
+                maxLength={16}
+              />
+              <Campo
+                etiqueta="Contraseña"
+                tipo="password"
+                icono="lock"
+                placeholder="Mínimo 8 caracteres"
+                valor={contrasena}
+                onCambio={setContrasena}
+                maxLength={72}
+              />
+              <Campo
+                etiqueta="Repetí la contraseña"
+                tipo="password"
+                icono="lock"
+                placeholder="La misma de arriba"
+                valor={repetida}
+                onCambio={setRepetida}
+                maxLength={72}
+              />
               <Campo
                 etiqueta="Correo"
                 tipo="email"
+                icono="mail"
+                placeholder="tu@correo.com"
                 valor={correo}
                 onCambio={setCorreo}
                 nota="Sirve para recuperar la contraseña. Una cuenta por correo."
               />
-              {problemaRegistro && <p style={textoError}>{problemaRegistro}</p>}
-              <Button type="submit" full loading={ocupado} disabled={!registroCompleto}>
-                Crear cuenta
+              <Button type="submit" full loading={ocupado} disabled={faltaReg !== null}>
+                {faltaReg ?? 'Crear cuenta'}
               </Button>
               {volver('inicio')}
             </Formulario>
           )}
 
           {vista === 'codigo' && (
-            <Formulario onEnviar={() => codigo.trim().length === 6 && void confirmar()}>
+            <Formulario onEnviar={() => faltaCod === null && void confirmar()}>
               <Titulo
                 titulo="Revisá tu correo"
                 texto={`Mandamos un código de 6 números a ${correoTapado || 'tu correo'}. Vence en 10 minutos.`}
               />
-              <Campo
-                etiqueta="Código"
-                valor={codigo}
-                onCambio={(v) => setCodigo(v.replace(/\D/g, ''))}
-                autoFocus
-                maxLength={6}
-                inputMode="numeric"
-                nota="Si no llega, mirá en spam o promociones."
-              />
-              <Button type="submit" full loading={ocupado} disabled={codigo.trim().length !== 6}>
-                {proposito === 'recuperar' ? 'Seguir' : 'Confirmar'}
+              <CodigoInput valor={codigo} onCambio={setCodigo} autoFocus />
+              <div style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--text-dim)' }}>
+                {reenvioEn > 0 ? (
+                  <>
+                    Reenviar en <b style={{ color: 'var(--text)' }}>{reenvioEn} s</b>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={ocupado}
+                    onClick={() => void reenviar()}
+                    style={enlace}
+                  >
+                    Reenviar el código
+                  </button>
+                )}
+                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-faint)' }}>
+                  Si no llega, mirá en spam o promociones.
+                </div>
+              </div>
+              <Button type="submit" full loading={ocupado} disabled={faltaCod !== null}>
+                {faltaCod ?? (proposito === 'recuperar' ? 'Seguir' : 'Confirmar')}
               </Button>
-              <button type="button" disabled={reenvioEn > 0 || ocupado} onClick={() => void reenviar()} style={enlace}>
-                {reenvioEn > 0 ? `Reenviar el código en ${reenvioEn} s` : 'Reenviar el código'}
-              </button>
               {volver(proposito === 'recuperar' ? 'recuperar' : 'registro')}
             </Formulario>
           )}
 
           {vista === 'entrar' && (
-            <Formulario onEnviar={() => nombre && contrasena && void entrar()}>
-              <Titulo titulo="Entrar" texto="Con el nombre y la contraseña de tu cuenta de Victoria." />
-              <Campo etiqueta="Nombre" valor={nombre} onCambio={setNombre} autoFocus maxLength={16} />
-              <Campo etiqueta="Contraseña" tipo="password" valor={contrasena} onCambio={setContrasena} maxLength={72} />
-              <Button type="submit" full loading={ocupado} disabled={!nombre || !contrasena}>
-                Entrar
+            <Formulario onEnviar={() => faltaLogin === null && void entrar()}>
+              <Titulo
+                titulo="Entrar"
+                texto="Con el nombre y la contraseña de tu cuenta de Victoria."
+              />
+              <Campo
+                etiqueta="Nombre"
+                icono="user"
+                placeholder="Tu nombre en el juego"
+                valor={nombre}
+                onCambio={setNombre}
+                autoFocus
+                maxLength={16}
+              />
+              <Campo
+                etiqueta="Contraseña"
+                tipo="password"
+                icono="lock"
+                placeholder="Tu contraseña"
+                valor={contrasena}
+                onCambio={setContrasena}
+                maxLength={72}
+              />
+              <Button type="submit" full loading={ocupado} disabled={faltaLogin !== null}>
+                {faltaLogin ?? 'Entrar'}
               </Button>
-              <button type="button" onClick={() => ir('recuperar')} style={enlace}>
-                Olvidé mi contraseña
-              </button>
               {volver('inicio')}
+              <p
+                style={{
+                  margin: '2px 0 0',
+                  textAlign: 'center',
+                  fontSize: 12.5,
+                  color: 'var(--text-faint)'
+                }}
+              >
+                ¿Olvidaste tu contraseña?{' '}
+                <button type="button" onClick={() => ir('recuperar')} style={enlaceFuerte}>
+                  Recuperala
+                </button>
+              </p>
             </Formulario>
           )}
 
           {vista === 'recuperar' && (
-            <Formulario onEnviar={() => CORREO.test(correo.trim()) && void recuperar()}>
-              <Titulo titulo="Recuperar la cuenta" texto="Escribí el correo de tu cuenta y te mandamos un código." />
-              <Campo etiqueta="Correo" tipo="email" valor={correo} onCambio={setCorreo} autoFocus />
-              <Button type="submit" full loading={ocupado} disabled={!CORREO.test(correo.trim())}>
-                Mandar código
+            <Formulario onEnviar={() => faltaRecuperar === null && void recuperar()}>
+              <Titulo
+                titulo="Recuperar la cuenta"
+                texto="Escribí el correo de tu cuenta y te mandamos un código."
+              />
+              <Campo
+                etiqueta="Correo"
+                tipo="email"
+                icono="mail"
+                placeholder="tu@correo.com"
+                valor={correo}
+                onCambio={setCorreo}
+                autoFocus
+              />
+              <Button type="submit" full loading={ocupado} disabled={faltaRecuperar !== null}>
+                {faltaRecuperar ?? 'Mandar código'}
               </Button>
               {volver('entrar')}
             </Formulario>
           )}
 
           {vista === 'restablecer' && (
-            <Formulario onEnviar={() => contrasena.length >= 8 && contrasena === repetida && void restablecer()}>
-              <Titulo titulo="Contraseña nueva" texto="Al cambiarla se cierra la sesión en las otras PC." />
-              <Campo etiqueta="Contraseña nueva" tipo="password" valor={contrasena} onCambio={setContrasena} autoFocus maxLength={72} />
-              <Campo etiqueta="Repetila" tipo="password" valor={repetida} onCambio={setRepetida} maxLength={72} />
-              {repetida && repetida !== contrasena && <p style={textoError}>Las contraseñas no coinciden.</p>}
-              <Button type="submit" full loading={ocupado} disabled={contrasena.length < 8 || contrasena !== repetida}>
-                Guardar y entrar
+            <Formulario onEnviar={() => faltaNueva === null && void restablecer()}>
+              <Titulo
+                titulo="Contraseña nueva"
+                texto="Al cambiarla se cierra la sesión en las otras PC."
+              />
+              <Campo
+                etiqueta="Contraseña nueva"
+                tipo="password"
+                icono="lock"
+                placeholder="Mínimo 8 caracteres"
+                valor={contrasena}
+                onCambio={setContrasena}
+                autoFocus
+                maxLength={72}
+              />
+              <Campo
+                etiqueta="Repetila"
+                tipo="password"
+                icono="lock"
+                placeholder="La misma de arriba"
+                valor={repetida}
+                onCambio={setRepetida}
+                maxLength={72}
+              />
+              <Button type="submit" full loading={ocupado} disabled={faltaNueva !== null}>
+                {faltaNueva ?? 'Guardar y entrar'}
               </Button>
               {volver('codigo')}
             </Formulario>
@@ -300,42 +425,104 @@ export default function Cuenta({ onListo, sesionVencida, servidorCaido, onReinte
           {error && <p style={textoError}>{error}</p>}
         </div>
 
-        <p style={{ margin: 0, fontSize: 11, color: 'var(--text-faint)', lineHeight: 1.6 }}>
-          Minecraft 1.20.1 · Forge 47.4.0
-        </p>
+        {etapa !== null ? (
+          <BarraPasos etapas={ETAPAS} actual={etapa} />
+        ) : (
+          <p style={{ margin: 0, fontSize: 11, color: 'var(--text-faint)', textAlign: 'center' }}>
+            Minecraft 1.20.1 · Forge 47.4.0
+          </p>
+        )}
       </div>
 
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        <img
-          src={art}
-          alt=""
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 28%' }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, rgba(13,13,20,0.85), rgba(13,13,20,0.15) 45%, rgba(13,13,20,0.55))'
-          }}
-        />
-        <div style={{ position: 'absolute', left: 34, bottom: 30, right: 34 }}>
-          <p className="eyebrow" style={{ margin: '0 0 6px' }}>
-            Servidor oficial
-          </p>
-          <p style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: -0.4, textShadow: '0 2px 20px rgba(0,0,0,0.6)' }}>
-            Victoria Kingdom
-          </p>
-        </div>
-      </div>
+      <ArteCapturas />
     </motion.div>
   )
 }
 
 function Titulo({ titulo, texto }: { titulo: string; texto: string }): JSX.Element {
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h1 style={{ margin: '0 0 6px', fontSize: 21, fontWeight: 700 }}>{titulo}</h1>
-      <p style={{ margin: 0, color: 'var(--text-dim)', fontSize: 13, lineHeight: 1.6 }}>{texto}</p>
+    <div style={{ textAlign: 'center', marginBottom: 4 }}>
+      <h1
+        style={{
+          margin: '0 0 6px',
+          fontSize: 17,
+          fontWeight: 800,
+          letterSpacing: 0.6,
+          textTransform: 'uppercase'
+        }}
+      >
+        {titulo}
+      </h1>
+      <p style={{ margin: 0, color: 'var(--text-dim)', fontSize: 13, lineHeight: 1.55 }}>{texto}</p>
+    </div>
+  )
+}
+
+/**
+ * La duda más común del que llega: qué cuenta usar. Plegada para no ocupar
+ * lugar, como el aviso del panel de Majestic.
+ */
+function AyudaCuenta(): JSX.Element {
+  const [abierta, setAbierta] = useState(false)
+  return (
+    <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)' }}>
+      <button
+        type="button"
+        onClick={() => setAbierta((a) => !a)}
+        aria-expanded={abierta}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '11px 12px',
+          background: 'none',
+          border: 0,
+          color: 'var(--text)',
+          fontSize: 12.5,
+          textAlign: 'left'
+        }}
+      >
+        <span style={{ display: 'flex', color: 'var(--gold)' }}>
+          <Icon name="info" size={16} />
+        </span>
+        <span style={{ flex: 1 }}>¿Qué cuenta uso? Hay dos formas de jugar.</span>
+        <span
+          style={{
+            display: 'flex',
+            color: 'var(--text-faint)',
+            transform: `rotate(${abierta ? -90 : 90}deg)`,
+            transition: 'transform 0.2s'
+          }}
+        >
+          <Icon name="chevron" size={15} />
+        </span>
+      </button>
+      {abierta && (
+        <div
+          style={{
+            display: 'grid',
+            gap: 8,
+            padding: '0 14px 12px 38px',
+            fontSize: 12.5,
+            lineHeight: 1.6,
+            color: 'var(--text-dim)'
+          }}
+        >
+          <p style={{ margin: 0 }}>
+            <b style={{ color: 'var(--text)' }}>Con Minecraft original:</b> entrá con tu cuenta de
+            Microsoft. Tu nombre y tu skin salen de ahí.
+          </p>
+          <p style={{ margin: 0 }}>
+            <b style={{ color: 'var(--text)' }}>Sin Minecraft original:</b> creá una cuenta de
+            Victoria con nombre, contraseña y correo. Te mandamos un código para confirmar el
+            correo.
+          </p>
+          <p style={{ margin: 0 }}>
+            Después, las dos piden lo mismo: vincular Discord y aceptar las normas.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -350,14 +537,20 @@ function Separador({ texto }: { texto: string }): JSX.Element {
   )
 }
 
-function Formulario({ children, onEnviar }: { children: React.ReactNode; onEnviar: () => void }): JSX.Element {
+function Formulario({
+  children,
+  onEnviar
+}: {
+  children: React.ReactNode
+  onEnviar: () => void
+}): JSX.Element {
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
         onEnviar()
       }}
-      style={{ display: 'grid', gap: 12 }}
+      style={{ display: 'grid', gap: 10 }}
     >
       {children}
     </form>
@@ -371,11 +564,25 @@ const enlace: React.CSSProperties = {
   color: 'var(--text-dim)',
   fontSize: 12.5,
   textDecoration: 'underline',
-  cursor: 'pointer',
-  justifySelf: 'center'
+  cursor: 'pointer'
 }
 
-const textoError: React.CSSProperties = { color: 'var(--err)', fontSize: 13, margin: 0, lineHeight: 1.5 }
+const enlaceFuerte: React.CSSProperties = {
+  background: 'none',
+  border: 0,
+  padding: 0,
+  color: 'var(--text)',
+  fontSize: 12.5,
+  fontWeight: 700,
+  cursor: 'pointer'
+}
+
+const textoError: React.CSSProperties = {
+  color: 'var(--err)',
+  fontSize: 13,
+  margin: 0,
+  lineHeight: 1.5
+}
 
 const aviso: React.CSSProperties = {
   background: 'rgba(255, 92, 108, 0.1)',

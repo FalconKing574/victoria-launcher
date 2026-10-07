@@ -126,6 +126,15 @@ export interface UpdaterState {
   antivirus: boolean
 }
 
+/** Lo que contesta el servidor de Minecraft al «ping» de la lista de servidores. */
+export interface EstadoServidor {
+  enLinea: boolean
+  jugadores: number | null
+  maximo: number | null
+  version: string | null
+  latencia: number | null
+}
+
 export interface SyncLive {
   running: boolean
   percent: number
@@ -278,6 +287,10 @@ export interface VictoriaApi {
      */
     posponer(): Promise<UpdaterState>
     onState(cb: (state: UpdaterState) => void): () => void
+  }
+  servidor: {
+    /** Si el servidor de Minecraft está en línea y cuánta gente hay. Nunca falla. */
+    estado(): Promise<EstadoServidor>
   }
   settings: {
     get(): Promise<Settings>

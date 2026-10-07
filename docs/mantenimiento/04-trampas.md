@@ -226,6 +226,13 @@ Streams o la variante async.
 
 ## Interfaz
 
+### El «en línea» de Jugar era un puntito verde fijo
+
+Decía que el servidor estaba en línea aunque estuviera caído: no consultaba
+nada. Ahora pregunta de verdad con el ping de la lista de servidores
+(`lib/estado-servidor.ts`) y, si no contesta, lo dice. Si cambia la IP o el
+puerto del servidor, cambialo en `src/main/config.ts` → `SERVIDOR_MINECRAFT`.
+
 ### Las pantallas se desmontan al cambiar de pestaña
 
 El estado que vive en un componente se pierde. Una descarga en curso parecía

@@ -9,6 +9,7 @@ import { registerLaunchHandlers } from './ipc/launch'
 import { registerSyncHandlers } from './ipc/sync'
 import { registerShaderHandlers } from './ipc/shaders'
 import { registerUpdaterHandlers } from './ipc/updater'
+import { registerServidorHandlers } from './ipc/servidor'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
 import { crashLogPath } from './lib/paths'
 import { permisoPermitido } from './lib/permisos'
@@ -67,7 +68,7 @@ function createWindow(): BrowserWindow {
     minHeight: 640,
     show: false,
     frame: false,
-    backgroundColor: '#0b0b10',
+    backgroundColor: '#0e0e0f',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -151,6 +152,7 @@ if (!app.requestSingleInstanceLock()) {
     registerSyncHandlers()
     registerShaderHandlers()
     registerUpdaterHandlers()
+    registerServidorHandlers()
     registerSettingsHandlers()
 
     const win = createWindow()

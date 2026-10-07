@@ -153,6 +153,37 @@ La sección «Shaders que quitaste» lo trae de vuelta. Antes era un `rmSync`: e
 archivo desaparecía y el nombre se quedaba en la lista para siempre, así que no
 había ninguna forma de recuperarlo desde el launcher.
 
+## Aspecto (07-10-2026)
+
+Sigue al launcher de Majestic, a pedido del dueño: grises neutros y planos,
+botones en mayúsculas sin degradados, campos con etiqueta arriba, ícono adentro
+y ojo para ver la contraseña (`components/Campo.tsx`), el código del correo en
+seis casillas (`components/CodigoInput.tsx`) y una barra de segmentos para el
+ingreso de un jugador nuevo (`components/BarraPasos.tsx`, la usan la pantalla
+de cuenta y la de pasos).
+
+**El color de acento está en un solo lugar:** `--acento`, `--acento-claro`,
+`--acento-oscuro` y `--acento-texto` en `theme/tokens.css`. Hoy es azul
+`#0066FF` con texto blanco (antes era dorado, y con el estilo plano se veía
+amarillo). Los `--gold*` que usa medio launcher son alias del acento; no
+escribas un color de acento a mano en una pantalla: usá esas variables, o
+`color-mix(in srgb, var(--gold) 12%, transparent)` para un tinte.
+
+**El botón dice qué falta.** Mientras un formulario de cuenta no se puede
+enviar, el botón va gris y su texto es lo que falta («Repetí la contraseña»).
+Las reglas están en `lib/formulario-cuenta.ts`, con tests.
+
+**Capturas de fondo en la pantalla de cuenta:** lo que haya en
+`assets/capturas/` va rotando (`components/ArteCapturas.tsx`, con
+`import.meta.glob`, sin tocar código). Se ponen con
+`node scripts/importar-capturas.mjs <carpeta o archivos>`, que las pasa a JPEG
+de 1600 px. Sin ninguna, queda el arte fijo `assets/victoria.png`.
+
+**Estado del servidor en Jugar:** `lib/estado-servidor.ts` hace el mismo ping
+que la lista de servidores de Minecraft (Server List Ping) contra
+`SERVIDOR_MINECRAFT` de `config.ts`, con caché de 20 s (`ipc/servidor.ts`).
+Cualquier problema es «El servidor no responde», nunca un error.
+
 ## La interfaz no depende de internet
 
 El launcher abre sin red. La tipografía (Outfit) va empaquetada en
@@ -172,6 +203,12 @@ npm run build && node scripts/preview-renderer.mjs
 
 Sirve `out/renderer` en `http://localhost:4310` con un `window.api` falso, así
 que se pueden mirar todas las pantallas sin lanzar el launcher del usuario.
+
+Escenarios por la URL: `?cuenta=nueva|pasos|lista|sancion`,
+`?launcher=al-dia|descarga|lenta|lista|bloqueada|sin-red` y `?servidor=caido`.
+**El `window.api` falso vive en la memoria del servidor de la vista previa:** si
+cambiás `scripts/preview-renderer.mjs`, reinicialo. Con el viejo, una pantalla
+que llama a algo nuevo del api revienta y se ve en negro.
 
 ## Tests
 

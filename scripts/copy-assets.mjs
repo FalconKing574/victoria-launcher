@@ -10,7 +10,6 @@ if (!existsSync(SRC)) {
 }
 
 mkdirSync(join(DEST, 'panorama'), { recursive: true })
-mkdirSync(join(DEST, 'slideshow'), { recursive: true })
 
 const files = [
   ['assets/logo.png', 'logo.png'],
@@ -25,9 +24,6 @@ for (let i = 0; i < 6; i++) {
     join(SRC, `panoramas/farfania_pan_1/panorama/panorama_${i}.png`),
     join(DEST, `panorama/panorama_${i}.png`)
   )
-}
-for (let i = 1; i <= 7; i++) {
-  cpSync(join(SRC, `slideshows/carga/images/image_${i}.png`), join(DEST, `slideshow/image_${i}.png`))
 }
 
 console.log('Assets copied.')

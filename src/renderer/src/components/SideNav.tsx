@@ -64,8 +64,10 @@ export default function SideNav({
                 padding: '10px 12px',
                 borderRadius: 10,
                 border: 'none',
-                background: isActive ? 'rgba(230,180,34,0.10)' : 'transparent',
-                color: isActive ? 'var(--gold-bright)' : 'var(--text-dim)',
+                // Como en Majestic: lo activo se marca con la barra del borde y el
+                // ícono dorado, no tiñendo todo el renglón.
+                background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
+                color: isActive ? 'var(--text)' : 'var(--text-dim)',
                 fontSize: 13.5,
                 fontWeight: isActive ? 600 : 500,
                 textAlign: 'left',
@@ -92,7 +94,9 @@ export default function SideNav({
                   }}
                 />
               )}
-              <Icon name={item.icon} size={16} />
+              <span style={{ display: 'flex', color: isActive ? 'var(--gold)' : 'inherit' }}>
+                <Icon name={item.icon} size={16} />
+              </span>
               {item.label}
             </button>
           )
@@ -143,8 +147,7 @@ export default function SideNav({
             gap: 10,
             padding: 9,
             borderRadius: 10,
-            background: 'var(--surface-2)',
-            border: '1px solid var(--stroke)'
+            background: 'var(--surface-2)'
           }}
         >
           <Avatar username={username} size={30} radius={7} />

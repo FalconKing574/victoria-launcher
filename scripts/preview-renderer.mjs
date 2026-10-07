@@ -224,6 +224,15 @@ const STUB = `<script>
         onState: (cb) => { oyentes.add(cb); return () => oyentes.delete(cb) }
       }
     })(),
+    // ?servidor=caido para ver el servidor sin respuesta.
+    servidor: {
+      estado: async () => {
+        await espera(600)
+        return new URLSearchParams(location.search).get('servidor') === 'caido'
+          ? { enLinea: false, jugadores: null, maximo: null, version: null, latencia: null }
+          : { enLinea: true, jugadores: 23, maximo: 120, version: '1.20.1', latencia: 84 }
+      }
+    },
     settings: { get: async () => settings, save: async (p) => Object.assign(settings, p) },
     launch: {
       start: async () => {}, isRunning: async () => false,
