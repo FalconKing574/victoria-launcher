@@ -32,10 +32,10 @@ import type { IUser } from 'minecraft-launcher-core'
  * las tres se caían a una letra sobre un cuadro dorado — que es lo que se veía
  * como "no cargan las imágenes".
  *
- * Ahora son recortes de las caras del panorama original (`assets/panorama/
- * original/`, 2048px sin desenfocar), o sea capturas de verdad del mundo del
- * servidor. Se regeneran con el bloque de sharp de `scripts/`; 106 KB las tres.
- * Si algún día hay capturas mejores, se sustituyen estos tres archivos y ya.
+ * Ahora son capturas del servidor que eligió el dueño (07-10-2026): el palacio
+ * de día, la plaza de las banderas y la sastrería. Las recorta
+ * `scripts/tarjetas-novedades.mjs`, que deja las mismas en la web; 76 KB las
+ * tres. Para cambiarlas se vuelve a correr el script con otras capturas.
  * ------------------------------------------------------------------------- */
 const HERO_IMAGE = heroBandera
 

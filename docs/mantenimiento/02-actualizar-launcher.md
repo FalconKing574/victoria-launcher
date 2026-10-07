@@ -170,5 +170,6 @@ porque corre dentro del instalador nuevo.
 | RAM recomendada, flags de la JVM | `src/main/lib/settings-core.ts` |
 | Color de acento (hoy rojo Victoria `#d7263d`) | `src/renderer/src/theme/tokens.css` → `--acento*` |
 | Degradado de los botones y verde de JUGAR | `src/renderer/src/theme/tokens.css` → `--boton-principal`, `--boton-jugar` |
-| Capturas de fondo de la pantalla de cuenta | `src/renderer/src/assets/capturas/`, con `node scripts/importar-capturas.mjs` |
+| Capturas de fondo de la pantalla de cuenta (y galería de la web) | `src/renderer/src/assets/capturas/`, con `node scripts/importar-capturas.mjs` |
+| Imágenes de las tarjetas de Novedades (launcher y web) | `node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png` |
 | Servidor del «En línea · N jugadores» | `src/main/config.ts` → `SERVIDOR_MINECRAFT` |

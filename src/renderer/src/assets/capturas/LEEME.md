@@ -14,3 +14,28 @@ node scripts/importar-capturas.mjs a.png b.png c.png
 ```
 
 Como mucho 12. Conviene armar una carpeta sólo con las que se quieran mostrar.
+
+## También van a la web
+
+El mismo script deja copias en `web/public/img/capturas/` (1920 px y
+miniaturas de 720 px) y la lista `web/public/datos/capturas.json`, que es lo
+que muestra la galería de la web. La primera captura es además la portada.
+
+El pie de cada foto sale del nombre del archivo: renombrá «2026-10-07_00.53.23.png»
+a «El palacio.png» antes de importarla. Con el nombre de Minecraft queda sin pie.
+
+## Tarjetas de Novedades (pantalla Jugar y web)
+
+Elegidas por el dueño el 07-10-2026:
+
+| Tarjeta | Captura |
+|---|---|
+| Servidor | el palacio de día (fachada con columnas, cielo azul) |
+| Comunidad | la plaza con los árboles y las banderas de Victoria |
+| Modpack | la sastrería (trajes y reloj de pie) |
+
+Se recortan con otro script, que las deja en `assets/news/` y en la web:
+
+```bash
+node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png
+```

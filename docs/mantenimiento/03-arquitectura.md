@@ -186,7 +186,13 @@ Las reglas están en `lib/formulario-cuenta.ts`, con tests.
 `assets/capturas/` va rotando (`components/ArteCapturas.tsx`, con
 `import.meta.glob`, sin tocar código). Se ponen con
 `node scripts/importar-capturas.mjs <carpeta o archivos>`, que las pasa a JPEG
-de 1600 px. Sin ninguna, queda el arte fijo `assets/victoria.png`.
+de 1600 px y deja también las copias de la web (galería y portada). El pie de
+foto de la web es el nombre del archivo. Sin ninguna, queda el arte fijo
+`assets/victoria.png`.
+
+**Tarjetas de Novedades:** `assets/news/servidor.jpg`, `comunidad.jpg` y
+`modpack.jpg`, las mismas que en la web. Se recortan con
+`node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png`.
 
 **Estado del servidor en Jugar:** `lib/estado-servidor.ts` hace el mismo ping
 que la lista de servidores de Minecraft (Server List Ping) contra
