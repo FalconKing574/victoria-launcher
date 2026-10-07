@@ -175,7 +175,8 @@ variables, o `color-mix(in srgb, var(--gold) 12%, transparent)` para un tinte.
 Como el error también es rojo, hay dos reglas para no confundirlos: los avisos
 informativos van en gris neutro (sólo los de error en rojo), y un campo
 enfocado se marca en blanco, no en el acento. Las tarjetas de Novedades de
-Jugar llevan cada una su color (`NEWS` en `Home.tsx`).
+Jugar llevan cada una su color (`NEWS` en `Home.tsx`), pero sólo en el texto
+de la etiqueta: con franja y tinte era demasiado color.
 
 **El botón dice qué falta.** Mientras un formulario de cuenta no se puede
 enviar, el botón va gris y su texto es lo que falta («Repetí la contraseña»).

@@ -60,9 +60,10 @@ export interface HomeProps {
 }
 
 /**
- * Cada tarjeta con su color (pedido del dueño, 07-10-2026): el servidor en el
- * rojo de Victoria, la comunidad en el azul de Discord y el modpack en el dorado
- * del «KINGDOM» del logo.
+ * Cada tarjeta con su color (pedido del dueño, 07-10-2026), sólo en el texto de
+ * la etiqueta: el servidor en el rojo de Victoria, la comunidad en el azul de
+ * Discord y el modpack en el dorado del «KINGDOM» del logo. Una versión con
+ * franja de color arriba y la imagen teñida le pareció demasiado.
  */
 const NEWS = [
   {
@@ -682,17 +683,7 @@ export default function Home({
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: `linear-gradient(rgba(14,14,15,0.2), color-mix(in srgb, ${item.color} 22%, rgba(14,14,15,0.9)))`
-                  }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    height: 3,
-                    background: item.color
+                    background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
                   }}
                 />
                 <span
@@ -706,8 +697,8 @@ export default function Home({
                     textTransform: 'uppercase',
                     padding: '4px 8px',
                     borderRadius: 5,
-                    background: `color-mix(in srgb, ${item.color} 24%, rgba(14,14,15,0.6))`,
-                    color: `color-mix(in srgb, ${item.color} 55%, white)`
+                    background: 'rgba(14,14,15,0.72)',
+                    color: `color-mix(in srgb, ${item.color} 80%, white)`
                   }}
                 >
                   {item.tag}
