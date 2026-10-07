@@ -169,5 +169,6 @@ porque corre dentro del instalador nuevo.
 | Repo de actualizaciones | `electron-builder.yml` → `publish` |
 | RAM recomendada, flags de la JVM | `src/main/lib/settings-core.ts` |
 | Color de acento (hoy azul `#0066FF`) | `src/renderer/src/theme/tokens.css` → `--acento*` |
+| Degradado de los botones y verde de JUGAR | `src/renderer/src/theme/tokens.css` → `--boton-principal`, `--boton-jugar` |
 | Capturas de fondo de la pantalla de cuenta | `src/renderer/src/assets/capturas/`, con `node scripts/importar-capturas.mjs` |
 | Servidor del «En línea · N jugadores» | `src/main/config.ts` → `SERVIDOR_MINECRAFT` |

@@ -2,17 +2,27 @@ import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { spring } from '../theme/motion'
 
-type Variant = 'primary' | 'ghost' | 'microsoft'
+type Variant = 'primary' | 'ghost' | 'microsoft' | 'jugar'
 
 /**
- * Planos y en mayúsculas, al estilo del launcher de Majestic (07-10-2026). Antes
- * el principal era un degradado dorado con brillo y todos crecían al pasar el
- * mouse; ahora el color hace el trabajo y el movimiento es mínimo.
+ * En mayúsculas y sin saltos al pasar el mouse, al estilo del launcher de
+ * Majestic (07-10-2026). El principal es azul con un degradado suave y JUGAR
+ * es verde, como en Steam: los dos salen de `theme/tokens.css`.
  */
 const STYLES: Record<Variant, React.CSSProperties> = {
-  primary: { background: 'var(--acento)', color: 'var(--acento-texto)', fontWeight: 800 },
+  primary: {
+    background: 'var(--boton-principal)',
+    color: 'var(--acento-texto)',
+    fontWeight: 800
+  },
   ghost: { background: 'var(--surface-3)', color: 'var(--text)', fontWeight: 700 },
-  microsoft: { background: '#107c10', color: '#fff', fontWeight: 700 }
+  microsoft: { background: '#107c10', color: '#fff', fontWeight: 700 },
+  jugar: {
+    background: 'var(--boton-jugar)',
+    color: '#fff',
+    fontWeight: 800,
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.35)'
+  }
 }
 
 /**

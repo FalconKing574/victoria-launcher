@@ -156,7 +156,9 @@ había ninguna forma de recuperarlo desde el launcher.
 ## Aspecto (07-10-2026)
 
 Sigue al launcher de Majestic, a pedido del dueño: grises neutros y planos,
-botones en mayúsculas sin degradados, campos con etiqueta arriba, ícono adentro
+botones en mayúsculas (el principal en azul con un degradado suave, y JUGAR en
+verde, como el de Steam: `--boton-principal` y `--boton-jugar` en
+`tokens.css`), campos con etiqueta arriba, ícono adentro
 y ojo para ver la contraseña (`components/Campo.tsx`), el código del correo en
 seis casillas (`components/CodigoInput.tsx`) y una barra de segmentos para el
 ingreso de un jugador nuevo (`components/BarraPasos.tsx`, la usan la pantalla

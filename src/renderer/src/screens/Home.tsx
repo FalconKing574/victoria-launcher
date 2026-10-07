@@ -488,8 +488,24 @@ export default function Home({
               {/* `updating` counts too: after a tab change the install may be
                   one this mount never started, so `launching` is false while a
                   download is very much in progress. */}
-              <Button full loading={launching || updating} onClick={() => void handlePlay()}>
-                {validando ? 'VALIDANDO...' : updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
+              <Button
+                variant="jugar"
+                full
+                loading={launching || updating}
+                onClick={() => void handlePlay()}
+              >
+                {validando ? (
+                  'VALIDANDO...'
+                ) : updating ? (
+                  'INSTALANDO...'
+                ) : launching ? (
+                  'INICIANDO...'
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+                    <Icon name="play" size={15} />
+                    JUGAR
+                  </span>
+                )}
               </Button>
             </div>
 

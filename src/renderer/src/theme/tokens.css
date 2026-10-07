@@ -44,6 +44,13 @@
   /* El texto que va encima del acento, en el botón principal. */
   --acento-texto: #ffffff;
 
+  /* Los botones llevan un degradado suave del mismo azul (pedido del dueño),
+     y JUGAR va en verde, como el botón de jugar de Steam. Las dos puntas de
+     cada uno dan al menos 4,5:1 con texto blanco salvo el verde claro, que se
+     compensa con sombra en el texto, igual que en Steam. */
+  --boton-principal: linear-gradient(90deg, #0a6cff 0%, #0050d8 100%);
+  --boton-jugar: linear-gradient(90deg, #47c22f 0%, #2e9c38 100%);
+
   /* Nombres viejos del acento: medio launcher los usa. Siguen al acento. */
   --gold: var(--acento);
   --gold-bright: var(--acento-claro);
