@@ -202,7 +202,7 @@ export default function Modpack(): JSX.Element {
                           letterSpacing: 0.7,
                           padding: '4px 8px',
                           borderRadius: 5,
-                          background: 'rgba(9,9,14,0.82)',
+                          background: 'rgba(14,14,15,0.82)',
                           color: 'var(--gold-bright)'
                         }}
                       >

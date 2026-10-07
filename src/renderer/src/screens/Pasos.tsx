@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import BarraPasos from '../components/BarraPasos'
 import Button from '../components/Button'
 import logo from '../assets/logo.png'
+import { etapasIngreso } from '../lib/formulario-cuenta'
 import type { EstadoCuenta, Normas, RespuestaCuenta } from '@shared/api'
 
 /**
@@ -23,10 +25,16 @@ export interface PasosProps {
   onSalir: () => void
 }
 
-const ETAPAS = ['Cuenta', 'Discord', 'Normas', 'Recorrido', 'Configuración'] as const
-
 export default function Pasos({ cuenta, onCuenta, onSalir }: PasosProps): JSX.Element {
-  const actual = cuenta.pasos.includes('discord') ? 1 : cuenta.pasos.includes('normas') ? 2 : 3
+  // La misma barra que la pantalla de cuenta (`lib/formulario-cuenta.ts`): el
+  // que entra con Microsoft no tiene la etapa del correo.
+  const etapas = etapasIngreso(cuenta.tipo)
+  const pendiente = cuenta.pasos.includes('discord')
+    ? 'Discord'
+    : cuenta.pasos.includes('normas')
+      ? 'Normas'
+      : 'Recorrido'
+  const actual = etapas.indexOf(pendiente)
 
   return (
     <motion.div
@@ -45,39 +53,9 @@ export default function Pasos({ cuenta, onCuenta, onSalir }: PasosProps): JSX.El
         }}
       >
         <img src={logo} alt="Victoria Kingdom" style={{ height: 34, imageRendering: 'pixelated' }} />
-        <ol style={{ display: 'flex', gap: 6, margin: 0, padding: 0, listStyle: 'none', flex: 1, flexWrap: 'wrap' }}>
-          {ETAPAS.map((etapa, i) => (
-            <li
-              key={etapa}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                fontSize: 12.5,
-                padding: '6px 10px',
-                borderRadius: 999,
-                background: i === actual ? 'rgba(230,180,34,0.14)' : 'transparent',
-                color: i < actual ? 'var(--ok)' : i === actual ? 'var(--gold-bright)' : 'var(--text-faint)'
-              }}
-            >
-              <span
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 999,
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  border: '1px solid currentColor'
-                }}
-              >
-                {i < actual ? '✓' : i + 1}
-              </span>
-              {etapa}
-            </li>
-          ))}
-        </ol>
+        <div style={{ flex: 1, maxWidth: 460, margin: '0 auto' }}>
+          <BarraPasos etapas={etapas} actual={actual} />
+        </div>
         <span style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>{cuenta.nombre}</span>
         <button type="button" onClick={onSalir} style={enlace}>
           Salir
@@ -85,8 +63,8 @@ export default function Pasos({ cuenta, onCuenta, onSalir }: PasosProps): JSX.El
       </header>
 
       <div style={{ overflowY: 'auto', display: 'grid', placeItems: 'center', padding: 28 }}>
-        {actual === 1 && <PasoDiscord onCuenta={onCuenta} />}
-        {actual === 2 && <PasoNormas onCuenta={onCuenta} />}
+        {pendiente === 'Discord' && <PasoDiscord onCuenta={onCuenta} />}
+        {pendiente === 'Normas' && <PasoNormas onCuenta={onCuenta} />}
       </div>
     </motion.div>
   )
@@ -110,10 +88,7 @@ function PasoDiscord({ onCuenta }: { onCuenta: (r: RespuestaCuenta) => void }): 
 
   return (
     <div className="panel" style={{ width: 'min(520px, 100%)', padding: 28, display: 'grid', gap: 16 }}>
-      <p className="eyebrow" style={{ margin: 0 }}>
-        Paso 2 de 5
-      </p>
-      <h1 style={{ margin: 0, fontSize: 22 }}>Vinculá tu Discord</h1>
+      <h1 style={titulo}>Vinculá tu Discord</h1>
       <p style={{ margin: 0, color: 'var(--text-dim)', fontSize: 13.5, lineHeight: 1.6 }}>
         Victoria se juega con la comunidad: anuncios, eventos, tickets y soporte pasan por Discord. Al vincular
         te sumamos al servidor de Victoria con el rol de Jugador.
@@ -184,10 +159,7 @@ function PasoNormas({ onCuenta }: { onCuenta: (r: RespuestaCuenta) => void }): J
 
   return (
     <div className="panel" style={{ width: 'min(680px, 100%)', padding: 28, display: 'grid', gap: 14 }}>
-      <p className="eyebrow" style={{ margin: 0 }}>
-        Paso 3 de 5
-      </p>
-      <h1 style={{ margin: 0, fontSize: 22 }}>{normas?.titulo ?? 'Normas de Victoria'}</h1>
+      <h1 style={titulo}>{normas?.titulo ?? 'Normas de Victoria'}</h1>
       <div
         ref={caja}
         onScroll={(e) => {
@@ -198,8 +170,7 @@ function PasoNormas({ onCuenta }: { onCuenta: (r: RespuestaCuenta) => void }): J
           maxHeight: '48vh',
           overflowY: 'auto',
           background: 'var(--surface-2)',
-          border: '1px solid var(--stroke)',
-          borderRadius: 12,
+          borderRadius: 'var(--r-md)',
           padding: '14px 18px',
           display: 'grid',
           gap: 14
@@ -243,4 +214,12 @@ const enlace: React.CSSProperties = {
   fontSize: 12.5,
   textDecoration: 'underline',
   cursor: 'pointer'
+}
+
+const titulo: React.CSSProperties = {
+  margin: 0,
+  fontSize: 18,
+  fontWeight: 800,
+  letterSpacing: 0.6,
+  textTransform: 'uppercase'
 }

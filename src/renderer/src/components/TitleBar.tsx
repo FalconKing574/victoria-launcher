@@ -1,6 +1,17 @@
+import { useEffect, useState } from 'react'
 import Icon, { type IconName } from './Icon'
 
 export default function TitleBar(): JSX.Element {
+  // La versión a la vista, como en Majestic: es lo primero que hay que saber
+  // cuando alguien pide ayuda con el launcher.
+  const [version, setVersion] = useState<string | null>(null)
+  useEffect(() => {
+    window.api.updater
+      .state()
+      .then((estado) => setVersion(estado.current))
+      .catch(() => undefined)
+  }, [])
+
   return (
     <div
       style={{
@@ -27,7 +38,19 @@ export default function TitleBar(): JSX.Element {
         VICTORIA KINGDOM
       </span>
 
-      <div style={{ display: 'flex', WebkitAppRegion: 'no-drag' }}>
+      <div style={{ display: 'flex', alignItems: 'center', WebkitAppRegion: 'no-drag' }}>
+        {version && (
+          <span
+            style={{
+              marginRight: 10,
+              fontSize: 11,
+              color: 'var(--text-faint)',
+              WebkitAppRegion: 'drag'
+            }}
+          >
+            v{version}
+          </span>
+        )}
         <WindowButton icon="minimize" onClick={() => window.api.window.minimize()} />
         <WindowButton icon="maximize" onClick={() => window.api.window.maximize()} />
         <WindowButton icon="close" danger onClick={() => window.api.window.close()} />

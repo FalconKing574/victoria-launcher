@@ -164,7 +164,7 @@ export default function Shaders(): JSX.Element {
                 height: 38,
                 borderRadius: 10,
                 flexShrink: 0,
-                background: enabled ? 'rgba(230,180,34,0.14)' : 'rgba(255,255,255,0.05)',
+                background: enabled ? 'color-mix(in srgb, var(--gold) 14%, transparent)' : 'rgba(255,255,255,0.05)',
                 color: enabled ? 'var(--gold-bright)' : 'var(--text-faint)',
                 transition: 'background 0.18s, color 0.18s'
               }}
@@ -278,7 +278,7 @@ export default function Shaders(): JSX.Element {
                   gap: 9,
                   alignContent: 'start',
                   border: active ? '1px solid var(--gold)' : undefined,
-                  background: active ? 'rgba(230,180,34,0.07)' : undefined
+                  background: active ? 'color-mix(in srgb, var(--gold) 7%, transparent)' : undefined
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>

@@ -47,7 +47,7 @@ export default function RemoteImage({
         position: 'relative',
         overflow: 'hidden',
         background:
-          'linear-gradient(135deg, rgba(230,180,34,0.16), rgba(18,18,26,0.9) 62%), var(--surface-2)',
+          'linear-gradient(135deg, color-mix(in srgb, var(--gold) 16%, transparent), rgba(18,18,26,0.9) 62%), var(--surface-2)',
         ...style
       }}
     >

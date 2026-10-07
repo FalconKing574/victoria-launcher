@@ -72,3 +72,12 @@ export function syncStatePath(): string {
 export function hashCachePath(): string {
   return join(app.getPath('userData'), 'mod-hashes.json')
 }
+
+/**
+ * Último instalador del launcher que se abrió para actualizarse. Si al volver a
+ * abrir la versión sigue siendo la vieja, ese instalador no llegó a correr —casi
+ * siempre el antivirus— y no se insiste en un ciclo. Ver `lib/actualizacion.ts`.
+ */
+export function actualizacionPath(): string {
+  return join(app.getPath('userData'), 'actualizacion-launcher.json')
+}

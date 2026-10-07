@@ -99,13 +99,40 @@ export interface SyncCheck {
 }
 
 export type UpdaterPhase =
-  | 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'none' | 'error' | 'dev'
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'ready'
+  /** Cerrándose para instalar; el instalador lo vuelve a abrir. */
+  | 'installing'
+  | 'none'
+  | 'error'
+  /** El instalador falló varias veces seguidas (casi siempre el antivirus). */
+  | 'blocked'
+  | 'dev'
 
 export interface UpdaterState {
   phase: UpdaterPhase
+  /** La versión nueva cuando hay una; la instalada cuando no. */
   version: string | null
+  /** La versión instalada ahora mismo. */
+  current: string
   percent: number
   message: string | null
+  /** El instalador completo de la versión nueva, para bajarlo con el navegador. */
+  manualUrl: string | null
+  /** El fallo parece del antivirus: la interfaz explica qué hacer. */
+  antivirus: boolean
+}
+
+/** Lo que contesta el servidor de Minecraft al «ping» de la lista de servidores. */
+export interface EstadoServidor {
+  enLinea: boolean
+  jugadores: number | null
+  maximo: number | null
+  version: string | null
+  latencia: number | null
 }
 
 export interface SyncLive {
@@ -252,8 +279,18 @@ export interface VictoriaApi {
   updater: {
     check(): Promise<UpdaterState>
     state(): Promise<UpdaterState>
+    /** Instala ya lo descargado: «Reiniciar ahora» o «Reintentar». */
     install(): Promise<boolean>
+    /**
+     * La pantalla de carga terminó: lo que baje desde ahora se instala al cerrar
+     * el launcher, no en medio de lo que el jugador esté haciendo.
+     */
+    posponer(): Promise<UpdaterState>
     onState(cb: (state: UpdaterState) => void): () => void
+  }
+  servidor: {
+    /** Si el servidor de Minecraft está en línea y cuánta gente hay. Nunca falla. */
+    estado(): Promise<EstadoServidor>
   }
   settings: {
     get(): Promise<Settings>

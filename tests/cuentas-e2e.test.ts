@@ -19,9 +19,17 @@ const HUELLA = 'e'.repeat(64)
 const PROD = process.env.VICTORIA_E2E === 'prod'
 
 describe.runIf((process.env.VICTORIA_E2E === '1' && existsSync(LLAVE)) || (PROD && existsSync(AUTH_PROD)))('VictoriaAuth', () => {
-  const auth: AuthManifest = PROD
-    ? (JSON.parse(readFileSync(AUTH_PROD, 'utf8')) as AuthManifest)
-    : { host: '127.0.0.1', puerto: 25568, llave: readFileSync(LLAVE, 'utf8').trim() }
+  // Vitest ejecuta este cuerpo aunque se salte la suite, para listar las
+  // pruebas salteadas: leer la llave sin mirar si existe rompía `npm test` en
+  // cualquier máquina sin el servidor al lado (la nube, otra PC).
+  const auth: AuthManifest =
+    PROD && existsSync(AUTH_PROD)
+      ? (JSON.parse(readFileSync(AUTH_PROD, 'utf8')) as AuthManifest)
+      : {
+          host: '127.0.0.1',
+          puerto: 25568,
+          llave: existsSync(LLAVE) ? readFileSync(LLAVE, 'utf8').trim() : ''
+        }
 
   it('entrar con una cuenta que no existe contesta credenciales', async () => {
     const r = await llamar(auth, 'entrar', { nombre: 'NadieE2E', contrasena: 'claveSegura1', huella: HUELLA })

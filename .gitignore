@@ -17,3 +17,6 @@ publicar/
 
 # Respaldos locales del pack armado (más de 1 GB cada uno)
 dist-modpack-*/
+
+# Archivos temporales de wrangler (npm run web:ver)
+.wrangler/

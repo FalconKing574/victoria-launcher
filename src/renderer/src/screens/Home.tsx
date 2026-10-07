@@ -13,12 +13,14 @@ import newsModpack from '../assets/news/modpack.jpg'
 import type {
   LaunchProgress,
   LaunchStatus,
+  EstadoServidor,
   RespuestaCuenta,
   SyncCheck,
   UpdaterState
 } from '@shared/api'
 import { shouldBlockPlay } from '../lib/play-gate'
 import { leerBloqueo } from '../lib/bloqueo'
+import { avisoLauncher } from '../lib/aviso-launcher'
 import type { NavKey } from '../components/SideNav'
 import type { IUser } from 'minecraft-launcher-core'
 
@@ -30,10 +32,10 @@ import type { IUser } from 'minecraft-launcher-core'
  * las tres se caían a una letra sobre un cuadro dorado — que es lo que se veía
  * como "no cargan las imágenes".
  *
- * Ahora son recortes de las caras del panorama original (`assets/panorama/
- * original/`, 2048px sin desenfocar), o sea capturas de verdad del mundo del
- * servidor. Se regeneran con el bloque de sharp de `scripts/`; 106 KB las tres.
- * Si algún día hay capturas mejores, se sustituyen estos tres archivos y ya.
+ * Ahora son capturas del servidor que eligió el dueño (07-10-2026): el palacio
+ * de día, la plaza de las banderas y la sastrería. Las recorta
+ * `scripts/tarjetas-novedades.mjs`, que deja las mismas en la web; 76 KB las
+ * tres. Para cambiarlas se vuelve a correr el script con otras capturas.
  * ------------------------------------------------------------------------- */
 const HERO_IMAGE = heroBandera
 
@@ -57,21 +59,30 @@ export interface HomeProps {
   onBloqueo?: (respuesta: RespuestaCuenta) => void
 }
 
+/**
+ * Cada tarjeta con su color (pedido del dueño, 07-10-2026), sólo en el texto de
+ * la etiqueta: el servidor en el rojo de Victoria, la comunidad en el azul de
+ * Discord y el modpack en el dorado del «KINGDOM» del logo. Una versión con
+ * franja de color arriba y la imagen teñida le pareció demasiado.
+ */
 const NEWS = [
   {
     tag: 'Servidor',
+    color: '#e63946',
     image: NEWS_IMAGES.servidor,
     title: 'Victoria Kingdom — temporada abierta',
     body: 'Minecraft 1.20.1 con Forge 47.4.0 y el modpack completo ya instalado.'
   },
   {
     tag: 'Comunidad',
+    color: '#5865f2',
     image: NEWS_IMAGES.comunidad,
     title: 'Eventos y avisos en Discord',
     body: 'Las novedades, caídas y eventos se anuncian primero en el Discord del servidor.'
   },
   {
     tag: 'Modpack',
+    color: '#e0a526',
     image: NEWS_IMAGES.modpack,
     title: 'Mods opcionales a tu gusto',
     body: 'En la pestaña Modpack eliges qué extras instalar sin romper la partida.'
@@ -107,6 +118,10 @@ export default function Home({
 
   // The launcher's own update, so the notice can cover both.
   const [updater, setUpdater] = useState<UpdaterState | null>(null)
+
+  // En línea y cuánta gente hay, como el «Jugando ahora» de Majestic. Antes el
+  // puntito verde era fijo: decía «en línea» aunque el servidor estuviera caído.
+  const [servidor, setServidor] = useState<EstadoServidor | null>(null)
 
   // VALIDAR ARCHIVOS (02-10-2026): primero se explica qué hace, después se hace.
   const [confirmarValidar, setConfirmarValidar] = useState(false)
@@ -246,6 +261,24 @@ export default function Home({
     }
   }, [refreshPending])
 
+  useEffect(() => {
+    let vivo = true
+    const consultar = (): void => {
+      window.api.servidor
+        .estado()
+        .then((estado) => {
+          if (vivo) setServidor(estado)
+        })
+        .catch(() => undefined)
+    }
+    consultar()
+    const reloj = setInterval(consultar, 60_000)
+    return () => {
+      vivo = false
+      clearInterval(reloj)
+    }
+  }, [])
+
   // Checked on every mount, so opening the launcher always reports what is
   // pending instead of leaving it to be discovered in Ajustes.
   useEffect(() => {
@@ -315,15 +348,16 @@ export default function Home({
   // button does the work — but the label should say what is about to happen.
   const willInstall = shouldBlockPlay(pending)
 
-  // One line covering both updates. The launcher's comes first: it installs
-  // itself and restarts, which would interrupt a modpack download anyway.
-  const launcherPending = updater?.phase === 'available' || updater?.phase === 'ready'
-  const updateNotice = launcherPending
-    ? `Hay una versión nueva del launcher${updater?.version ? ` (${updater.version})` : ''}. Se instala sola al reiniciar.`
-    : willInstall
+  // Un solo aviso para las dos actualizaciones. La del launcher va primero: dice
+  // cuándo se instala, que es lo que confundía (ver lib/aviso-launcher.ts).
+  const aviso = avisoLauncher(updater)
+  const updateNotice =
+    aviso?.texto ??
+    (willInstall
       ? `Hay una actualización del modpack pendiente: ${pending?.toDownload ?? 0} archivos` +
         `${pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}.`
-      : null
+      : null)
+  const alerta = aviso?.tono === 'alerta'
 
   return (
     <motion.div
@@ -341,7 +375,8 @@ export default function Home({
       }}
     >
       {/* Aviso de actualizaciones pendientes. Sale sólo cuando hay algo que
-          hacer, y lleva a Ajustes, que es donde están los dos botones. */}
+          contar. El botón hace lo que se pueda hacer desde acá; el resto
+          lleva a Ajustes. */}
       {updateNotice && !updating && (
         <div
           className="row"
@@ -350,29 +385,35 @@ export default function Home({
             alignItems: 'center',
             gap: 12,
             padding: '11px 14px',
-            border: '1px solid rgba(230,180,34,0.35)',
-            background: 'rgba(230,180,34,0.07)'
+            // Lo informativo en gris neutro: el acento es rojo, igual que los
+            // errores, y una actualización lista no puede parecer una alarma.
+            border: alerta ? '1px solid rgba(255,92,108,0.4)' : '1px solid var(--stroke-strong)',
+            background: alerta ? 'rgba(255,92,108,0.07)' : 'var(--surface-2)'
           }}
         >
-          <span style={{ color: 'var(--gold-bright)', display: 'flex', flexShrink: 0 }}>
-            <Icon name="download" size={17} />
-          </span>
-          <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.5 }}>{updateNotice}</span>
-          <button
-            onClick={() => onNavigate?.('settings')}
+          <span
             style={{
-              padding: '8px 13px',
-              borderRadius: 8,
-              border: '1px solid var(--stroke-strong)',
-              background: 'rgba(230,180,34,0.12)',
-              color: 'var(--gold-bright)',
-              fontSize: 12.5,
-              flexShrink: 0,
-              cursor: 'pointer'
+              color: alerta ? 'var(--err)' : 'var(--gold-bright)',
+              display: 'flex',
+              flexShrink: 0
             }}
           >
-            Ir a Ajustes
-          </button>
+            <Icon name={alerta ? 'warning' : 'download'} size={17} />
+          </span>
+          <span style={{ flex: 1, fontSize: 12.5, lineHeight: 1.5 }}>{updateNotice}</span>
+          {aviso?.accion && (
+            <button
+              onClick={() => void window.api.updater.install().catch(() => undefined)}
+              style={avisoBoton}
+            >
+              {aviso.accion === 'reiniciar' ? 'Reiniciar ahora' : 'Reintentar'}
+            </button>
+          )}
+          {(!aviso || aviso.tono === 'alerta') && (
+            <button onClick={() => onNavigate?.('settings')} style={avisoBoton}>
+              {aviso ? 'Qué hacer' : 'Ir a Ajustes'}
+            </button>
+          )}
         </div>
       )}
 
@@ -390,7 +431,7 @@ export default function Home({
             // Dos capas: una lateral para el bloque de texto y otra inferior
             // para que el botón y el estado se lean sobre cualquier foto.
             background:
-              'linear-gradient(0deg, rgba(9,9,14,0.94) 0%, rgba(9,9,14,0.55) 34%, rgba(9,9,14,0) 62%), linear-gradient(96deg, rgba(9,9,14,0.96) 0%, rgba(9,9,14,0.86) 40%, rgba(9,9,14,0.3) 100%)'
+              'linear-gradient(0deg, rgba(14,14,15,0.94) 0%, rgba(14,14,15,0.55) 34%, rgba(14,14,15,0) 62%), linear-gradient(96deg, rgba(14,14,15,0.96) 0%, rgba(14,14,15,0.86) 40%, rgba(14,14,15,0.3) 100%)'
           }}
         />
 
@@ -426,12 +467,23 @@ export default function Home({
                   width: 7,
                   height: 7,
                   borderRadius: '50%',
-                  background: 'var(--ok)',
-                  boxShadow: '0 0 8px var(--ok)',
+                  background: servidor?.enLinea ? 'var(--ok)' : 'var(--text-faint)',
+                  boxShadow: servidor?.enLinea ? '0 0 8px var(--ok)' : 'none',
                   flexShrink: 0
                 }}
               />
-              Minecraft 1.20.1 · Forge 47.4.0 · modpack oficial
+              {servidor === null ? (
+                'Consultando el servidor...'
+              ) : servidor.enLinea ? (
+                <span>
+                  <b style={{ color: 'var(--text)', fontWeight: 600 }}>En línea</b>
+                  {servidor.jugadores !== null &&
+                    ` · ${servidor.jugadores} ${servidor.jugadores === 1 ? 'jugador' : 'jugadores'} ahora`}
+                </span>
+              ) : (
+                'El servidor no responde'
+              )}
+              <span style={{ color: 'var(--text-faint)' }}>· Minecraft 1.20.1 · Forge 47.4.0</span>
             </div>
           </div>
 
@@ -447,8 +499,24 @@ export default function Home({
               {/* `updating` counts too: after a tab change the install may be
                   one this mount never started, so `launching` is false while a
                   download is very much in progress. */}
-              <Button full loading={launching || updating} onClick={() => void handlePlay()}>
-                {validando ? 'VALIDANDO...' : updating ? 'INSTALANDO...' : launching ? 'INICIANDO...' : 'JUGAR'}
+              <Button
+                variant="jugar"
+                full
+                loading={launching || updating}
+                onClick={() => void handlePlay()}
+              >
+                {validando ? (
+                  'VALIDANDO...'
+                ) : updating ? (
+                  'INSTALANDO...'
+                ) : launching ? (
+                  'INICIANDO...'
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+                    <Icon name="play" size={15} />
+                    JUGAR
+                  </span>
+                )}
               </Button>
             </div>
 
@@ -498,8 +566,8 @@ export default function Home({
                       style={{
                         padding: '8px 13px',
                         borderRadius: 8,
-                        border: '1px solid rgba(230,180,34,0.5)',
-                        background: 'rgba(230,180,34,0.16)',
+                        border: '1px solid color-mix(in srgb, var(--gold) 50%, transparent)',
+                        background: 'color-mix(in srgb, var(--gold) 16%, transparent)',
                         color: 'var(--gold-bright)',
                         fontSize: 12.5,
                         fontWeight: 700,
@@ -615,7 +683,7 @@ export default function Home({
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(rgba(13,13,20,0.25), rgba(13,13,20,0.88))'
+                    background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
                   }}
                 />
                 <span
@@ -629,8 +697,8 @@ export default function Home({
                     textTransform: 'uppercase',
                     padding: '4px 8px',
                     borderRadius: 5,
-                    background: 'rgba(230,180,34,0.16)',
-                    color: 'var(--gold-bright)'
+                    background: 'rgba(14,14,15,0.72)',
+                    color: `color-mix(in srgb, ${item.color} 80%, white)`
                   }}
                 >
                   {item.tag}
@@ -693,4 +761,15 @@ function StatTile({
       <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{hint}</span>
     </div>
   )
+}
+
+const avisoBoton: React.CSSProperties = {
+  padding: '8px 13px',
+  borderRadius: 8,
+  border: '1px solid var(--stroke-strong)',
+  background: 'color-mix(in srgb, var(--gold) 12%, transparent)',
+  color: 'var(--gold-bright)',
+  fontSize: 12.5,
+  flexShrink: 0,
+  cursor: 'pointer'
 }

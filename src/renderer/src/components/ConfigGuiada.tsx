@@ -180,7 +180,7 @@ export default function ConfigGuiada({ onListo }: ConfigGuiadaProps): JSX.Elemen
                     padding: '10px 11px',
                     borderRadius: 10,
                     border: elegido ? '1px solid var(--gold-bright)' : '1px solid var(--stroke)',
-                    background: elegido ? 'rgba(230,180,34,0.10)' : 'var(--surface-3)',
+                    background: elegido ? 'color-mix(in srgb, var(--gold) 10%, transparent)' : 'var(--surface-3)',
                     color: 'var(--text)',
                     cursor: 'pointer',
                     display: 'grid',

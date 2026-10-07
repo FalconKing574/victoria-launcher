@@ -153,6 +153,52 @@ La sección «Shaders que quitaste» lo trae de vuelta. Antes era un `rmSync`: e
 archivo desaparecía y el nombre se quedaba en la lista para siempre, así que no
 había ninguna forma de recuperarlo desde el launcher.
 
+## Aspecto (07-10-2026)
+
+Sigue al launcher de Majestic, a pedido del dueño: grises neutros y planos,
+botones en mayúsculas (el principal en azul con un degradado suave, y JUGAR en
+verde, como el de Steam: `--boton-principal` y `--boton-jugar` en
+`tokens.css`), campos con etiqueta arriba, ícono adentro
+y ojo para ver la contraseña (`components/Campo.tsx`), el código del correo en
+seis casillas (`components/CodigoInput.tsx`) y una barra de segmentos para el
+ingreso de un jugador nuevo (`components/BarraPasos.tsx`, la usan la pantalla
+de cuenta y la de pasos).
+
+**El color de acento está en un solo lugar:** `--acento`, `--acento-claro`,
+`--acento-oscuro` y `--acento-texto` en `theme/tokens.css`. Hoy es el **rojo
+Victoria** (`#d7263d`, el del logo y la bandera) con texto blanco: el dueño lo
+eligió entre cuatro rojos después de probar el dorado (con el estilo plano se
+veía amarillo) y el azul. Los `--gold*` que usa medio launcher son alias del
+acento; no escribas un color de acento a mano en una pantalla: usá esas
+variables, o `color-mix(in srgb, var(--gold) 12%, transparent)` para un tinte.
+
+Como el error también es rojo, hay dos reglas para no confundirlos: los avisos
+informativos van en gris neutro (sólo los de error en rojo), y un campo
+enfocado se marca en blanco, no en el acento. Las tarjetas de Novedades de
+Jugar llevan cada una su color (`NEWS` en `Home.tsx`), pero sólo en el texto
+de la etiqueta: con franja y tinte era demasiado color.
+
+**El botón dice qué falta.** Mientras un formulario de cuenta no se puede
+enviar, el botón va gris y su texto es lo que falta («Repetí la contraseña»).
+Las reglas están en `lib/formulario-cuenta.ts`, con tests.
+
+**Capturas de fondo en la pantalla de cuenta:** lo que haya en
+`assets/capturas/` va rotando (`components/ArteCapturas.tsx`, con
+`import.meta.glob`, sin tocar código). Se ponen con
+`node scripts/importar-capturas.mjs <carpeta o archivos>`, que las pasa a JPEG
+de 1600 px y deja también las copias de la web (galería y portada). El pie de
+foto de la web es el nombre del archivo. Sin ninguna, queda el arte fijo
+`assets/victoria.png`.
+
+**Tarjetas de Novedades:** `assets/news/servidor.jpg`, `comunidad.jpg` y
+`modpack.jpg`, las mismas que en la web. Se recortan con
+`node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png`.
+
+**Estado del servidor en Jugar:** `lib/estado-servidor.ts` hace el mismo ping
+que la lista de servidores de Minecraft (Server List Ping) contra
+`SERVIDOR_MINECRAFT` de `config.ts`, con caché de 20 s (`ipc/servidor.ts`).
+Cualquier problema es «El servidor no responde», nunca un error.
+
 ## La interfaz no depende de internet
 
 El launcher abre sin red. La tipografía (Outfit) va empaquetada en
@@ -173,6 +219,12 @@ npm run build && node scripts/preview-renderer.mjs
 Sirve `out/renderer` en `http://localhost:4310` con un `window.api` falso, así
 que se pueden mirar todas las pantallas sin lanzar el launcher del usuario.
 
+Escenarios por la URL: `?cuenta=nueva|pasos|lista|sancion`,
+`?launcher=al-dia|descarga|lenta|lista|bloqueada|sin-red` y `?servidor=caido`.
+**El `window.api` falso vive en la memoria del servidor de la vista previa:** si
+cambiás `scripts/preview-renderer.mjs`, reinicialo. Con el viejo, una pantalla
+que llama a algo nuevo del api revienta y se ve en negro.
+
 ## Tests
 
 ```bash
@@ -182,7 +234,8 @@ npm test
 Casi todo es lógica pura, sin Electron. Por eso los módulos están partidos:
 `java.ts` (puro) frente a `java-runtime.ts` (descarga, usa Electron);
 `settings-core.ts` frente a `settings.ts`; `sync-plan.ts` y `hash-cache.ts`
-frente a `ipc/sync.ts`.
+frente a `ipc/sync.ts`; `actualizacion.ts` (el freno contra el ciclo de
+instaladores bloqueados) frente a `ipc/updater.ts`.
 
 Si escribes algo que valga la pena probar, ponlo del lado puro.
 

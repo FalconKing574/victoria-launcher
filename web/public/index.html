@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Victoria Kingdom — Servidor de rol de Minecraft</title>
+    <meta
+      name="description"
+      content="Servidor de rol de Minecraft Java 1.20.1 con launcher propio: descarga, crea tu cuenta y entra al Reino de Victoria. Con o sin Minecraft original."
+    />
+    <meta name="theme-color" content="#d7263d" />
+    <link rel="icon" type="image/png" href="img/icono.png" />
+    <link rel="apple-touch-icon" href="img/icono-180.png" />
+
+    <!-- Para la vista previa al pegar el enlace en Discord o WhatsApp. Las
+         imágenes tienen que ir con la dirección completa: si la web cambia de
+         dirección, se cambia acá (ver web/README.md). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Victoria Kingdom" />
+    <meta property="og:title" content="Victoria Kingdom — Servidor de rol de Minecraft" />
+    <meta
+      property="og:description"
+      content="Un país entero para tu personaje. Descarga el launcher: instala todo solo y te deja en el servidor."
+    />
+    <meta property="og:image" content="https://victoriakingdom.pages.dev/img/capturas/captura-01.jpg" />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="img/capturas/captura-01.jpg" as="image" fetchpriority="high" />
+    <link rel="stylesheet" href="estilos.css" />
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
+    <script src="app.js" defer></script>
+  </head>
+
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="cabecera">
+      <div class="contenedor cabecera__interior">
+        <a class="marca" href="./" aria-label="Victoria Kingdom, inicio">
+          <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+        </a>
+        <nav class="nav" aria-label="Principal">
+          <a href="#empezar">Cómo empezar</a>
+          <a href="#pais">El país</a>
+          <a href="#novedades">Novedades</a>
+          <a href="guia">Guía</a>
+          <a href="normas">Normas</a>
+        </nav>
+        <div class="cabecera__acciones">
+          <div class="en-linea" data-servidor data-estado="cargando" title="Jugadores conectados ahora">
+            <span class="punto"></span>
+            <span class="en-linea__numero" data-jugadores>—</span>
+            <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
+          </div>
+          <a
+            class="boton boton--principal"
+            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+            data-descarga
+            aria-label="Descargar el launcher"
+          >
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>
+            <span>Descargar</span>
+          </a>
+          <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir el menú">
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#menu" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="menu-movil" id="menu-movil" inert>
+      <a class="menu-movil__enlace" style="--i: 0" href="#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <div class="menu-movil__acciones">
+        <a
+          class="boton boton--principal boton--grande"
+          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+          data-descarga
+        >
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
+        </a>
+        <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Unirse al Discord
+        </a>
+      </div>
+    </div>
+
+    <main id="contenido">
+      <!-- Portada -->
+      <section class="portada" aria-labelledby="titulo-portada" data-portada>
+        <div class="portada__fondo" aria-hidden="true" data-portada-fotos>
+          <div class="portada__foto activa" style="background-image: url('img/capturas/captura-01.jpg')"></div>
+        </div>
+        <div class="portada__velo" aria-hidden="true"></div>
+        <div class="portada__resplandor" aria-hidden="true"></div>
+
+        <div class="contenedor portada__contenido">
+          <div>
+            <span class="etiqueta-viva aparecer" style="--retraso: 150ms"><span class="punto"></span>Servidor de rol · Minecraft 1.20.1</span>
+            <h1 id="titulo-portada">
+              <span class="linea"><span style="--i: 0">Vive tu</span></span>
+              <span class="linea"><span style="--i: 1">historia en</span></span>
+              <span class="linea"><span class="rojo" style="--i: 2">Victoria</span></span>
+            </h1>
+            <p class="portada__bajada aparecer" style="--retraso: 700ms">
+              Un país entero hecho bloque a bloque, con trabajos, comercios y una comunidad que se toma el rol en serio.
+              Descarga el launcher: instala todo solo y te deja en el servidor.
+            </p>
+            <div class="portada__acciones aparecer" style="--retraso: 850ms">
+              <a class="boton boton--principal boton--grande boton--brillo" href="#empezar">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#play" /></svg>Empezar a jugar
+              </a>
+              <a class="boton boton--fantasma boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Discord
+              </a>
+            </div>
+            <ul class="portada__datos aparecer" style="--retraso: 1000ms">
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#windows" /></svg>Windows 10 y 11</li>
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg>Gratis</li>
+              <li><svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg>Con o sin Minecraft original</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="portada__pie">
+          <div class="contenedor">
+            <div class="indicadores">
+              <div class="indicadores__barras" data-portada-barras></div>
+              <span class="indicadores__pie" aria-hidden="true">
+                <svg class="icono"><use href="iconos.svg#camera" /></svg><span data-portada-pie>El palacio</span>
+              </span>
+            </div>
+            <a class="bajar" href="#sobre"><span>Descubre más</span><span class="bajar__raton" aria-hidden="true"></span></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- La cinta que desfila -->
+      <div class="cintas" aria-hidden="true">
+        <div class="cinta">
+          <div class="cinta__pista">
+            <ul class="cinta__grupo"><li>Minecraft 1.20.1</li><li>Forge 47.4.0</li><li>Launcher propio</li><li>Rol en español</li><li>Shaders incluidos</li><li>Distant Horizons</li><li>Mapa de Xaero</li><li>Comunidad en Discord</li></ul>
+            <ul class="cinta__grupo"><li>Minecraft 1.20.1</li><li>Forge 47.4.0</li><li>Launcher propio</li><li>Rol en español</li><li>Shaders incluidos</li><li>Distant Horizons</li><li>Mapa de Xaero</li><li>Comunidad en Discord</li></ul>
+            <ul class="cinta__grupo"><li>Minecraft 1.20.1</li><li>Forge 47.4.0</li><li>Launcher propio</li><li>Rol en español</li><li>Shaders incluidos</li><li>Distant Horizons</li><li>Mapa de Xaero</li><li>Comunidad en Discord</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sobre Victoria -->
+      <section class="seccion" id="sobre" aria-labelledby="titulo-sobre">
+        <span class="palabra-fondo" aria-hidden="true">Victoria</span>
+        <div class="contenedor">
+          <div class="sobre">
+            <div class="revelar revelar--izq">
+              <span class="eyebrow">Sobre Victoria</span>
+              <h2 class="titulo-seccion" id="titulo-sobre">Un país entero para <span class="rojo">tu personaje</span></h2>
+              <p class="bajada">
+                Victoria Kingdom es un servidor de rol de Minecraft Java ambientado en el Reino de Victoria: un país con su palacio, su
+                bandera, aeropuerto, emergencias, comercios y un Centro de Trabajos donde empieza tu carrera. Quién eres ahí lo decides tú.
+              </p>
+              <ul class="rasgos">
+                <li class="rasgo revelar" style="--retraso: 120ms">
+                  <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#building" /></svg></span>
+                  <div>
+                    <h3>Un país hecho a mano</h3>
+                    <p>Cada edificio se levantó bloque a bloque para el rol: calles, tiendas, oficinas y lugares de trabajo.</p>
+                  </div>
+                </li>
+                <li class="rasgo revelar" style="--retraso: 220ms">
+                  <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#briefcase" /></svg></span>
+                  <div>
+                    <h3>Trabajos y vida diaria</h3>
+                    <p>Busca empleo en el Centro de Trabajos y hazte un lugar en el reino.</p>
+                  </div>
+                </li>
+                <li class="rasgo revelar" style="--retraso: 320ms">
+                  <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#map" /></svg></span>
+                  <div>
+                    <h3>Mapa listo desde el primer día</h3>
+                    <p>El mapa de Xaero viene ya explorado: siempre sabes a dónde ir.</p>
+                  </div>
+                </li>
+                <li class="rasgo revelar" style="--retraso: 420ms">
+                  <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#sparkles" /></svg></span>
+                  <div>
+                    <h3>Todo se instala solo</h3>
+                    <p>El launcher baja Minecraft, Forge, Java, los mods y los shaders, y los mantiene al día.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="revelar revelar--der">
+              <button class="video" type="button" data-abrir-visor="0" aria-label="Ver las capturas de Victoria en grande">
+                <span class="video__foto activa" style="background-image: url('img/capturas/captura-05.jpg')" data-video-foto></span>
+                <span class="video__boton" aria-hidden="true">
+                  <svg class="video__anillo" viewBox="0 0 150 150">
+                    <defs><path id="circulo" d="M75,75 m-60,0 a60,60 0 1,1 120,0 a60,60 0 1,1 -120,0" /></defs>
+                    <text><textPath href="#circulo" textLength="372" lengthAdjust="spacing">Recorre Victoria · Recorre Victoria ·</textPath></text>
+                  </svg>
+                  <span class="video__play"><svg class="icono"><use href="iconos.svg#play" /></svg></span>
+                </span>
+                <span class="video__pie">
+                  <span><strong>Recorre Victoria</strong><span data-total-capturas>Capturas del servidor</span></span>
+                  <svg class="icono" aria-hidden="true"><use href="iconos.svg#expand" /></svg>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="cifras">
+            <div class="cifra revelar" data-servidor data-estado="cargando">
+              <div class="cifra__numero"><span class="punto"></span><span data-jugadores data-contar>—</span></div>
+              <p class="cifra__texto">jugadores en línea ahora</p>
+            </div>
+            <div class="cifra revelar" style="--retraso: 100ms">
+              <div class="cifra__numero"><span data-maximo data-contar>—</span></div>
+              <p class="cifra__texto">plazas en el servidor</p>
+            </div>
+            <div class="cifra revelar" style="--retraso: 200ms">
+              <div class="cifra__numero"><span data-mods data-contar>117</span></div>
+              <p class="cifra__texto">mods que instala el launcher</p>
+            </div>
+            <div class="cifra revelar" style="--retraso: 300ms">
+              <div class="cifra__numero"><span data-minecraft>1.20.1</span></div>
+              <p class="cifra__texto">Minecraft Java con Forge</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cómo empezar a jugar -->
+      <section class="seccion seccion--tenue" id="empezar" aria-labelledby="titulo-empezar">
+        <span class="palabra-fondo" aria-hidden="true">Empezar</span>
+        <div class="contenedor">
+          <div class="seccion__cabeza seccion__cabeza--centro revelar">
+            <span class="eyebrow">En cuatro pasos</span>
+            <h2 class="titulo-seccion" id="titulo-empezar">Cómo empezar <span class="rojo">a jugar</span></h2>
+            <p class="bajada">Del instalador a Victoria en pocos minutos. El launcher hace lo difícil por ti.</p>
+          </div>
+
+          <ol class="pasos" data-pasos>
+            <li class="paso">
+              <div class="paso__marca" aria-hidden="true"><span class="paso__numero">1</span></div>
+              <article class="paso__tarjeta revelar">
+                <span class="paso__fondo-numero" aria-hidden="true">01</span>
+                <div>
+                  <span class="insignia">Primer paso</span>
+                  <h3 class="paso__titulo">Descarga el launcher</h3>
+                  <p class="paso__texto">
+                    El instalador es gratis y no pide permisos de administrador. Ábrelo, acepta y elige la carpeta: en un minuto tienes
+                    Victoria Kingdom en el escritorio.
+                  </p>
+                  <div class="paso__acciones">
+                    <a
+                      class="boton boton--principal boton--brillo"
+                      href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+                      data-descarga
+                    >
+                      <svg class="icono" aria-hidden="true"><use href="iconos.svg#windows" /></svg>Descargar para Windows
+                    </a>
+                    <span class="paso__nota">Windows 10 y 11 · 64 bits</span>
+                  </div>
+                  <p style="margin: 20px 0 0">
+                    <a class="enlace-flecha" href="guia#smartscreen">¿Windows o el antivirus lo frenan? <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+                  </p>
+                </div>
+                <div class="descarga-falsa" aria-hidden="true">
+                  <div class="descarga-falsa__archivo">
+                    <img src="img/icono.png" alt="" width="56" height="56" />
+                    <div>
+                      <div class="descarga-falsa__nombre">Victoria-Kingdom-Setup.exe</div>
+                      <div class="descarga-falsa__detalle">Instalador de Victoria Kingdom</div>
+                    </div>
+                  </div>
+                  <div class="barra"><div class="barra__relleno"></div></div>
+                  <div class="descarga-falsa__fila">
+                    <span class="descarga-falsa__bajando">Descargando…</span>
+                    <span class="descarga-falsa__listo"><svg class="icono"><use href="iconos.svg#check" /></svg>Listo para abrir</span>
+                  </div>
+                </div>
+              </article>
+            </li>
+
+            <li class="paso">
+              <div class="paso__marca" aria-hidden="true"><span class="paso__numero">2</span></div>
+              <article class="paso__tarjeta revelar">
+                <span class="paso__fondo-numero" aria-hidden="true">02</span>
+                <div>
+                  <span class="insignia">Segundo paso</span>
+                  <h3 class="paso__titulo">Entra con tu cuenta</h3>
+                  <p class="paso__texto">
+                    ¿Tienes Minecraft original? Entra con tu cuenta de Microsoft. ¿No lo tienes? Crea una cuenta de Victoria con tu nombre
+                    de jugador y tu correo: te llega un código de 6 números para confirmarla.
+                  </p>
+                  <div class="paso__acciones">
+                    <a class="boton boton--fantasma" href="guia#cuenta">
+                      <svg class="icono" aria-hidden="true"><use href="iconos.svg#user" /></svg>Cómo crear la cuenta
+                    </a>
+                  </div>
+                </div>
+                <div class="paso__imagen">
+                  <img src="img/launcher/cuenta.jpg" alt="La pantalla para entrar o crear una cuenta en el launcher" width="1120" height="647" loading="lazy" />
+                </div>
+              </article>
+            </li>
+
+            <li class="paso">
+              <div class="paso__marca" aria-hidden="true"><span class="paso__numero">3</span></div>
+              <article class="paso__tarjeta revelar">
+                <span class="paso__fondo-numero" aria-hidden="true">03</span>
+                <div>
+                  <span class="insignia">Tercer paso</span>
+                  <h3 class="paso__titulo">Discord y normas</h3>
+                  <p class="paso__texto">
+                    El launcher te pide vincular tu Discord y aceptar las normas. Es un momento: así te enteras de eventos y avisos, y entras
+                    sabiendo cómo se juega.
+                  </p>
+                  <div class="paso__acciones">
+                    <a class="boton boton--discord" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+                      <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Unirse al Discord
+                    </a>
+                    <a class="boton boton--fantasma" href="normas">
+                      <svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>Leer las normas
+                    </a>
+                  </div>
+                </div>
+                <div class="paso__imagen">
+                  <img src="img/launcher/pasos.jpg" alt="El paso de vincular Discord en el launcher" width="1120" height="700" loading="lazy" />
+                </div>
+              </article>
+            </li>
+
+            <li class="paso">
+              <div class="paso__marca" aria-hidden="true"><span class="paso__numero">4</span></div>
+              <article class="paso__tarjeta revelar">
+                <span class="paso__fondo-numero" aria-hidden="true">04</span>
+                <div>
+                  <span class="insignia insignia--verde">Último paso</span>
+                  <h3 class="paso__titulo">Toca JUGAR</h3>
+                  <p class="paso__texto">
+                    La primera vez el launcher descarga Minecraft, Forge, Java y los mods: puede tardar unos minutos según tu conexión.
+                    Después solo baja lo que cambie y entras directo a Victoria.
+                  </p>
+                  <div class="paso__acciones">
+                    <a
+                      class="boton boton--jugar"
+                      href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+                      data-descarga
+                    >
+                      <svg class="icono" aria-hidden="true"><use href="iconos.svg#play" /></svg>Empezar ahora
+                    </a>
+                  </div>
+                </div>
+                <div class="paso__imagen">
+                  <img src="img/launcher/jugar.jpg" alt="La pantalla Jugar del launcher, con el botón verde" width="1120" height="647" loading="lazy" />
+                </div>
+              </article>
+            </li>
+          </ol>
+
+          <div class="aviso-av revelar" style="margin-top: 56px">
+            <span class="aviso-av__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield-check" /></svg></span>
+            <div>
+              <h3>¿Windows o tu antivirus frenan el instalador?</h3>
+              <p>Pasa con los programas nuevos que todavía no tienen firma digital: es un aviso, no un virus. Te mostramos cómo seguir en un minuto.</p>
+            </div>
+            <a class="boton boton--fantasma" href="guia#smartscreen">Ver la solución <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Galería -->
+      <section class="seccion" id="pais" aria-labelledby="titulo-pais">
+        <span class="palabra-fondo" aria-hidden="true">El país</span>
+        <div class="contenedor">
+          <div class="seccion__cabeza revelar">
+            <span class="eyebrow">Capturas del servidor</span>
+            <h2 class="titulo-seccion" id="titulo-pais">Recorre <span class="rojo">el país</span></h2>
+            <p class="bajada">Así se ve Victoria de día y de noche, con los shaders que instala el launcher. Toca una captura para verla en grande.</p>
+          </div>
+          <div class="galeria" data-galeria>
+            <noscript><p class="bajada">Activa JavaScript para ver la galería.</p></noscript>
+          </div>
+        </div>
+      </section>
+
+      <!-- Novedades -->
+      <section class="seccion seccion--tenue" id="novedades" aria-labelledby="titulo-novedades">
+        <span class="palabra-fondo" aria-hidden="true">Novedades</span>
+        <div class="contenedor">
+          <div class="seccion__cabeza revelar">
+            <span class="eyebrow">Novedades</span>
+            <h2 class="titulo-seccion" id="titulo-novedades">Lo último de <span class="rojo">Victoria</span></h2>
+            <p class="bajada">Lo mismo que ves en el launcher. Los avisos al momento, en el Discord.</p>
+          </div>
+          <div class="noticias" data-noticias></div>
+        </div>
+      </section>
+
+      <!-- Llamado final -->
+      <section class="seccion" aria-labelledby="titulo-llamado">
+        <div class="contenedor">
+          <div class="llamado revelar revelar--escala">
+            <div class="llamado__fondo" aria-hidden="true" style="background-image: url('img/capturas/captura-02.jpg')"></div>
+            <span class="eyebrow">Te esperamos</span>
+            <h2 id="titulo-llamado">¿Listo para entrar <span class="rojo">a Victoria</span>?</h2>
+            <p class="bajada">Descarga el launcher, crea tu cuenta y nos vemos en el reino.</p>
+            <div class="portada__acciones">
+              <a
+                class="boton boton--principal boton--grande boton--brillo"
+                href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+                data-descarga
+              >
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
+              </a>
+              <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Unirse al Discord
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pie">
+      <div class="contenedor">
+        <div class="pie__grilla">
+          <div class="pie__marca">
+            <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" loading="lazy" />
+            <p>Servidor de rol de Minecraft Java 1.20.1, con launcher propio que instala todo solo.</p>
+            <div class="pie__redes">
+              <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener" aria-label="Discord de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4>Jugar</h4>
+            <ul>
+              <li><a href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>Descargar el launcher</a></li>
+              <li><a href="#empezar">Cómo empezar</a></li>
+              <li><a href="guia">Guía de instalación</a></li>
+              <li><a href="guia#requisitos">Requisitos</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Comunidad</h4>
+            <ul>
+              <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
+              <li><a href="normas">Normas</a></li>
+              <li><a href="#novedades">Novedades</a></li>
+              <li><a href="#pais">Capturas</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Ayuda</h4>
+            <ul>
+              <li><a href="guia#smartscreen">Windows protegió su PC</a></li>
+              <li><a href="guia#antivirus">El antivirus lo bloquea</a></li>
+              <li><a href="guia#lento">El juego va lento</a></li>
+              <li><a href="guia#conectar">No puedo entrar</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="pie__base">
+          <span>© <span data-anio>2026</span> Victoria Kingdom</span>
+          <span>No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado con ellos.</span>
+        </div>
+      </div>
+    </footer>
+
+    <div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Capturas del servidor" inert>
+      <div class="visor__escena">
+        <img class="visor__imagen" alt="" data-visor-imagen />
+        <button class="visor__flecha visor__flecha--antes" type="button" aria-label="Captura anterior" data-visor-antes>
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#chevron-left" /></svg>
+        </button>
+        <button class="visor__flecha visor__flecha--despues" type="button" aria-label="Captura siguiente" data-visor-despues>
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#chevron" /></svg>
+        </button>
+        <button class="visor__cerrar" type="button" aria-label="Cerrar" data-visor-cerrar>
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#close" /></svg>
+        </button>
+      </div>
+      <div class="visor__pie">
+        <div>
+          <div class="visor__titulo" data-visor-titulo></div>
+          <div class="visor__contador" data-visor-contador></div>
+        </div>
+        <div class="visor__tira" data-visor-tira></div>
+      </div>
+    </div>
+
+    <div class="tostada" role="status" aria-live="polite" data-tostada>
+      <span class="tostada__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg></span>
+      <div>
+        <strong>Bajando el instalador…</strong>
+        <p>
+          Si aparece «Windows protegió su PC», toca <b>Más información</b> y luego <b>Ejecutar de todas formas</b>.
+          <a href="guia#smartscreen">Ver cómo</a>
+        </p>
+      </div>
+      <button class="tostada__cerrar" type="button" aria-label="Cerrar el aviso" data-tostada-cerrar>
+        <svg class="icono" aria-hidden="true"><use href="iconos.svg#close" /></svg>
+      </button>
+    </div>
+
+    <button class="arriba" type="button" aria-label="Volver arriba" data-arriba>
+      <svg class="arriba__anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /></svg>
+      <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-up" /></svg>
+    </button>
+  </body>
+</html>

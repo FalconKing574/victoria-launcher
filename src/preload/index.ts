@@ -69,7 +69,11 @@ const api: VictoriaApi = {
     check: () => ipcRenderer.invoke('updater:check'),
     state: () => ipcRenderer.invoke('updater:state'),
     install: () => ipcRenderer.invoke('updater:install'),
+    posponer: () => ipcRenderer.invoke('updater:posponer'),
     onState: (cb) => on('updater:state', cb)
+  },
+  servidor: {
+    estado: () => ipcRenderer.invoke('servidor:estado')
   },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),

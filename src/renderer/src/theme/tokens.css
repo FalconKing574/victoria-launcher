@@ -30,39 +30,70 @@
 }
 
 :root {
-  --gold: #e6b422;
-  --gold-bright: #ffd45e;
-  --gold-deep: #a67c0d;
+  /* EL color de acento del launcher: botón principal, lo activo, el progreso,
+     los enlaces destacados. Cambiarlo es cambiar estas cuatro líneas; nada más
+     en la interfaz lleva el color escrito a mano (07-10-2026).
+
+     Rojo Victoria: el rojo del logo y de la bandera, elegido por el dueño
+     (07-10-2026) entre cuatro rojos, después de probar dorado y azul. Da 3,7:1
+     sobre el fondo (íconos y bordes) y 4,9:1 con texto blanco encima; para
+     texto sobre fondo oscuro va el claro. Como el color de error también es
+     rojo, los avisos informativos van en gris neutro y sólo los de error en
+     rojo (ver el aviso de Jugar). */
+  --acento: #d7263d;
+  --acento-claro: #ff6b7a;
+  --acento-oscuro: #8f1526;
+  /* El texto que va encima del acento, en el botón principal. */
+  --acento-texto: #ffffff;
+
+  /* Los botones llevan un degradado suave del mismo rojo (pedido del dueño),
+     y JUGAR va en verde, como el botón de jugar de Steam. Las dos puntas de
+     cada uno dan al menos 4,5:1 con texto blanco salvo el verde claro, que se
+     compensa con sombra en el texto, igual que en Steam. */
+  --boton-principal: linear-gradient(90deg, #df2f42 0%, #b81d32 100%);
+  --boton-jugar: linear-gradient(90deg, #47c22f 0%, #2e9c38 100%);
+
+  /* Nombres viejos del acento: medio launcher los usa. Siguen al acento. */
+  --gold: var(--acento);
+  --gold-bright: var(--acento-claro);
+  --gold-deep: var(--acento-oscuro);
   --red: #d7263d;
   --blue: #1e3a8a;
   --blue-bright: #3b5bdb;
 
-  --bg-0: #07070b;
-  --bg-1: #0d0d14;
-  --bg-2: #14141d;
+  /* Grises neutros y planos, al estilo del launcher de Majestic (07-10-2026):
+     antes eran negros azulados. El dorado sigue siendo el único acento, y se
+     reserva para lo importante: el botón principal, lo activo, el progreso. */
+  --bg-0: #0e0e0f;
+  --bg-1: #151516;
+  --bg-2: #1a1a1c;
 
-  --text: #f4f4f7;
-  --text-dim: #a1a1b5;
-  --text-faint: #6b6b80;
+  --text: #f2f2f3;
+  --text-dim: #a5a5ad;
+  --text-faint: #6c6c74;
 
   /* Opaque surfaces, not frosted glass. Translucent panels over the rotating
      panorama meant every card re-blurred its backdrop each frame, and the look
      reads as generic. */
-  --surface: #12121a;
-  --surface-2: #181822;
-  --surface-3: #1f1f2b;
-  --stroke: rgba(255, 255, 255, 0.07);
-  --stroke-strong: rgba(255, 255, 255, 0.14);
+  --surface: #18181a;
+  --surface-2: #1f1f22;
+  --surface-3: #27272b;
+  --stroke: rgba(255, 255, 255, 0.06);
+  --stroke-strong: rgba(255, 255, 255, 0.12);
+
+  /* Campos de texto: relleno plano, sin borde hasta que se enfocan. */
+  --campo: #1f1f22;
+  --campo-hover: #242427;
 
   --ok: #3ddc84;
   --err: #ff5c6c;
 
   --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
+  --r-md: 10px;
+  --r-lg: 14px;
 
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --shadow-gold: 0 6px 20px rgba(230, 180, 34, 0.22);
+  --shadow-gold: 0 6px 20px color-mix(in srgb, var(--gold) 22%, transparent);
 
   --titlebar-h: 38px;
   --sidebar-w: 208px;
@@ -104,7 +135,7 @@ input {
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(230, 180, 34, 0.4);
+  background: color-mix(in srgb, var(--gold) 40%, transparent);
 }
 
 .panel {
