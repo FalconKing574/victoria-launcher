@@ -83,7 +83,9 @@ contraseña.
 4. Save and Deploy. En un minuto queda en https://victoriakingdom.pages.dev.
 
 Después, cada push a `main` la vuelve a publicar (el plan gratis da 500
-publicaciones por mes). Las demás ramas generan una vista previa con su propia
+publicaciones por mes). Los cambios de la web se preparan en una rama y el
+agente abre él mismo el PR a `main` (el dueño lo autorizó el 07-10-2026); el
+dueño lo fusiona y Cloudflare publica. Las demás ramas generan una vista previa con su propia
 dirección; si no hace falta, se apaga en Settings → Builds → Branch control.
 
 **No mezclar los dos caminos:** un proyecto creado desde la consola (abajo) no
@@ -199,6 +201,10 @@ Reglas para lo que se agregue:
   la cinta girada lo son: van recortadas (`.seccion { overflow-x: clip }`,
   `.cintas { overflow: hidden }`). Sin eso, en el celular la página se arrastraba
   de costado.
+- **Quedó un `victoria-launcher` viejo sin borrar** en Cloudflare (07-10-2026):
+  el Worker o el proyecto de Pages del primer intento. Si aparece una
+  publicación fallida o una copia de la web en `victoria-launcher.pages.dev`,
+  es eso; la web de verdad es el proyecto `victoriakingdom`.
 - **`404.html` usa rutas absolutas** (`/estilos.css`): se sirve en cualquier
   dirección que no exista, también en `/algo/otra-cosa`.
 - **Los íconos (`<use href="iconos.svg#…">`) llevan los atributos de trazo en

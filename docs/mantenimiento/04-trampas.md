@@ -47,6 +47,25 @@ mundo que no había modpack. Sigue pasando la variable si publicas a otro sitio,
 pero olvidarla ya no rompe nada.
 **Comprueba:** `grep -o "manifest.json" out/main/index.js` después de compilar.
 
+### Un test que pasa en tu PC y falla en GitHub
+
+**Síntoma:** `publicar.yml` se corta en «Typecheck y tests» y no publica nada,
+con un test que en tu PC pasa. Pasó el 07-10-2026 con la 1.8.0:
+`shaders-restore.test.ts` › «uno heredado sin copia…», `expected true to be false`.
+**Causa:** el workflow pone `VICTORIA_MANIFEST_URL` para todo el job, tests
+incluidos, y `src/main/config.ts` la lee de `process.env`. En la PC no está, así
+que el rescate de shaders no tenía de dónde bajar nada. En GitHub sí estaba, y
+bajó el shader de verdad de R2.
+**Ya está puesto:** ese test la vacía con `vi.stubEnv('VICTORIA_MANIFEST_URL', '')`
+antes de importar el módulo. Un test que cuente con que no haya URL tiene que
+hacer lo mismo: vacía, no borrada (el `??` de `config.ts` deja pasar `''`).
+**Comprueba** antes de publicar, con los tests en las mismas condiciones que en
+GitHub:
+
+```bash
+VICTORIA_MANIFEST_URL="https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manifest.json" npm test
+```
+
 ### Un solo archivo que falta deja el modpack sin instalar
 
 **Síntoma:** el launcher repite «hay N archivos por descargar» para siempre y no

@@ -2761,26 +2761,6 @@ kbd {
   font-weight: 800;
 }
 
-.lista-check {
-  display: grid;
-  gap: 10px;
-  margin: 18px 0;
-  padding: 0;
-  list-style: none;
-}
-
-.lista-check li {
-  display: grid;
-  grid-template-columns: 22px 1fr;
-  gap: 12px;
-}
-
-.lista-check .icono {
-  margin-top: 4px;
-  color: var(--verde);
-  font-size: 19px;
-}
-
 .nota {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
