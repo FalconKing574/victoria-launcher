@@ -37,6 +37,10 @@ Web                  https://victoriakingdom.pages.dev   (código en web/, ver 0
 Minecraft / Forge    1.20.1 / 47.4.0
 ```
 
+**Victoria es un país, el Reino de Victoria, no sólo una ciudad.** En cualquier
+texto que vea un jugador (launcher, web, Discord) se habla de «Victoria», «el
+país» o «el reino».
+
 La **instancia fuente** es la verdad del modpack. Se edita ahí, no en
 `dist-modpack/` (esa carpeta se regenera entera).
 

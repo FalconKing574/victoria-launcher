@@ -5,14 +5,18 @@
  * cual. Cada parte mira si lo suyo está en la página y, si no, no hace nada, así
  * que el mismo archivo sirve para la portada, la guía y las normas.
  *
- * Con «reducir movimiento» activado en el sistema no hay presentación, chispas,
- * paralaje ni contadores: todo aparece quieto y en su lugar.
+ * Con «reducir movimiento» activado en el sistema no hay presentación ni
+ * contadores: todo aparece quieto y en su lugar.
+ *
+ * Lo que se mueve sin parar está hecho con `transform` u `opacity`, que el
+ * navegador anima sin recalcular la página. Hubo chispas en un canvas, grano de
+ * película, paralaje con el mouse y un brillo que seguía al cursor: se sacaron
+ * porque gastaban procesador todo el tiempo (ver docs/mantenimiento/06-web.md).
  */
 ;(() => {
   'use strict'
 
   const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches
-  const punteroFino = matchMedia('(hover: hover) and (pointer: fine)').matches
   const $ = (selector, raiz = document) => raiz.querySelector(selector)
   const $$ = (selector, raiz = document) => [...raiz.querySelectorAll(selector)]
   const numero = new Intl.NumberFormat('es')
@@ -203,8 +207,6 @@
   function alDesplazar() {
     const pasos = $('[data-pasos]')
     const listaPasos = pasos ? $$('.paso', pasos) : []
-    const palabras = $$('[data-corrimiento]')
-    const paralajes = $$('[data-paralaje]')
     const arriba = $('[data-arriba]')
     let pendiente = false
 
@@ -218,18 +220,6 @@
         for (const p of listaPasos) {
           const marca = $('.paso__numero', p).getBoundingClientRect()
           p.classList.toggle('alcanzado', marca.height > 0 && marca.top + marca.height / 2 < alto * 0.6)
-        }
-      }
-      if (!reducido) {
-        for (const w of palabras) {
-          const s = w.parentElement.getBoundingClientRect()
-          const k = (s.top + s.height / 2 - alto / 2) / alto
-          w.style.setProperty('--corrimiento', `${(k * -140).toFixed(1)}px`)
-        }
-        for (const f of paralajes) {
-          const s = f.parentElement.getBoundingClientRect()
-          const k = (s.top + s.height / 2 - alto / 2) / alto
-          f.style.setProperty('--paralaje', `${(k * 50).toFixed(1)}px`)
         }
       }
       if (arriba) {
@@ -250,7 +240,7 @@
   }
 
   /* -----------------------------------------------------------------------
-     Portada: presentación de capturas, chispas y paralaje con el mouse
+     Portada: presentación de capturas
      ----------------------------------------------------------------------- */
 
   async function portada() {
@@ -343,115 +333,6 @@
     marcar()
     programar()
     new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(raiz)
-  }
-
-  /** Chispas rojas y doradas que suben despacio, como brasas. */
-  function brasas() {
-    const lienzo = $('[data-brasas]')
-    if (!lienzo || reducido) return
-    const ctx = lienzo.getContext('2d')
-    if (!ctx) return
-    let ancho = 0
-    let alto = 0
-    let cuadroPedido = null
-    const cantidad = innerWidth < 720 ? 22 : 46
-    const particulas = []
-
-    const medir = () => {
-      const dpr = Math.min(2, devicePixelRatio || 1)
-      ancho = lienzo.clientWidth
-      alto = lienzo.clientHeight
-      lienzo.width = Math.round(ancho * dpr)
-      lienzo.height = Math.round(alto * dpr)
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
-    const nueva = (enCualquierLado) => ({
-      x: Math.random() * ancho,
-      y: enCualquierLado ? Math.random() * alto : alto + 10,
-      r: 0.6 + Math.random() * 1.7,
-      vy: 0.2 + Math.random() * 0.65,
-      vx: (Math.random() - 0.5) * 0.25,
-      fase: Math.random() * Math.PI * 2,
-      brillo: 0.45 + Math.random() * 0.55,
-      color: Math.random() < 0.72 ? '255, 88, 102' : '255, 196, 120'
-    })
-
-    medir()
-    for (let i = 0; i < cantidad; i++) particulas.push(nueva(true))
-
-    const cuadro = (t) => {
-      ctx.clearRect(0, 0, ancho, alto)
-      for (const p of particulas) {
-        p.y -= p.vy
-        p.x += p.vx + Math.sin(t / 1500 + p.fase) * 0.22
-        if (p.y < -12) Object.assign(p, nueva(false))
-        const parpadeo = 0.55 + 0.45 * Math.sin(t / 360 + p.fase * 3)
-        const alfa = Math.max(0, Math.min(1, (p.y / alto) * 1.3)) * p.brillo * parpadeo
-        const radio = p.r * 4
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radio)
-        g.addColorStop(0, `rgba(${p.color}, ${alfa.toFixed(3)})`)
-        g.addColorStop(1, `rgba(${p.color}, 0)`)
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, radio, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      cuadroPedido = requestAnimationFrame(cuadro)
-    }
-
-    // Sólo se dibuja mientras la portada está a la vista.
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !cuadroPedido) cuadroPedido = requestAnimationFrame(cuadro)
-      else if (!e.isIntersecting && cuadroPedido) {
-        cancelAnimationFrame(cuadroPedido)
-        cuadroPedido = null
-      }
-    }).observe(lienzo)
-    let espera
-    addEventListener('resize', () => {
-      clearTimeout(espera)
-      espera = setTimeout(medir, 200)
-    })
-  }
-
-  function paralajeRaton() {
-    const raiz = $('[data-portada]')
-    if (!raiz || reducido || !punteroFino) return
-    let pendiente = false
-    let px = 0
-    let py = 0
-    raiz.addEventListener('pointermove', (e) => {
-      const r = raiz.getBoundingClientRect()
-      px = ((e.clientX - r.left) / r.width) * 2 - 1
-      py = ((e.clientY - r.top) / r.height) * 2 - 1
-      if (pendiente) return
-      pendiente = true
-      requestAnimationFrame(() => {
-        raiz.style.setProperty('--px', px.toFixed(3))
-        raiz.style.setProperty('--py', py.toFixed(3))
-        pendiente = false
-      })
-    })
-    raiz.addEventListener('pointerleave', () => {
-      raiz.style.setProperty('--px', '0')
-      raiz.style.setProperty('--py', '0')
-    })
-  }
-
-  /** El brillo rojo de las tarjetas `.foco` sigue al mouse. */
-  function foco() {
-    if (!punteroFino) return
-    document.addEventListener(
-      'pointermove',
-      (e) => {
-        const el = e.target instanceof Element ? e.target.closest('.foco') : null
-        if (!el) return
-        const r = el.getBoundingClientRect()
-        el.style.setProperty('--mx', `${e.clientX - r.left}px`)
-        el.style.setProperty('--my', `${e.clientY - r.top}px`)
-      },
-      { passive: true }
-    )
   }
 
   /* -----------------------------------------------------------------------
@@ -781,9 +662,6 @@
     prepararContadores()
     revelar()
     alDesplazar()
-    foco()
-    paralajeRaton()
-    brasas()
     avisoDescarga()
     espiar()
 

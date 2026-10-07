@@ -392,8 +392,9 @@ launcher» arriba).
 ## La web
 
 Las de la web (el ping que colgaba la página, lo que no puede ser más ancho que
-la pantalla, la fecha de compatibilidad de wrangler) están en
-[`06-web.md`](06-web.md) § Trampas.
+la pantalla, la fecha de compatibilidad de wrangler, las animaciones que
+gastaban procesador sin parar) están en [`06-web.md`](06-web.md), en «Trampas»
+y «Rendimiento».
 
 ## Trabajando con el usuario
 

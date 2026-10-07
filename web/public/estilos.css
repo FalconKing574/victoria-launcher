@@ -333,9 +333,9 @@ button {
   width: 100%;
 }
 
-/* Un destello que cruza el botón cada tanto. Va detrás del texto: el botón
-   es su propio contexto de apilamiento (isolation) y el brillo tiene z-index
-   negativo, así que se pinta sobre el fondo y debajo de las letras. */
+/* Un destello que cruza el botón al pasar el mouse. Va detrás del texto: el
+   botón es su propio contexto de apilamiento (isolation) y el brillo tiene
+   z-index negativo, así que se pinta sobre el fondo y debajo de las letras. */
 .boton--brillo::after {
   content: '';
   position: absolute;
@@ -343,17 +343,11 @@ button {
   z-index: -1;
   background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.38) 50%, transparent 70%);
   transform: translateX(-130%);
-  animation: brillo 5s var(--ease) 1.8s infinite;
 }
 
-@keyframes brillo {
-  0% {
-    transform: translateX(-130%);
-  }
-  35%,
-  100% {
-    transform: translateX(130%);
-  }
+.boton--brillo:hover::after {
+  transform: translateX(130%);
+  transition: transform 0.9s var(--ease);
 }
 
 .enlace-flecha {
@@ -397,11 +391,11 @@ button {
   transition: opacity 0.35s;
 }
 
+/* Fondo casi opaco y sin desenfoque: desenfocar lo que pasa por detrás se
+   recalcula en cada cuadro del scroll, igual que en el launcher. */
 .cabecera.con-fondo {
-  background: rgba(14, 14, 15, 0.86);
+  background: rgba(14, 14, 15, 0.95);
   box-shadow: 0 1px 0 var(--borde);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
 }
 
 .cabecera.con-fondo::before {
@@ -684,8 +678,6 @@ button {
   position: absolute;
   inset: 0;
   z-index: -3;
-  transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px), 0);
-  transition: transform 0.6s var(--ease-out);
 }
 
 /* Las capturas se funden una en otra con un acercamiento lento (Ken Burns).
@@ -749,95 +741,12 @@ button {
   z-index: -2;
   width: 80vmax;
   height: 80vmax;
-  background: radial-gradient(closest-side, rgba(215, 38, 61, 0.28), rgba(215, 38, 61, 0));
-  animation: respirar 9s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(215, 38, 61, 0.24), rgba(215, 38, 61, 0));
   pointer-events: none;
-}
-
-@keyframes respirar {
-  from {
-    opacity: 0.5;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.06);
-  }
-}
-
-/* Grano de película. Se mueve a saltos, como el de verdad. */
-.portada__grano {
-  position: absolute;
-  inset: -100%;
-  z-index: -1;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grano 0.9s steps(5) infinite;
-  pointer-events: none;
-}
-
-@keyframes grano {
-  0% {
-    transform: translate(0, 0);
-  }
-  20% {
-    transform: translate(-4%, 3%);
-  }
-  40% {
-    transform: translate(3%, -5%);
-  }
-  60% {
-    transform: translate(-6%, -2%);
-  }
-  80% {
-    transform: translate(5%, 4%);
-  }
-}
-
-.portada__brasas {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* «VICTORIA» enorme y hueco que pasa despacio por detrás. */
-.portada__marca-agua {
-  position: absolute;
-  left: 0;
-  bottom: 3vh;
-  z-index: -1;
-  display: flex;
-  width: max-content;
-  color: transparent;
-  font-size: clamp(110px, 19vw, 300px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.8;
-  text-transform: uppercase;
-  white-space: nowrap;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.07);
-  animation: desfilar 70s linear infinite;
-  pointer-events: none;
-  user-select: none;
-}
-
-.portada__marca-agua span {
-  padding-right: 0.4em;
-}
-
-@keyframes desfilar {
-  to {
-    transform: translateX(-50%);
-  }
 }
 
 .portada__contenido {
   position: relative;
-  transform: translate3d(calc(var(--px, 0) * 8px), calc(var(--py, 0) * 6px), 0);
-  transition: transform 0.6s var(--ease-out);
 }
 
 .etiqueta-viva {
@@ -1082,7 +991,7 @@ button {
 }
 
 /* -------------------------------------------------------------------------
-   Cinta: rasgos que desfilan sin fin, cruzada como en las webs de GrandRP.
+   Cinta: rasgos que desfilan sin fin, como en las webs de GrandRP.
    ------------------------------------------------------------------------- */
 
 /* Las cintas son más anchas que la pantalla y van giradas: el envoltorio las
@@ -1090,7 +999,7 @@ button {
 .cintas {
   position: relative;
   z-index: 3;
-  margin: -76px 0 -30px;
+  margin: -76px 0 -40px;
   padding: 30px 0;
   overflow: hidden;
   pointer-events: none;
@@ -1112,23 +1021,10 @@ button {
   transform: rotate(-2deg);
 }
 
-.cinta--oscura {
-  z-index: 2;
-  margin-top: -58px;
-  background: var(--surface-2);
-  box-shadow: none;
-  transform: rotate(1.6deg);
-}
-
 .cinta__pista {
   display: flex;
   width: max-content;
   animation: cinta 46s linear infinite;
-}
-
-.cinta--oscura .cinta__pista {
-  animation-direction: reverse;
-  animation-duration: 60s;
 }
 
 .cinta:hover .cinta__pista {
@@ -1153,11 +1049,6 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.cinta--oscura .cinta__grupo li {
-  color: var(--text-faint);
-  font-size: 15px;
 }
 
 .cinta__grupo li::after {
@@ -1192,7 +1083,8 @@ button {
     var(--bg-1);
 }
 
-/* La palabra gigante y hueca de fondo, que se corre con el scroll. */
+/* La palabra gigante y hueca de fondo. Quieta: moverla con el scroll obligaba
+   a recalcular el estilo en cada cuadro. */
 .palabra-fondo {
   position: absolute;
   top: clamp(30px, 5vw, 70px);
@@ -1206,7 +1098,7 @@ button {
   text-transform: uppercase;
   white-space: nowrap;
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.055);
-  transform: translateX(calc(-50% + var(--corrimiento, 0px)));
+  transform: translateX(-50%);
   pointer-events: none;
   user-select: none;
 }
@@ -1236,27 +1128,6 @@ button {
 .js .revelar.visto {
   opacity: 1;
   transform: none;
-}
-
-/* Foco que sigue al mouse sobre las tarjetas. */
-.foco {
-  position: relative;
-}
-
-.foco::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), rgba(215, 38, 61, 0.14), transparent 42%);
-  opacity: 0;
-  transition: opacity 0.4s;
-  pointer-events: none;
-}
-
-.foco:hover::before {
-  opacity: 1;
 }
 
 /* -------------------------------------------------------------------------
@@ -1343,16 +1214,11 @@ button {
 
 .video__foto {
   position: absolute;
-  inset: -3%;
+  inset: 0;
   background-position: center;
   background-size: cover;
   opacity: 0;
   transition: opacity 1.4s ease;
-}
-
-.video__foto.activa,
-.video__foto.saliendo {
-  animation: ken-burns 9s linear forwards;
 }
 
 .video__foto.activa {
@@ -1415,7 +1281,7 @@ button {
   height: 78px;
   border-radius: 50%;
   background: var(--boton-principal);
-  animation: latido 2.4s ease-out infinite;
+  box-shadow: 0 0 0 10px rgba(215, 38, 61, 0.22);
   transition: transform 0.4s var(--ease);
 }
 
@@ -1426,18 +1292,6 @@ button {
 
 .video:hover .video__play {
   transform: scale(1.12);
-}
-
-@keyframes latido {
-  0% {
-    box-shadow: 0 0 0 0 rgba(215, 38, 61, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 26px rgba(215, 38, 61, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(215, 38, 61, 0);
-  }
 }
 
 @media (max-width: 560px) {
@@ -1560,20 +1414,23 @@ button {
   content: '';
   position: absolute;
   top: 56px;
+  bottom: 56px;
   left: 39px;
   width: 2px;
   border-radius: 2px;
 }
 
 .pasos::before {
-  bottom: 56px;
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 0 6px, transparent 6px 14px);
 }
 
+/* Se estira con transform y no cambiando el alto: así no hay que recalcular
+   la página en cada cuadro del scroll. */
 .pasos::after {
-  height: calc(var(--avance, 0) * (100% - 112px));
   background: linear-gradient(180deg, var(--acento-claro), var(--acento));
   box-shadow: 0 0 14px var(--acento);
+  transform: scaleY(var(--avance, 0));
+  transform-origin: top;
 }
 
 .paso {
@@ -1784,16 +1641,21 @@ button {
 }
 
 .descarga-falsa .barra__relleno {
+  width: 100%;
+  border-radius: 0;
+  transform-origin: left;
   animation: bajando 4.5s var(--ease) infinite;
 }
 
+/* Con transform y no con width: animar el ancho recalcula la página en cada
+   cuadro. */
 @keyframes bajando {
   0% {
-    width: 0;
+    transform: scaleX(0);
   }
   70%,
   100% {
-    width: 100%;
+    transform: scaleX(1);
   }
 }
 
@@ -2295,13 +2157,6 @@ button {
   background: rgba(215, 38, 61, 0.2);
   color: var(--acento-claro);
   font-size: 32px;
-  animation: vigilar 3.2s ease-in-out infinite;
-}
-
-@keyframes vigilar {
-  50% {
-    box-shadow: 0 0 0 10px rgba(215, 38, 61, 0.08);
-  }
 }
 
 .aviso-av h3 {
@@ -2337,11 +2192,10 @@ button {
 
 .llamado__fondo {
   position: absolute;
-  inset: -22% 0;
+  inset: 0;
   z-index: -2;
   background-position: center;
   background-size: cover;
-  transform: translate3d(0, var(--paralaje, 0px), 0) scale(1.05);
 }
 
 .llamado::before {
@@ -2640,11 +2494,10 @@ button {
 
 .cabecera-pagina__fondo {
   position: absolute;
-  inset: -6% 0;
+  inset: 0;
   z-index: -2;
   background-position: center 40%;
   background-size: cover;
-  animation: ken-burns 26s linear both;
 }
 
 .cabecera-pagina::before {
@@ -3120,7 +2973,6 @@ kbd {
 
 .smartscreen .smartscreen__detalle {
   margin: 12px 0 0;
-  overflow: hidden;
   color: rgba(255, 255, 255, 0.9);
   font-size: 13.5px;
   line-height: 1.6;
@@ -3179,20 +3031,19 @@ kbd {
   }
 }
 
+/* Sólo opacidad: el espacio del detalle está reservado desde el principio,
+   así los botones no se mueven y no hay que recalcular la caja. */
 @keyframes smart-detalle {
   0%,
   30% {
     opacity: 0;
-    max-height: 0;
   }
   36%,
   92% {
     opacity: 1;
-    max-height: 60px;
   }
   100% {
     opacity: 0;
-    max-height: 0;
   }
 }
 
@@ -3503,12 +3354,6 @@ kbd {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     transition-delay: 0ms !important;
-  }
-
-  .portada__grano,
-  .portada__brasas,
-  .portada__marca-agua {
-    display: none;
   }
 
   .js .revelar {

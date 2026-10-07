@@ -6,7 +6,7 @@
     <title>Victoria Kingdom — Servidor de rol de Minecraft</title>
     <meta
       name="description"
-      content="Servidor de rol de Minecraft Java 1.20.1 con launcher propio: descarga, crea tu cuenta y entra a la ciudad. Con o sin Minecraft original."
+      content="Servidor de rol de Minecraft Java 1.20.1 con launcher propio: descarga, crea tu cuenta y entra al Reino de Victoria. Con o sin Minecraft original."
     />
     <meta name="theme-color" content="#d7263d" />
     <link rel="icon" type="image/png" href="img/icono.png" />
@@ -20,7 +20,7 @@
     <meta property="og:title" content="Victoria Kingdom — Servidor de rol de Minecraft" />
     <meta
       property="og:description"
-      content="Una ciudad entera para tu personaje. Descarga el launcher: instala todo solo y te deja en el servidor."
+      content="Un país entero para tu personaje. Descarga el launcher: instala todo solo y te deja en el servidor."
     />
     <meta property="og:image" content="https://victoriakingdom.pages.dev/img/capturas/captura-01.jpg" />
     <meta property="og:locale" content="es_ES" />
@@ -45,7 +45,7 @@
         </a>
         <nav class="nav" aria-label="Principal">
           <a href="#empezar">Cómo empezar</a>
-          <a href="#ciudad">La ciudad</a>
+          <a href="#pais">El país</a>
           <a href="#novedades">Novedades</a>
           <a href="guia">Guía</a>
           <a href="normas">Normas</a>
@@ -74,7 +74,7 @@
 
     <div class="menu-movil" id="menu-movil" inert>
       <a class="menu-movil__enlace" style="--i: 0" href="#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 1" href="#ciudad">La ciudad <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
       <a class="menu-movil__enlace" style="--i: 2" href="#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
       <a class="menu-movil__enlace" style="--i: 3" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
       <a class="menu-movil__enlace" style="--i: 4" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
@@ -100,9 +100,6 @@
         </div>
         <div class="portada__velo" aria-hidden="true"></div>
         <div class="portada__resplandor" aria-hidden="true"></div>
-        <canvas class="portada__brasas" aria-hidden="true" data-brasas></canvas>
-        <div class="portada__grano" aria-hidden="true"></div>
-        <div class="portada__marca-agua" aria-hidden="true"><span>Victoria Kingdom</span><span>Victoria Kingdom</span></div>
 
         <div class="contenedor portada__contenido">
           <div>
@@ -113,7 +110,7 @@
               <span class="linea"><span class="rojo" style="--i: 2">Victoria</span></span>
             </h1>
             <p class="portada__bajada aparecer" style="--retraso: 700ms">
-              Una ciudad entera hecha bloque a bloque, con trabajos, comercios y una comunidad que se toma el rol en serio.
+              Un país entero hecho bloque a bloque, con trabajos, comercios y una comunidad que se toma el rol en serio.
               Descarga el launcher: instala todo solo y te deja en el servidor.
             </p>
             <div class="portada__acciones aparecer" style="--retraso: 850ms">
@@ -145,7 +142,7 @@
         </div>
       </section>
 
-      <!-- Dos cintas cruzadas -->
+      <!-- La cinta que desfila -->
       <div class="cintas" aria-hidden="true">
         <div class="cinta">
           <div class="cinta__pista">
@@ -154,32 +151,25 @@
             <ul class="cinta__grupo"><li>Minecraft 1.20.1</li><li>Forge 47.4.0</li><li>Launcher propio</li><li>Rol en español</li><li>Shaders incluidos</li><li>Distant Horizons</li><li>Mapa de Xaero</li><li>Comunidad en Discord</li></ul>
           </div>
         </div>
-        <div class="cinta cinta--oscura">
-          <div class="cinta__pista">
-            <ul class="cinta__grupo"><li>El palacio</li><li>La plaza de las banderas</li><li>Centro de Trabajos</li><li>El aeropuerto</li><li>Emergencias</li><li>Walcart</li><li>La sastrería</li></ul>
-            <ul class="cinta__grupo"><li>El palacio</li><li>La plaza de las banderas</li><li>Centro de Trabajos</li><li>El aeropuerto</li><li>Emergencias</li><li>Walcart</li><li>La sastrería</li></ul>
-            <ul class="cinta__grupo"><li>El palacio</li><li>La plaza de las banderas</li><li>Centro de Trabajos</li><li>El aeropuerto</li><li>Emergencias</li><li>Walcart</li><li>La sastrería</li></ul>
-          </div>
-        </div>
       </div>
 
       <!-- Sobre Victoria -->
       <section class="seccion" id="sobre" aria-labelledby="titulo-sobre">
-        <span class="palabra-fondo" aria-hidden="true" data-corrimiento>Victoria</span>
+        <span class="palabra-fondo" aria-hidden="true">Victoria</span>
         <div class="contenedor">
           <div class="sobre">
             <div class="revelar revelar--izq">
               <span class="eyebrow">Sobre Victoria</span>
-              <h2 class="titulo-seccion" id="titulo-sobre">Una ciudad entera para <span class="rojo">tu personaje</span></h2>
+              <h2 class="titulo-seccion" id="titulo-sobre">Un país entero para <span class="rojo">tu personaje</span></h2>
               <p class="bajada">
-                Victoria Kingdom es un servidor de rol de Minecraft Java. La ciudad tiene palacio, plaza, aeropuerto, emergencias,
-                comercios y un Centro de Trabajos donde empieza tu carrera. Quién eres ahí lo decides tú.
+                Victoria Kingdom es un servidor de rol de Minecraft Java ambientado en el Reino de Victoria: un país con su palacio, su
+                bandera, aeropuerto, emergencias, comercios y un Centro de Trabajos donde empieza tu carrera. Quién eres ahí lo decides tú.
               </p>
               <ul class="rasgos">
                 <li class="rasgo revelar" style="--retraso: 120ms">
                   <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#building" /></svg></span>
                   <div>
-                    <h3>Ciudad hecha a mano</h3>
+                    <h3>Un país hecho a mano</h3>
                     <p>Cada edificio se levantó bloque a bloque para el rol: calles, tiendas, oficinas y lugares de trabajo.</p>
                   </div>
                 </li>
@@ -187,14 +177,14 @@
                   <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#briefcase" /></svg></span>
                   <div>
                     <h3>Trabajos y vida diaria</h3>
-                    <p>Busca empleo en el Centro de Trabajos y hazte un lugar en la ciudad.</p>
+                    <p>Busca empleo en el Centro de Trabajos y hazte un lugar en el reino.</p>
                   </div>
                 </li>
                 <li class="rasgo revelar" style="--retraso: 320ms">
                   <span class="rasgo__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#map" /></svg></span>
                   <div>
                     <h3>Mapa listo desde el primer día</h3>
-                    <p>El mapa de Xaero viene con la ciudad ya explorada: siempre sabes a dónde ir.</p>
+                    <p>El mapa de Xaero viene ya explorado: siempre sabes a dónde ir.</p>
                   </div>
                 </li>
                 <li class="rasgo revelar" style="--retraso: 420ms">
@@ -208,7 +198,7 @@
             </div>
 
             <div class="revelar revelar--der">
-              <button class="video" type="button" data-abrir-visor="0" aria-label="Ver las capturas de la ciudad en grande">
+              <button class="video" type="button" data-abrir-visor="0" aria-label="Ver las capturas de Victoria en grande">
                 <span class="video__foto activa" style="background-image: url('img/capturas/captura-05.jpg')" data-video-foto></span>
                 <span class="video__boton" aria-hidden="true">
                   <svg class="video__anillo" viewBox="0 0 150 150">
@@ -218,7 +208,7 @@
                   <span class="video__play"><svg class="icono"><use href="iconos.svg#play" /></svg></span>
                 </span>
                 <span class="video__pie">
-                  <span><strong>Recorre la ciudad</strong><span data-total-capturas>Capturas del servidor</span></span>
+                  <span><strong>Recorre Victoria</strong><span data-total-capturas>Capturas del servidor</span></span>
                   <svg class="icono" aria-hidden="true"><use href="iconos.svg#expand" /></svg>
                 </span>
               </button>
@@ -226,19 +216,19 @@
           </div>
 
           <div class="cifras">
-            <div class="cifra foco revelar" data-servidor data-estado="cargando">
+            <div class="cifra revelar" data-servidor data-estado="cargando">
               <div class="cifra__numero"><span class="punto"></span><span data-jugadores data-contar>—</span></div>
               <p class="cifra__texto">jugadores en línea ahora</p>
             </div>
-            <div class="cifra foco revelar" style="--retraso: 100ms">
+            <div class="cifra revelar" style="--retraso: 100ms">
               <div class="cifra__numero"><span data-maximo data-contar>—</span></div>
               <p class="cifra__texto">plazas en el servidor</p>
             </div>
-            <div class="cifra foco revelar" style="--retraso: 200ms">
+            <div class="cifra revelar" style="--retraso: 200ms">
               <div class="cifra__numero"><span data-mods data-contar>117</span></div>
               <p class="cifra__texto">mods que instala el launcher</p>
             </div>
-            <div class="cifra foco revelar" style="--retraso: 300ms">
+            <div class="cifra revelar" style="--retraso: 300ms">
               <div class="cifra__numero"><span data-minecraft>1.20.1</span></div>
               <p class="cifra__texto">Minecraft Java con Forge</p>
             </div>
@@ -248,18 +238,18 @@
 
       <!-- Cómo empezar a jugar -->
       <section class="seccion seccion--tenue" id="empezar" aria-labelledby="titulo-empezar">
-        <span class="palabra-fondo" aria-hidden="true" data-corrimiento>Empezar</span>
+        <span class="palabra-fondo" aria-hidden="true">Empezar</span>
         <div class="contenedor">
           <div class="seccion__cabeza seccion__cabeza--centro revelar">
             <span class="eyebrow">En cuatro pasos</span>
             <h2 class="titulo-seccion" id="titulo-empezar">Cómo empezar <span class="rojo">a jugar</span></h2>
-            <p class="bajada">Del instalador a la ciudad en pocos minutos. El launcher hace lo difícil por ti.</p>
+            <p class="bajada">Del instalador a Victoria en pocos minutos. El launcher hace lo difícil por ti.</p>
           </div>
 
           <ol class="pasos" data-pasos>
             <li class="paso">
               <div class="paso__marca" aria-hidden="true"><span class="paso__numero">1</span></div>
-              <article class="paso__tarjeta foco revelar">
+              <article class="paso__tarjeta revelar">
                 <span class="paso__fondo-numero" aria-hidden="true">01</span>
                 <div>
                   <span class="insignia">Primer paso</span>
@@ -301,7 +291,7 @@
 
             <li class="paso">
               <div class="paso__marca" aria-hidden="true"><span class="paso__numero">2</span></div>
-              <article class="paso__tarjeta foco revelar">
+              <article class="paso__tarjeta revelar">
                 <span class="paso__fondo-numero" aria-hidden="true">02</span>
                 <div>
                   <span class="insignia">Segundo paso</span>
@@ -324,7 +314,7 @@
 
             <li class="paso">
               <div class="paso__marca" aria-hidden="true"><span class="paso__numero">3</span></div>
-              <article class="paso__tarjeta foco revelar">
+              <article class="paso__tarjeta revelar">
                 <span class="paso__fondo-numero" aria-hidden="true">03</span>
                 <div>
                   <span class="insignia">Tercer paso</span>
@@ -350,14 +340,14 @@
 
             <li class="paso">
               <div class="paso__marca" aria-hidden="true"><span class="paso__numero">4</span></div>
-              <article class="paso__tarjeta foco revelar">
+              <article class="paso__tarjeta revelar">
                 <span class="paso__fondo-numero" aria-hidden="true">04</span>
                 <div>
                   <span class="insignia insignia--verde">Último paso</span>
                   <h3 class="paso__titulo">Toca JUGAR</h3>
                   <p class="paso__texto">
                     La primera vez el launcher descarga Minecraft, Forge, Java y los mods: puede tardar unos minutos según tu conexión.
-                    Después solo baja lo que cambie y entras directo a la ciudad.
+                    Después solo baja lo que cambie y entras directo a Victoria.
                   </p>
                   <div class="paso__acciones">
                     <a
@@ -376,7 +366,7 @@
             </li>
           </ol>
 
-          <div class="aviso-av foco revelar" style="margin-top: 56px">
+          <div class="aviso-av revelar" style="margin-top: 56px">
             <span class="aviso-av__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#shield-check" /></svg></span>
             <div>
               <h3>¿Windows o tu antivirus frenan el instalador?</h3>
@@ -388,12 +378,12 @@
       </section>
 
       <!-- Galería -->
-      <section class="seccion" id="ciudad" aria-labelledby="titulo-ciudad">
-        <span class="palabra-fondo" aria-hidden="true" data-corrimiento>La ciudad</span>
+      <section class="seccion" id="pais" aria-labelledby="titulo-pais">
+        <span class="palabra-fondo" aria-hidden="true">El país</span>
         <div class="contenedor">
           <div class="seccion__cabeza revelar">
             <span class="eyebrow">Capturas del servidor</span>
-            <h2 class="titulo-seccion" id="titulo-ciudad">Recorre <span class="rojo">la ciudad</span></h2>
+            <h2 class="titulo-seccion" id="titulo-pais">Recorre <span class="rojo">el país</span></h2>
             <p class="bajada">Así se ve Victoria de día y de noche, con los shaders que instala el launcher. Toca una captura para verla en grande.</p>
           </div>
           <div class="galeria" data-galeria>
@@ -404,7 +394,7 @@
 
       <!-- Novedades -->
       <section class="seccion seccion--tenue" id="novedades" aria-labelledby="titulo-novedades">
-        <span class="palabra-fondo" aria-hidden="true" data-corrimiento>Novedades</span>
+        <span class="palabra-fondo" aria-hidden="true">Novedades</span>
         <div class="contenedor">
           <div class="seccion__cabeza revelar">
             <span class="eyebrow">Novedades</span>
@@ -419,10 +409,10 @@
       <section class="seccion" aria-labelledby="titulo-llamado">
         <div class="contenedor">
           <div class="llamado revelar revelar--escala">
-            <div class="llamado__fondo" aria-hidden="true" data-paralaje style="background-image: url('img/capturas/captura-02.jpg')"></div>
+            <div class="llamado__fondo" aria-hidden="true" style="background-image: url('img/capturas/captura-02.jpg')"></div>
             <span class="eyebrow">Te esperamos</span>
             <h2 id="titulo-llamado">¿Listo para entrar <span class="rojo">a Victoria</span>?</h2>
-            <p class="bajada">Descarga el launcher, crea tu cuenta y nos vemos en la ciudad.</p>
+            <p class="bajada">Descarga el launcher, crea tu cuenta y nos vemos en el reino.</p>
             <div class="portada__acciones">
               <a
                 class="boton boton--principal boton--grande boton--brillo"
@@ -467,7 +457,7 @@
               <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
               <li><a href="normas">Normas</a></li>
               <li><a href="#novedades">Novedades</a></li>
-              <li><a href="#ciudad">Capturas</a></li>
+              <li><a href="#pais">Capturas</a></li>
             </ul>
           </div>
           <div>
