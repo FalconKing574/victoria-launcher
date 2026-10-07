@@ -15,7 +15,7 @@ cifras de más abajo ya lo dicen.
 
 ```
 web/
-  wrangler.toml          nombre del proyecto en Cloudflare: victoriakingdom
+  wrangler.toml          nombre del proyecto en Cloudflare: victoria-launcher
   public/                lo que se sirve tal cual
     index.html           portada
     guia.html            instalar, cuenta, SmartScreen, antivirus, problemas
@@ -52,8 +52,10 @@ incluidas.
 
 ## Publicarla
 
-Gratis, en Cloudflare Pages conectado al repo de GitHub: cada cambio que llega a
-`main` se publica solo, sin comandos. Lo configura el dueño con su cuenta de
+**Está publicada desde el 07-10-2026 en https://victoria-launcher.pages.dev**,
+en Cloudflare Pages conectado al repo de GitHub: cada cambio que llega a `main`
+se publica solo, sin comandos. Lo que sigue es cómo se armó, por si hay que
+rehacerlo. Lo configura el dueño con su cuenta de
 Cloudflare (la misma del bucket R2); una IA no debe pedir ni escribir esa
 contraseña.
 
@@ -73,14 +75,14 @@ contraseña.
 
    | Campo | Valor |
    |---|---|
-   | Project name | `victoriakingdom` (el mismo `name` de `web/wrangler.toml`) |
+   | Project name | `victoria-launcher` (el mismo `name` de `web/wrangler.toml`) |
    | Production branch | `main` |
    | Framework preset | None |
    | Build command | vacío (si obliga a poner algo: `exit 0`) |
    | Build output directory | `public` |
    | Root directory (en Advanced) | `web` |
 
-4. Save and Deploy. En un minuto queda en https://victoriakingdom.pages.dev.
+4. Save and Deploy. En un minuto queda en `https://<project name>.pages.dev`.
 
 Después, cada push a `main` la vuelve a publicar (el plan gratis da 500
 publicaciones por mes). Las demás ramas generan una vista previa con su propia
@@ -91,11 +93,12 @@ se puede conectar a GitHub después; habría que crear otro, con otra dirección
 
 ### Desde la consola (alternativa)
 
-Sin conectar GitHub, desde la PC del dueño:
+Hoy no hace falta: el proyecto está conectado a GitHub. Queda por si algún día
+se arma sin GitHub, desde la PC del dueño:
 
 ```bash
 npx wrangler login                                                 # abre el navegador
-npx wrangler pages project create victoriakingdom --production-branch main
+npx wrangler pages project create victoria-launcher --production-branch main
 npm run web:publicar                                               # cada vez que cambie algo
 ```
 
@@ -105,19 +108,21 @@ aunque estés en otra rama de git).
 **Verifica lo publicado**, no el archivo local:
 
 ```bash
-curl https://victoriakingdom.pages.dev/api/estado    # {"enLinea":true,...} con el servidor prendido
-curl https://victoriakingdom.pages.dev/api/modpack   # la cantidad de mods del manifiesto vivo
-curl https://victoriakingdom.pages.dev/api/normas    # las normas
+curl https://victoria-launcher.pages.dev/api/estado    # {"enLinea":true,...} con el servidor prendido
+curl https://victoria-launcher.pages.dev/api/modpack   # la cantidad de mods del manifiesto vivo
+curl https://victoria-launcher.pages.dev/api/normas    # las normas
 ```
 
 Y abre la portada: el contador de arriba tiene que mostrar los jugadores.
 
-### Si la dirección no es victoriakingdom.pages.dev
+### Si cambia la dirección
 
-Si el nombre está tomado, Cloudflare da otro. Hay que cambiar la dirección en
-las etiquetas `og:image` de `index.html`, `guia.html` y `normas.html` (busca
-`victoriakingdom.pages.dev`): es la imagen que se ve al pegar el enlace en
-Discord o WhatsApp, y tiene que ir completa.
+El proyecto se creó con el nombre `victoria-launcher` y en Pages el nombre no se
+cambia después: para otra dirección `.pages.dev` hay que crear otro proyecto.
+Si la dirección cambia (otro proyecto o un dominio propio), hay que cambiarla
+también en las etiquetas `og:image` de `index.html`, `guia.html` y `normas.html`
+(busca `victoria-launcher.pages.dev`): es la imagen que se ve al pegar el enlace
+en Discord o WhatsApp, y tiene que ir completa.
 
 Un dominio propio (`victoriakingdom.com`) se conecta en el panel de Cloudflare →
 Workers & Pages → el proyecto → Custom domains. Cuesta lo que cueste el dominio
