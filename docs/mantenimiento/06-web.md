@@ -60,8 +60,15 @@ contraseña.
 1. La web tiene que estar en `main`, que es la rama que publica Cloudflare.
    Pasar cambios a `main` no publica el launcher: eso sólo lo hace un tag `v*`
    (`.github/workflows/publicar.yml`).
-2. En dash.cloudflare.com: Workers & Pages → Create → Pages → Connect to Git →
-   autorizar GitHub → elegir `FalconKing574/victoria-launcher`.
+2. En dash.cloudflare.com: Workers & Pages → Create → **pestaña Pages** (si no
+   aparece, el enlace de abajo «Looking to deploy Pages? Get started») → Import
+   an existing Git repository → elegir `FalconKing574/victoria-launcher`.
+
+   Ojo: la pantalla de Create abre por defecto en **Workers**, y por ahí sale un
+   Worker (dirección `…/workers/services/view/…` en el panel), no un proyecto de
+   Pages. El Worker no sirve con esta web: publica mal y queda con la dirección
+   `<nombre>.<subdominio-de-la-cuenta>.workers.dev`. Pasó el 07-10-2026; se borra
+   en el Worker → Settings → Delete.
 3. Configuración del proyecto:
 
    | Campo | Valor |
