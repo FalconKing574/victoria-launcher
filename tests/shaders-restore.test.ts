@@ -69,6 +69,10 @@ async function boot(): Promise<void> {
 
 beforeEach(async () => {
   handlers.clear()
+  // Nada sale a internet. publicar.yml define la URL del manifiesto para todo
+  // el job, y con ella el rescate bajaba de verdad el shader de R2. Vacía y no
+  // borrada: `??` en config.ts deja pasar la cadena vacía.
+  vi.stubEnv('VICTORIA_MANIFEST_URL', '')
   userData = mkdtempSync(join(tmpdir(), 'victoria-shaders-'))
   mkdirSync(inGame(), { recursive: true })
   writeFileSync(join(inGame(), BSL), 'zip-bsl')
@@ -78,6 +82,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   rmSync(userData, { recursive: true, force: true })
+  vi.unstubAllEnvs()
 })
 
 describe('en shaderpacks/ solo está el que se usa', () => {
@@ -238,7 +243,7 @@ describe('quitar y recuperar shaders', () => {
     mkdirSync(join(userData, 'minecraft'), { recursive: true })
     writeFileSync(removedList(), JSON.stringify(['Solas Shader V3.7.zip']))
 
-    // Sin URL de modpack en los tests, la descarga de rescate no puede correr.
+    // Sin URL de modpack (la vacía beforeEach), la descarga de rescate no puede correr.
     const after = await restaurar('Solas Shader V3.7.zip')
 
     // Lo importante: NO miente diciendo que lo recuperó...

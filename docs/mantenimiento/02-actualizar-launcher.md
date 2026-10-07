@@ -32,7 +32,10 @@ npm run typecheck
 npm test
 ```
 
-Los dos tienen que pasar limpios antes de publicar. Los tests son de lógica pura
+Los dos tienen que pasar limpios antes de publicar. Si publicas con
+`publicar.yml`, corre también `npm test` con `VICTORIA_MANIFEST_URL` puesta, como
+la pone el workflow (ver «Un test que pasa en tu PC y falla en GitHub» en
+[`04-trampas.md`](04-trampas.md)). Los tests son de lógica pura
 (sin Electron): planificador de sync, UUID offline, ajustes, versión de Java,
 propiedades de shaders.
 
