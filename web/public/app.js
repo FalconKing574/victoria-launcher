@@ -148,16 +148,6 @@
     for (const el of $$('[data-en-linea-texto]')) {
       el.innerHTML = estado === 'abajo' ? 'servidor<br />sin respuesta' : 'jugadores<br />en línea'
     }
-    for (const el of $$('[data-leyenda]')) {
-      el.textContent =
-        estado === 'abajo'
-          ? 'El servidor no responde ahora. Los avisos están en el Discord.'
-          : 'jugadores en la ciudad ahora mismo'
-    }
-    for (const el of $$('[data-ocupacion]')) {
-      const parte = arriba && e.maximo ? (e.jugadores ?? 0) / e.maximo : 0
-      el.style.width = `${arriba ? Math.min(100, Math.max(3, parte * 100)) : 0}%`
-    }
   }
 
   async function modpack() {
@@ -446,24 +436,6 @@
       raiz.style.setProperty('--px', '0')
       raiz.style.setProperty('--py', '0')
     })
-  }
-
-  /** La tarjeta del servidor se inclina hacia el mouse. */
-  function inclinar() {
-    if (reducido || !punteroFino) return
-    for (const el of $$('[data-inclinar]')) {
-      el.addEventListener('pointermove', (e) => {
-        const r = el.getBoundingClientRect()
-        const x = (e.clientX - r.left) / r.width - 0.5
-        const y = (e.clientY - r.top) / r.height - 0.5
-        el.style.setProperty('--rx', (x * 12).toFixed(2))
-        el.style.setProperty('--ry', (-y * 12).toFixed(2))
-      })
-      el.addEventListener('pointerleave', () => {
-        el.style.setProperty('--rx', '0')
-        el.style.setProperty('--ry', '0')
-      })
-    }
   }
 
   /** El brillo rojo de las tarjetas `.foco` sigue al mouse. */
@@ -810,7 +782,6 @@
     revelar()
     alDesplazar()
     foco()
-    inclinar()
     paralajeRaton()
     brasas()
     avisoDescarga()

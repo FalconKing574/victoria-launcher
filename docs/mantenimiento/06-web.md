@@ -5,9 +5,11 @@ en Cloudflare Pages, **gratis**, y tiene el mismo aspecto que el launcher (rojo
 Victoria, Outfit, botones en mayúsculas, JUGAR en verde).
 
 La portada sigue el modelo de la de GrandRP (contador «en línea» arriba, título
-enorme, «Cómo empezar a jugar» en pasos, galería) y la guía el de la wiki de
-Majestic (categorías a la izquierda, artículo, ficha a la derecha). Pedido del
-dueño el 07-10-2026.
+enorme sobre las capturas, «Cómo empezar a jugar» en pasos, galería) y la guía
+el de la wiki de Majestic (categorías a la izquierda, artículo, ficha a la
+derecha). Pedido del dueño el 07-10-2026. Al costado del título hubo una tarjeta
+con el estado del servidor y no le gustó: el contador de la cabecera y las
+cifras de más abajo ya lo dicen.
 
 ## Qué hay dónde
 
@@ -114,11 +116,10 @@ la portada está abierta. Sobra para un servidor como este.
 Todas en CSS (keyframes y transiciones) más `IntersectionObserver` en `app.js`
 para que aparezcan al hacer scroll. Lo que hay: el título que sube palabra por
 palabra, las capturas de la portada fundiéndose con acercamiento lento, chispas
-en un `<canvas>`, la tarjeta del servidor que flota y se inclina con el mouse,
-las cintas cruzadas que desfilan, contadores que cuentan hasta su valor, el
-conector de los pasos que se llena de rojo al bajar, el brillo que sigue al
-mouse en las tarjetas, la galería con visor (teclado y dedo) y el aviso de
-SmartScreen dibujado con un cursor que hace los dos clics.
+en un `<canvas>`, las cintas cruzadas que desfilan, contadores que cuentan hasta
+su valor, el conector de los pasos que se llena de rojo al bajar, el brillo que
+sigue al mouse en las tarjetas, la galería con visor (teclado y dedo) y el aviso
+de SmartScreen dibujado con un cursor que hace los dos clics.
 
 Con «reducir movimiento» activado en Windows o en el celular, todo queda quieto
 y en su lugar: no hay presentación, chispas, paralaje ni contadores.
@@ -140,5 +141,3 @@ y en su lugar: no hay presentación, chispas, paralaje ni contadores.
 - **Los íconos (`<use href="iconos.svg#…">`) llevan los atributos de trazo en
   cada `<symbol>`**: lo que clona `<use>` hereda del `<use>`, no del `<g>` donde
   estaba el símbolo.
-- **La tarjeta del servidor y su flotación van en elementos separados**: las dos
-  animan `transform` y una pisaría a la otra.
