@@ -104,6 +104,16 @@ hizo en su lugar:
   el del 01-10-2026, ID `fe36e6ff-1531-48d6-83ef-a48a4de46ea9`:
   https://www.microsoft.com/en-us/wdsi/submission/fe36e6ff-1531-48d6-83ef-a48a4de46ea9
   (cuenta Microsoft del usuario; el historial guarda 30 días).
+- **Respuesta de Microsoft (llegó el 09-10-2026):** no habla de malware. Dice
+  que el aviso es falta de reputación, que se junta sola con el uso (descargas,
+  historial, resultados de antivirus, reputación de la URL) y que nadie la
+  aprueba a mano. Volver a mandar el mismo archivo no cambia nada. Dos frases
+  que deciden lo de este documento:
+  - «unsigned files will have to establish reputation each time a new version
+    is released»: por eso el fijo no se cambia.
+  - «once your signing certificate has gained reputation in our system, all
+    applications or releases signed with your certificate should have
+    warn-free experience»: por eso lo que lo cierra es la firma.
 - **En el navegador integrado de Claude**: ya logueado, entrar directo a
   `filesubmission?persona=SoftwareDeveloper` (el botón «Continue» de la
   portada deja una página en blanco). No deja adjuntar archivos de la PC ni
