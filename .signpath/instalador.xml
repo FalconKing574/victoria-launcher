@@ -3,10 +3,14 @@
   Artifact configuration "instalador" de SignPath (vuelta 2 del workflow).
   Se copia tal cual en SignPath -> proyecto -> Artifact Configurations, con el
   slug "instalador".
+
+  El nombre sale de nsis.artifactName en electron-builder.yml. Si cambia allá,
+  cambia acá: con un nombre que no coincide, SignPath no encuentra nada que
+  firmar y el workflow se corta.
 -->
 <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
   <zip-file>
-    <pe-file path="Victoria Kingdom Setup *.exe" product-name="Victoria Kingdom" max-matches="1">
+    <pe-file path="Victoria-Kingdom-actualizacion-*.exe" product-name="Victoria Kingdom" max-matches="1">
       <authenticode-sign />
     </pe-file>
   </zip-file>

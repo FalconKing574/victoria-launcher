@@ -18,7 +18,8 @@ programa.
 ## 1. Pedirla (lo hace el dueño del repo)
 
 1. **Verificación en dos pasos en GitHub** (obligatoria):
-   https://github.com/settings/security
+   https://github.com/settings/security. Activada (lo confirmó el dueño el
+   09-10-2026). La cuenta que se cree en SignPath también la necesita.
 2. Formulario: https://signpath.org/apply
    Datos para completar:
 
@@ -31,7 +32,8 @@ programa.
    | Code signing policy | https://github.com/FalconKing574/victoria-launcher/blob/main/FIRMA-DE-CODIGO.md |
    | Privacy policy | https://github.com/FalconKing574/victoria-launcher/blob/main/PRIVACIDAD.md |
    | Build system | GitHub Actions (`.github/workflows/publicar.yml`) |
-   | What will be signed | `Victoria Kingdom.exe`, its NSIS uninstaller and the NSIS installer `Victoria Kingdom Setup <version>.exe` |
+   | What will be signed | `Victoria Kingdom.exe`, its NSIS uninstaller and the NSIS installer `Victoria-Kingdom-actualizacion-<version>.exe` |
+   | Project website (si lo pide) | https://victoriakingdom.pages.dev |
 
    Descripción sugerida (en inglés, que es como leen):
 
@@ -43,9 +45,17 @@ programa.
    > electron-builder on GitHub Actions. Installers are per-user and never
    > request administrator rights. No telemetry.
 
-3. **Importante:** SignPath pide que el proyecto ya esté publicado y que la rama
-   `main` tenga los archivos de arriba. Antes de mandar el formulario hay que
-   mergear `feat/cuentas-victoria` a `main` y publicar la 1.6.0.
+3. Lo que SignPath pide antes de mirar el formulario ya está: `main` tiene
+   `LICENSE`, `FIRMA-DE-CODIGO.md` y `PRIVACIDAD.md`, el repo es público, y hay
+   versiones publicadas armadas en GitHub Actions (la 1.8.1, 07-10-2026, fue la
+   primera que salió entera por `publicar.yml`).
+4. Si el formulario pide algo que no está en la tabla (cantidad de usuarios,
+   motivo, etc.), contestar con datos reales; no inventar números.
+
+**Ojo con los nombres.** `.signpath/instalador.xml` tiene que buscar el mismo
+nombre que `nsis.artifactName` de `electron-builder.yml`. Hasta el 09-10-2026
+buscaba `Victoria Kingdom Setup *.exe`, el nombre de antes del instalador fijo:
+la primera firma se habría cortado sin firmar nada.
 
 ## 2. Cuando aprueben
 
