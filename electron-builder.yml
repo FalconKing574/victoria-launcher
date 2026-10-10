@@ -43,12 +43,11 @@ nsis:
   # Se muestra durante la instalación: licencia, marca y privacidad. SignPath
   # pide que la política de privacidad se vea al instalar.
   license: build/instalador-licencia.txt
-  # Este es el instalador que baja el actualizador (latest.yml lo nombra), NO el
-  # que se reparte. A los jugadores se les da siempre el mismo archivo,
-  # Victoria-Kingdom-Setup.exe de la release `instalador`, porque SmartScreen
-  # ata la reputación al hash y uno nuevo por versión volvería a mostrar
-  # «Windows protegió tu PC». Se llama así para que nadie lo baje por error de
-  # la página de la release. Ver scripts/instalador-fijo.mjs.
+  # Este es el instalador que baja el actualizador (latest.yml lo nombra). A los
+  # jugadores se les da una copia con el nombre Victoria-Kingdom-Setup.exe, en
+  # la release de la versión y en la release `instalador` (la web y el Discord):
+  # ver scripts/instalador-jugadores.mjs. Este nombre es para que nadie se
+  # confunda de .exe en la página de la release.
   artifactName: Victoria-Kingdom-actualizacion-${version}.${ext}
   oneClick: false
   allowToChangeInstallationDirectory: true

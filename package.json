@@ -1,6 +1,6 @@
 {
   "name": "victoria-launcher",
-  "version": "1.8.0",
+  "version": "1.8.2",
   "description": "Launcher oficial del servidor de Minecraft Victoria Kingdom",
   "main": "./out/main/index.js",
   "author": {
@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "dist": "electron-vite build && electron-builder",
-    "release": "electron-vite build && electron-builder --publish always && node scripts/instalador-fijo.mjs",
+    "release": "electron-vite build && electron-builder --publish always && node scripts/instalador-jugadores.mjs",
     "web:ver": "cd web && wrangler pages dev",
     "web:publicar": "cd web && wrangler pages deploy --branch main"
   },
