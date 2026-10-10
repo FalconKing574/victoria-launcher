@@ -98,7 +98,7 @@ try {
       ''
     ].join('\n')
   )
-  gh('release', 'edit', RELEASE_JUGADORES, '--notes-file', notasJugadores)
+  gh('release', 'edit', RELEASE_JUGADORES, '--title', 'Instalador (última versión)', '--notes-file', notasJugadores)
 
   // Lo publicado, no el archivo local: los tres tienen que ser el mismo.
   const original = digest(tag, ACTUALIZACION)
