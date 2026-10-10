@@ -225,11 +225,11 @@ jobs:
           # Un borrador es invisible para el actualizador.
           gh release edit $tag --draft=false
 
-      # El botón «Descargar» del Discord apunta a /releases/latest: ahí tiene que
-      # estar el instalador fijo, que es el que tiene reputación en SmartScreen.
-      # Ver scripts/instalador-fijo.mjs.
-      - name: Instalador fijo en la release
+      # Lo que bajan los jugadores (la web, el Discord y /releases/latest) pasa a
+      # ser esta versión: Victoria-Kingdom-Setup.exe en esta release y en la
+      # release `instalador`. Ver scripts/instalador-jugadores.mjs.
+      - name: Instalador para los jugadores
         if: startsWith(github.ref, 'refs/tags/v') || inputs.publicar
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/instalador-fijo.mjs
+        run: node scripts/instalador-jugadores.mjs

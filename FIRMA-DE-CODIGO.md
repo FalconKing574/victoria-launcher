@@ -19,10 +19,11 @@ Todos se compilan en GitHub Actions a partir del código de este repositorio
 (`.github/workflows/publicar.yml`). Ningún binario armado en una PC personal se
 firma.
 
-Las releases llevan además una copia de `Victoria-Kingdom-Setup.exe`, el
-instalador de la versión 1.6.1, armado antes de usar SignPath. Ese archivo no
-está firmado ni se manda a firmar: con la primera versión firmada se reemplaza
-por un instalador firmado.
+Cada release lleva además `Victoria-Kingdom-Setup.exe`, que es una copia del
+instalador de esa misma versión con el nombre que se les da a los jugadores
+(`scripts/instalador-jugadores.mjs`). Las releases hasta la 1.8.1 llevan en su
+lugar una copia del instalador de la 1.6.1, armado antes de usar SignPath: esa
+no está firmada ni se manda a firmar.
 
 ## Equipo
 

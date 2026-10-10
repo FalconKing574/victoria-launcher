@@ -62,4 +62,4 @@ gh release list --repo FalconKing574/victoria-launcher --limit 3
 leer el manifiesto vivo, mirar dentro del .zip publicado, confirmar que la
 release no es borrador. Publicar sin comprobar ya ha dejado a los jugadores sin
 actualización más de una vez — está contado en [`04-trampas.md`](04-trampas.md).
-- [05-firma-de-codigo.md](05-firma-de-codigo.md) — «Windows protegió tu PC»: el instalador fijo mandado a Microsoft (lo que está en uso) y la firma gratis con SignPath (preparada, sin pedir).
+- [05-firma-de-codigo.md](05-firma-de-codigo.md) — «Windows protegió tu PC»: por qué sale, qué contestó Microsoft, y la firma gratis con SignPath (lista para pedir).

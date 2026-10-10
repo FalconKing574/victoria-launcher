@@ -288,6 +288,24 @@ que ya no se montaban, restos de cuando esa pantalla tenía su propio sincroniza
 **Ya está puesto:** `noUnusedLocals` en `tsconfig.json`. Un estado que dejas de
 usar ahora rompe `npm run typecheck` en vez de quedarse ahí meses.
 
+### El logo se quedaba para siempre al abrir
+
+**Síntoma:** al abrir el launcher, el logo con la barrita y nada más, para
+siempre. Lo vio el dueño el 10-10-2026, instalando desde la web (la 1.6.1 del
+instalador fijo); la 1.8.1 tenía el mismo código.
+**Causa:** después de la pantalla de carga, `arrancar()` en `App.tsx` espera la
+sesión de Microsoft y la cuenta de Victoria antes de mostrar nada. Ninguna de
+las dos esperas tenía tiempo máximo, y antes de preguntar por la cuenta se lee
+el manifiesto del modpack con un `fetch` sin límite. Una conexión que no
+contesta, ni bien ni mal, dejaba el logo en pantalla.
+**Ya está puesto (1.8.2):** `conLimite()` en `lib/arranque.ts` corta cada espera
+del arranque (20 s Microsoft, 30 s la cuenta). Si vence, se sigue como sin
+sesión de Microsoft o como servidor caído, que muestra «Reintentar».
+`fetchManifest()` corta a los 15 s, también si la respuesta se queda a mitad.
+Tests en `tests/arranque.test.ts`.
+**Regla:** nada que la pantalla espere antes de mostrar algo puede quedar sin
+tiempo máximo, y lo que se pida a la red en el proceso principal, tampoco.
+
 ### Las imágenes de los mods opcionales apuntaban a un 404
 
 **Síntoma:** en la pestaña Mods, las tres fichas salían con una letra gigante
@@ -409,11 +427,11 @@ No es un fallo del código y no se arregla con elevación de permisos — pedir
 administrador empeora la heurística.
 
 **«Windows protegió tu PC» no es un antivirus**: es SmartScreen avisando que el
-archivo no tiene reputación. La reputación va atada al hash, así que **el
-instalador que se reparte no se cambia en cada versión** (desde el 27-09-2026 es
-siempre `Victoria-Kingdom-Setup.exe` de la release `instalador`, mandado a
-revisar a Microsoft). Copiar el `.exe` de cada versión a la carpeta de reparto,
-como se hacía antes, tiraba la reputación a cero cada vez. Ver
+archivo no tiene reputación. Sin firma, la reputación va atada a cada archivo y
+empieza de cero con cada versión (lo confirmó Microsoft el 09-10-2026). Del
+27-09 al 10-10 se repartió siempre el mismo instalador, el de la 1.6.1, para no
+perderla; quedó tan viejo que daba problemas al abrir, y desde el 10-10 se
+reparte siempre el de la última versión. Ver
 [`05-firma-de-codigo.md`](05-firma-de-codigo.md) §4.
 
 Lo que lo cierra del todo es una firma: SignPath (gratis, preparado y sin
