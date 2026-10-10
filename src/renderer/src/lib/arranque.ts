@@ -64,3 +64,41 @@ export function puedeSaltar(fase: UpdaterPhase | null, msEnFase: number): boolea
   if (fase === 'ready' || fase === 'installing') return msEnFase >= SPLASH_SALTAR_INSTALACION_MS
   return false
 }
+
+/**
+ * Lo máximo que se espera a la sesión de Microsoft al abrir. Renovarla son
+ * varias llamadas a Microsoft, Xbox y Mojang, ninguna con tiempo máximo propio.
+ */
+export const ARRANQUE_MICROSOFT_MAX_MS = 20000
+
+/**
+ * Lo máximo que se espera a la cuenta de Victoria al abrir. Antes de preguntarle
+ * al servidor de cuentas se lee el manifiesto del modpack, y cada paso tiene su
+ * límite en el proceso principal; esto los cubre a todos, también a un proceso
+ * principal ocupado que no contesta.
+ */
+export const ARRANQUE_CUENTA_MAX_MS = 30000
+
+/**
+ * Lo que contestó `promesa`, o `siVence` si no contestó en `ms` o falló.
+ *
+ * Al abrir, el launcher espera dos respuestas de la red antes de mostrar nada,
+ * con el logo en pantalla. Sin límite, una conexión que no contesta dejaba al
+ * jugador mirando el logo para siempre (reportado el 10-10-2026, en la 1.6.1 y
+ * igual en la 1.8.1). Lo que llegue tarde se ignora.
+ */
+export function conLimite<T>(promesa: Promise<T>, ms: number, siVence: T): Promise<T> {
+  return new Promise((resolver) => {
+    const reloj = setTimeout(() => resolver(siVence), ms)
+    promesa.then(
+      (valor) => {
+        clearTimeout(reloj)
+        resolver(valor)
+      },
+      () => {
+        clearTimeout(reloj)
+        resolver(siVence)
+      }
+    )
+  })
+}
