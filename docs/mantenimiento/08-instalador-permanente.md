@@ -1,8 +1,9 @@
 # Instalador permanente
 
 `Victoria-Kingdom-Setup.exe` ahora es un bootstrap pequeño de .NET Framework,
-incluido en Windows 10/11, que consulta `/api/launcher` de la web; si no responde,
-consulta la release estable más reciente del repositorio oficial en GitHub.
+incluido en Windows 10/11, que consulta la release estable más reciente del
+repositorio oficial en GitHub. Si no responde, usa `/api/launcher?actual=1`
+de la web. Ambas consultas evitan la caché durante la instalación.
 Al pulsar Instalar descarga `Victoria-Kingdom-actualizacion-<versión>.exe`,
 valida URL oficial, tamaño y SHA256, vuelve a consultar la versión y abre el
 asistente original. No tiene una versión antigua incrustada. Si no puede
@@ -30,4 +31,5 @@ completo: nunca debe apuntar al bootstrap.
 
 La web conserva el enlace permanente y explica que la instalación necesita
 Internet. Su endpoint solo acepta publicaciones estables, URL del repositorio
-oficial y un SHA256 válido. Su caché dura como máximo 60 segundos.
+oficial y un SHA256 válido. La consulta normal usa caché de hasta 60 segundos;
+la consulta del instalador con `actual=1` no usa ni almacena caché.
