@@ -88,7 +88,7 @@ export async function llamar(
 ): Promise<Respuesta> {
   const base = `http://${auth.host}:${auth.puerto}`
   try {
-    const d = await conTiempo(fetcher(`${base}/v1/desafio`, { cache: 'no-store' }), esperaMs)
+    const d = await conTiempo(fetcher(`${base}/v1/desafio`, { cache: 'no-store', signal: AbortSignal.timeout(esperaMs) }), esperaMs)
     if (!d.ok) throw new ServidorCaido()
     const { desafio } = (await d.json()) as { desafio?: string }
     if (!desafio) throw new ServidorCaido()
@@ -97,6 +97,7 @@ export async function llamar(
     const r = await conTiempo(
       fetcher(`${base}/v2/sobre`, {
         method: 'POST',
+        signal: AbortSignal.timeout(esperaMs),
         headers: { 'Content-Type': 'text/plain' },
         body: texto
       }),

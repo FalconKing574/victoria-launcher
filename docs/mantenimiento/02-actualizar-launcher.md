@@ -61,8 +61,9 @@ VICTORIA_MANIFEST_URL="https://pub-71a914f3c2c84bc2ab56e0b651560b55.r2.dev/manif
 Sin ella el launcher sale sin URL de modpack y no descarga nada: una app
 empaquetada no tiene `.env` ni shell de donde leerla.
 
-`npm run release` termina con `scripts/instalador-fijo.mjs`, que copia el
-instalador fijo a la release nueva (ver el paso 6). Necesita `gh` en el PATH.
+`npm run release` termina con `scripts/instalador-jugadores.mjs`, que pone el
+instalador de la versión nueva donde lo bajan los jugadores (ver el paso 6).
+Necesita `gh` en el PATH. `publicar.yml` hace lo mismo en su último paso.
 
 ## 5. Verifica — no te saltes esto
 
@@ -87,37 +88,46 @@ cat release/win-unpacked/resources/app-update.yml
 Tiene que decir `owner: FalconKing574`. Si dice otra cosa, mira
 [`04-trampas.md`](04-trampas.md).
 
-## 6. El instalador que se reparte NO cambia
+Si publicaste con `publicar.yml` no hay carpeta: el paso «El instalador lleva
+app-update.yml» lo comprueba dentro del instalador final y corta antes de
+publicar. Que ese paso esté en verde en la corrida, y si no existe, **no
+publiques**: sin ese archivo quien se actualice no recibe nunca más otra
+versión (pasó con la 1.8.0).
 
-Desde el 27-09-2026 a los jugadores se les da siempre el mismo archivo:
-`Victoria-Kingdom-Setup.exe` (launcher 1.6.1, SHA-256 `f3853e7b…3ea3e5`), que
-vive en la release `instalador` (prerelease, para que el actualizador no la tome
-como la última) y en `Desktop/Victoria Kingdom Launcher/`. **No lo reemplaces al
-publicar.** El launcher se actualiza solo al abrirse, así que instalar uno viejo
-no importa.
+## 6. El instalador que se reparte es siempre la última versión
 
-Por qué: «Windows protegió tu PC» es SmartScreen avisando que un archivo sin
-firma no tiene reputación, y la reputación va atada al hash. Un instalador nuevo
-por versión arranca de cero cada vez; el fijo es el que se mandó a revisar a
-Microsoft. Por eso el `.exe` de cada versión se llama
-`Victoria-Kingdom-actualizacion-<versión>.exe` (`electron-builder.yml` →
-`nsis.artifactName`): que nadie lo baje por error de la página de la release.
+Los jugadores bajan `Victoria-Kingdom-Setup.exe`: la web y el Discord, de la
+release `instalador` (prerelease, para que el actualizador no la tome como la
+última), y el botón que apunta a `/releases/latest`, de la release de la
+versión. Al publicar, `scripts/instalador-jugadores.mjs` sube a los dos lugares
+una copia del instalador de esa versión (`Victoria-Kingdom-actualizacion-<versión>.exe`)
+y comprueba que los tres archivos publicados son el mismo. No hay que hacer
+nada a mano.
 
-Link permanente para el Discord o donde sea:
+Link permanente para la web, el Discord o donde sea (no cambia nunca):
 `https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe`
 
-Cuándo sí se cambia el fijo (a mano, y se vuelve a mandar a Microsoft, ver
-[`05-firma-de-codigo.md`](05-firma-de-codigo.md)):
-- si el instalador viejo deja de poder instalar algo que funcione (por ejemplo,
-  un updater tan viejo que ya no sabe actualizarse);
-- con la primera versión firmada, que trae su propia reputación.
+**Comprueba** después de publicar: la release `instalador` dice en sus notas la
+versión que entrega, y su `Victoria-Kingdom-Setup.exe` tiene el mismo `digest`
+que el `Victoria-Kingdom-actualizacion-<versión>.exe` de la versión nueva.
 
-Lo que cuesta mantener el 1.6.1: quien lo instala pasa por **una** actualización
-con el código viejo (busca en segundo plano y cierra la ventana cuando termina
-de bajar; desde la 1.8.0 al menos sin asistente y reabriéndose solo), y su
-asistente todavía pregunta «¿Para quién instalar?». Un fijo de la 1.8.0 o
-posterior se salta las dos cosas: la primera apertura ya trae la pantalla de
-carga nueva, y el asistente es Licencia → Carpeta → Instalar.
+**Por qué ya no es un instalador fijo.** Del 27-09 al 10-10-2026 se repartió
+siempre el de la 1.6.1, porque SmartScreen ata la reputación al archivo y uno
+nuevo por versión vuelve a mostrar «Windows protegió tu PC». Salió mal:
+
+- quien instalaba de cero arrancaba en una versión de semanas atrás, con su
+  propio arranque y su propio actualizador, y tenía que actualizarse antes de
+  poder usar nada. El 10-10 el dueño lo vio quedarse en el logo al abrir;
+- Microsoft contestó (09-10) que sin firma cada versión junta su reputación de
+  cero igual, así que el fijo tampoco iba a quitar el aviso.
+
+El aviso de SmartScreen lo quita la firma (SignPath, ver
+[`05-firma-de-codigo.md`](05-firma-de-codigo.md)): con firma la reputación es del
+certificado y pasa de una versión a la otra.
+
+El `.exe` de cada versión se sigue llamando `Victoria-Kingdom-actualizacion-<versión>.exe`
+(`electron-builder.yml` → `nsis.artifactName`): es el que nombra `latest.yml`, y
+la copia con el nombre de siempre es la que se les dice a los jugadores.
 
 `LEEME.txt` son las instrucciones para los jugadores. Si has cambiado algo que
 les afecta (mods opcionales, shaders, avisos del antivirus), actualízalo.

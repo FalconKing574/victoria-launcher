@@ -13,11 +13,17 @@ Cada versión publicada del launcher de Victoria Kingdom en
 
 - `Victoria Kingdom.exe` (el launcher),
 - el desinstalador,
-- el instalador `Victoria Kingdom Setup <versión>.exe`.
+- el instalador de cada versión, `Victoria-Kingdom-actualizacion-<versión>.exe`.
 
 Todos se compilan en GitHub Actions a partir del código de este repositorio
 (`.github/workflows/publicar.yml`). Ningún binario armado en una PC personal se
 firma.
+
+Cada release lleva además `Victoria-Kingdom-Setup.exe`, que es una copia del
+instalador de esa misma versión con el nombre que se les da a los jugadores
+(`scripts/instalador-jugadores.mjs`). Las releases hasta la 1.8.1 llevan en su
+lugar una copia del instalador de la 1.6.1, armado antes de usar SignPath: esa
+no está firmada ni se manda a firmar.
 
 ## Equipo
 

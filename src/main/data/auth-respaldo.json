@@ -1,0 +1,9 @@
+{
+  "host": "131.221.32.76",
+  "puerto": 25568,
+  "llave": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAr5YhcmrzFZD7ksXDnL3+45Psy3qjjmRMQK/UtkHEts8rDAr6stPQbHnhr1KOnjZZndGKQXBQqpAK2ThGJAPYB1nzTDu62+0tuSmdJ+ExMFeMxB0ZftDcvMw9lVm0PsGOCW6Uip3wxDt/UgAH6nSZlORCiGXBpEdwT7Ba7HLalOckbwgIDh/43wEgsNU9Aqj7f+bp5WzaFrGst9ni/Z+F2VuaLpgHW4pZFy/fQTaNcNXl+gvKth4WH1he4R6ls3idMuGoUhVFUVd3iKGiIHAvEz7SLqJjen2vZIik25EtN0dL9KmajxIsPgvqgDogeK66WVsDgDk/8XvOqhuZhofFjTFZ4uE5L0uOFqpYjZp/cgWfulBKjOlxSWpTKCqlTOpHgD9RHqDdn+dVJWNWvb0nK6ndgEMmnhJQphwi5AkiTvixW+KuN9Prx2GibvFd+tBtsafgRCjYayD4aLS98PFi0NUnndeIe5aPoWM73w8SeOA/PRrzh4HIF1G21pRAz0vrAgMBAAE=",
+  "discord": {
+    "clientId": "1531381003170484375",
+    "puerto": 53682
+  }
+}
