@@ -1,0 +1,13 @@
+import {execFileSync} from 'node:child_process';
+import {existsSync,mkdirSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+if(process.platform!=='win32')throw Error('El instalador se compila en Windows con .NET Framework.');
+const raiz=resolve(import.meta.dirname,'..'),salida=resolve(process.argv[2]??join(raiz,'release/bootstrap'));
+mkdirSync(salida,{recursive:true});
+const csc=join(process.env.WINDIR??'C:/Windows','Microsoft.NET/Framework64/v4.0.30319/csc.exe');
+if(!existsSync(csc))throw Error('Falta el compilador .NET Framework de Windows.');
+const comunes=['/nologo','/optimize+','/platform:x64','/utf8output','/reference:System.Windows.Forms.dll','/reference:System.Drawing.dll','/reference:System.Web.Extensions.dll',`/win32icon:${join(raiz,'build/icon.ico')}`,`/win32manifest:${join(raiz,'build/bootstrap/instalador.manifest')}`,join(raiz,'build/bootstrap/Instalador.cs')];
+execFileSync(csc,['/target:exe',`/out:${join(salida,'verificar-instalador.exe')}`,...comunes],{stdio:'inherit'});
+execFileSync(join(salida,'verificar-instalador.exe'),['--autoprueba'],{stdio:'inherit'});
+execFileSync(csc,['/target:winexe',`/out:${join(salida,'Victoria-Kingdom-Setup.exe')}`,...comunes],{stdio:'inherit'});
+console.log('Instalador preparado:',join(salida,'Victoria-Kingdom-Setup.exe'));

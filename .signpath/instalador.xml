@@ -13,5 +13,8 @@
     <pe-file path="Victoria-Kingdom-actualizacion-*.exe" product-name="Victoria Kingdom" max-matches="1">
       <authenticode-sign />
     </pe-file>
+    <pe-file path="Victoria-Kingdom-Setup.exe" product-name="Victoria Kingdom Setup" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
   </zip-file>
 </artifact-configuration>

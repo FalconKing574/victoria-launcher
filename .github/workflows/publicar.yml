@@ -129,11 +129,15 @@ jobs:
           FIRMA_DIR: ${{ github.workspace }}\firma\firmados
         run: npx electron-builder --win nsis --publish never --prepackaged release/win-unpacked
 
+      - name: Compilar instalador permanente y comprobar metadatos
+        run: node scripts/compilar-instalador.mjs
+
       - name: Separar el instalador
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force firma/instalador | Out-Null
           Copy-Item "release/Victoria-Kingdom-actualizacion-*.exe" firma/instalador/
+          Copy-Item "release/bootstrap/Victoria-Kingdom-Setup.exe" firma/instalador/
 
       - name: Subir instalador para firmar
         id: instalador
@@ -162,8 +166,8 @@ jobs:
         if: env.FIRMAR == 'true'
         shell: pwsh
         run: |
-          $instalador = Get-ChildItem "firma/instalador-firmado/*.exe" | Select-Object -First 1
-          $revisar = @($instalador.FullName)
+          $instalador = Get-ChildItem "firma/instalador-firmado/Victoria-Kingdom-actualizacion-*.exe" | Select-Object -First 1
+          $revisar = @(Get-ChildItem "firma/instalador-firmado/*.exe" | ForEach-Object FullName)
           # El instalador NSIS se abre con 7-Zip: adentro están el desinstalador y la app.
           7z x $instalador.FullName -ofirma/abierto -y | Out-Null
           $app7z = Get-ChildItem -Recurse firma/abierto -Filter "app-64.7z" | Select-Object -First 1
@@ -183,7 +187,7 @@ jobs:
         shell: pwsh
         run: |
           $origen = if ("${{ env.FIRMAR }}" -eq "true") { "firma/instalador-firmado" } else { "firma/instalador" }
-          $instalador = Get-ChildItem "$origen/*.exe" | Select-Object -First 1
+          $instalador = Get-ChildItem "$origen/Victoria-Kingdom-actualizacion-*.exe" | Select-Object -First 1
           7z x $instalador.FullName -ofirma/revisar -y | Out-Null
           $app7z = Get-ChildItem -Recurse firma/revisar -Filter "app-64.7z" | Select-Object -First 1
           if (-not $app7z) { throw "No se encontró app-64.7z dentro de $($instalador.Name)" }
@@ -198,8 +202,9 @@ jobs:
         shell: pwsh
         run: |
           $origen = if ("${{ env.FIRMAR }}" -eq "true") { "firma/instalador-firmado" } else { "firma/instalador" }
-          $instalador = Get-ChildItem "$origen/*.exe" | Select-Object -First 1
+          $instalador = Get-ChildItem "$origen/Victoria-Kingdom-actualizacion-*.exe" | Select-Object -First 1
           node scripts/latest-yml.mjs --instalador $instalador.FullName --salida publicar
+          Copy-Item "$origen/Victoria-Kingdom-Setup.exe" publicar/
 
       - name: Archivos de la release
         uses: actions/upload-artifact@v4
@@ -232,4 +237,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || inputs.publicar
         env:
           GH_TOKEN: ${{ github.token }}
+          BOOTSTRAP_FILE: publicar/Victoria-Kingdom-Setup.exe
         run: node scripts/instalador-jugadores.mjs
