@@ -6,6 +6,8 @@ import { Auth } from 'msmc'
 // `types` namespace that msmc re-exports from its entry point.
 import type { types } from 'msmc'
 import { msTokenPath } from '../lib/paths'
+import { isNetworkError } from '../lib/network-error'
+import { logNetwork } from '../lib/network-log'
 
 type MclcUser = types.MclcUser
 
@@ -57,6 +59,8 @@ export type RestoreResult =
   | { status: 'expired' }
   /** Nunca hubo sesión de Microsoft en esta máquina. */
   | { status: 'none' }
+  /** La red falló; se conserva el refresh token para volver a intentar. */
+  | { status: 'unavailable' }
 
 export function clearRefreshToken(): void {
   if (existsSync(msTokenPath())) rmSync(msTokenPath())
@@ -78,8 +82,19 @@ async function toSession(xbox: Awaited<ReturnType<Auth['launch']>>): Promise<Pre
 
 export async function loginMicrosoft(): Promise<PremiumSession> {
   const auth = new Auth('select_account')
-  const xbox = await auth.launch('electron')
-  return toSession(xbox)
+  let stage = 'microsoft_window'
+  auth.on('load', (code: string) => { if (/^load\.auth\.[A-Za-z0-9.]+$/.test(code)) stage = code })
+  try {
+    const xbox = await auth.launch('electron')
+    return await toSession(xbox)
+  } catch (error) {
+    logNetwork('microsoft', stage, error)
+    if (isNetworkError(error)) {
+      throw new Error('No se pudo completar la conexión con Microsoft, Xbox o Minecraft. Volvé a intentar. Si continúa, compartí conexion-launcher.log con soporte.')
+    }
+    if (error === 'error.gui.closed') throw new Error('Se cerró la ventana de Microsoft antes de terminar el inicio de sesión.')
+    throw error
+  }
 }
 
 /**
@@ -108,7 +123,10 @@ export async function restoreMicrosoft(): Promise<RestoreResult> {
     const auth = new Auth('select_account')
     const xbox = await auth.refresh(refreshToken)
     return { status: 'ok', session: await toSession(xbox) }
-  } catch {
+  } catch (error) {
+    logNetwork('microsoft', 'restore', error)
+    // Una interrupción de red no revoca la sesión guardada.
+    if (isNetworkError(error)) return { status: 'unavailable' }
     clearRefreshToken()
     return { status: 'expired' }
   }

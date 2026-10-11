@@ -32,7 +32,7 @@ import {
 import { writeProperties } from '../lib/shaders-core'
 import { restoreMicrosoft } from './auth'
 import { pedirValeCuenta } from './cuentas'
-import { fetchManifest } from './sync'
+import { getAuthConfig } from '../lib/auth-config-runtime'
 
 export interface LaunchRequest {
   /** Premium sessions pass the MCLC user object produced by msmc. */
@@ -281,8 +281,8 @@ export const PREFIJO_BLOQUEO = 'VICTORIA_BLOQUEO:'
  */
 async function conseguirVale(): Promise<void> {
   delete process.env.VICTORIA_VALE
-  const manifest = await fetchManifest().catch(() => null)
-  if (!manifest?.auth) return
+  const configuration = await getAuthConfig()
+  if (!configuration) return
   const r = await pedirValeCuenta()
   if (r.ok && r.vale) {
     process.env.VICTORIA_VALE = r.vale

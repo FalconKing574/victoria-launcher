@@ -63,3 +63,4 @@ leer el manifiesto vivo, mirar dentro del .zip publicado, confirmar que la
 release no es borrador. Publicar sin comprobar ya ha dejado a los jugadores sin
 actualización más de una vez — está contado en [`04-trampas.md`](04-trampas.md).
 - [05-firma-de-codigo.md](05-firma-de-codigo.md) — «Windows protegió tu PC»: por qué sale, qué contestó Microsoft, y la firma gratis con SignPath (lista para pedir).
+- [07-conexion-cuentas.md](07-conexion-cuentas.md) — respaldo de cuentas, reintentos y diagnóstico de «fetch failed» desde 1.8.3.

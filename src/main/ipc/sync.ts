@@ -14,6 +14,7 @@ import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import AdmZip from 'adm-zip'
 import { MANIFEST_URL } from '../config'
+import { loadManifest } from '../lib/manifest-runtime'
 import { launcherRoot, instanceDir } from '../lib/paths'
 import { downloadVerified } from '../lib/download'
 import { writeJsonAtomic } from '../lib/write-atomic'
@@ -203,31 +204,11 @@ function sendProgress(done: number, total: number): void {
 }
 
 /**
- * Cuánto se espera el manifiesto. Es un JSON chico; sin límite, una conexión
- * que no contestaba colgaba todo lo que lo lee: la cuenta al abrir (el logo se
- * quedaba para siempre), el vale al jugar y la sincronización.
+ * Descarga acotada y compartida. El cliente prueba la red del sistema y un
+ * segundo transporte; no instala versiones viejas de un caché persistente.
  */
-const ESPERA_MANIFIESTO_MS = 15_000
-
 export async function fetchManifest(): Promise<Manifest> {
-  if (!MANIFEST_URL) throw new Error('No hay ninguna URL de modpack configurada.')
-  try {
-    // La señal corta también la lectura del cuerpo, no sólo la conexión.
-    const response = await fetch(MANIFEST_URL, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(ESPERA_MANIFIESTO_MS)
-    } as RequestInit)
-    if (!response.ok) {
-      throw new Error(`No se pudo descargar el manifiesto (HTTP ${response.status}).`)
-    }
-    return (await response.json()) as Manifest
-  } catch (error) {
-    const nombre = (error as Error).name
-    if (nombre === 'TimeoutError' || nombre === 'AbortError') {
-      throw new Error('El modpack no respondió a tiempo. Revisa tu conexión y vuelve a intentar.')
-    }
-    throw error
-  }
+  return loadManifest()
 }
 
 async function downloadMod(mod: ManifestMod): Promise<void> {
