@@ -39,3 +39,24 @@ Validación del 11-10-2026: typecheck correcto; 12 pruebas de funciones web corr
 
 Publicación manual autorizada del sitio: 56527279.victoriakingdom.pages.dev.
 No modifica ni publica el ejecutable del launcher.
+
+## Búsqueda orgánica (12-10-2026)
+
+Las 25 páginas públicas tienen títulos propios, descripción, URL canónica,
+Open Graph y JSON-LD de la comunidad, el sitio y la página. Los artículos
+incluyen rutas de navegación estructuradas. `web/seo.mjs` genera el JSON-LD;
+`node web/generar-wiki.mjs` regenera las guías y ambos sitemaps. Los metadatos
+de portada, instalación y normas se mantienen en sus HTML.
+
+`/sitemap.xml` contiene tres páginas en el dominio principal y 22 en el
+dominio de la wiki: el middleware entrega `sitemap-wiki.xml` en este último.
+Cada `robots.txt` anuncia el mapa de su propio host. Las copias de páginas en
+el dominio antiguo y en el dominio principal redirigen permanentemente a su
+dirección oficial. Las API de pages.dev se conservan para los instaladores.
+Los despliegues de prueba llevan `X-Robots-Tag: noindex, nofollow`.
+
+Verificación: `npm run typecheck` y `npm test`, incluyendo regresiones de
+canónicas, separación de mapas, redirecciones y compatibilidad de las API.
+Search Console debe conservar la verificación DNS para poder enviar mapas,
+inspeccionar URL y medir consultas. Un envío no garantiza indexación ni una
+posición determinada. No añadir palabras clave ocultas ni reseñas ficticias.
