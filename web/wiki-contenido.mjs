@@ -1,0 +1,143 @@
+// Texto editorial contrastado con ContenidoGuia.java y docs/COMANDOS.md de VictoriaRP.
+// Los precios, condiciones y la normativa vigentes se consultan en el juego.
+export const categorias = [
+ ['empezar','Primeros pasos','Tu llegada al Reino de Victoria.','compass'],
+ ['economia','Economía y oficios','Gana, comercia y administra tu dinero.','wallet'],
+ ['propiedades','Propiedades','Un lugar para vivir y construir.','home'],
+ ['vehiculos','Vehículos','Compra, guarda y protege tu vehículo.','car'],
+ ['estado','Ciudadanía y Estado','Documentos, facciones y trámites.','landmark'],
+ ['telefono','Teléfono y personaje','Tus contactos, apps y configuración.','phone'],
+ ['reglas','Rol y convivencia','Una historia compartida con reglas claras.','shield'],
+ ['soporte','Ayuda y soporte','Instalación, conexión y soluciones.','help']
+].map(([id,nombre,descripcion,icono])=>({id,nombre,descripcion,icono}));
+const a=(id,categoria,titulo,resumen,secciones,relacionados=[])=>({id,categoria,titulo,resumen,secciones:secciones.map(([titulo,texto])=>({titulo,texto})),relacionados});
+export const articulos = [
+ a('bienvenido','empezar','Bienvenido a Victoria','Un país, dos mundos y una vida que construyes tú.',[
+ ['El Reino de Victoria','Victoria Kingdom es un servidor de rol de Minecraft Java. Tu personaje vive en un país con banco, propiedades, vehículos, Policía, Gobierno y teléfono. Las personas que encuentras también tienen su historia: habla con ellas, acuerda intercambios y da espacio a sus decisiones.'],
+ ['Victoria y el Extranjero','Victoria es el lugar para vivir, comerciar y participar en la vida del país. La obtención de recursos se hace en el Extranjero: minería, tala, pesca, caza y cultivos. Para cruzar, visita la aduana y habla con el oficial; el viaje se inicia desde su diálogo.'],
+ ['Una economía entre jugadores','Tu progreso depende de lo que haces y negocias. Vender recursos, ofrecer servicios, comerciar o participar en una facción son caminos distintos. No esperes trabajos automáticos que pague un NPC por estar conectado.']
+ ],['primeros-pasos','ganar-dinero','reglas-de-rol']),
+ a('primeros-pasos','empezar','Tus primeros pasos','Del Registro Civil a tu primera venta.',[
+ ['1. Prepara tu instalación','Descarga el launcher oficial desde victoriakingdom.com. Inicia sesión y pulsa Jugar: el launcher prepara la versión y los archivos del servidor. La guía de instalación explica los requisitos y los posibles avisos de Windows.'],
+ ['2. Visita el Registro Civil','Habla con el NPC del Registro Civil para tramitar tu DNI y avanzar de extranjero a civil. Los documentos y las licencias tienen funciones dentro del rol; revisa los requisitos que muestra cada trámite.'],
+ ['3. Conoce el banco','Solicita tu tarjeta en el banco. El cajero permite consultar movimientos, depositar, retirar, cambiar el PIN y gestionar cheques. Depositar tu efectivo reduce lo que llevas expuesto en el inventario.'],
+ ['4. Haz tu primera venta','Cruza al Extranjero por la aduana, consigue recursos y consulta el mercado con /mercado. Revisa la cotización antes de confirmar: el precio cambia con las existencias.'],
+ ['5. Elige tu camino','Explora las propiedades en venta, la concesionaria y los trámites. Puedes ofrecer servicios a otros jugadores, desarrollar un oficio o interesarte por una facción. Comienza por lo que puedas mantener con tu saldo actual.']
+ ],['menus-y-teclas','banco','mercado']),
+ a('menus-y-teclas','empezar','Menús y teclas','Los dos menús que más vas a usar: J y G.',[
+ ['J: tu menú de Victoria','Desde J puedes acceder a tu información, propiedades, garaje, facción, documentos, trámites, logros, guía y configuración. Es el punto de partida para consultar tus sistemas sin memorizar comandos.'],
+ ['G: interactúa con tu entorno','Mira a una persona, vehículo o terreno y abre G. La rueda ofrece acciones según el objetivo: comerciar, compartir tu número, mostrar documentos, reclamar un vehículo o administrar una propiedad.'],
+ ['Controles básicos','W, A, S y D: moverte. E: inventario. T: chat. Tab: lista de jugadores. R: recargar un arma. El teléfono se abre con clic derecho mientras lo tienes en la mano.'],
+ ['Voz y controles propios','La voz usa Plasmo Voice. Revisa la tecla de hablar y el micrófono en sus ajustes; V es la referencia habitual, pero tu configuración puede ser distinta. Los vehículos tienen controles propios de Immersive Vehicles. Si una tecla no responde, consulta Configuración → Teclas antes de reasignarla.']
+ ],['telefono','vehiculos','configuracion']),
+ a('ganar-dinero','economia','Cómo ganar dinero','Recursos, comercio y servicios que otros jugadores necesitan.',[
+ ['Vende recursos del Extranjero','El mercado compra recursos por rubro. Consulta qué admite y cuánto paga en ese momento. Diversificar lo que consigues puede ser más útil que repetir una venta cuyo precio ha bajado por exceso de stock.'],
+ ['Comercia con otras personas','Usa G → PERSONA → COMERCIAR para intercambiar objetos y dinero con confirmación de ambos. El teléfono también dispone de Anuncios para dar a conocer lo que ofreces.'],
+ ['Desarrolla un oficio','La conducción de taxis, la cocina, los negocios y las profesiones vinculadas a estudios permiten prestar servicios. Cada sistema tiene sus requisitos: consulta licencias, títulos y condiciones antes de invertir.'],
+ ['Participa en una facción','Policía, Ejército y Gobierno funcionan con jugadores y presupuestos propios. La incorporación y el trabajo forman parte del rol; consulta la facción correspondiente.']
+ ],['mercado','intercambio','universidad']),
+ a('banco','economia','Banco, tarjeta y cajero','Distingue el saldo bancario del efectivo que llevas encima.',[
+ ['Tu tarjeta','Puedes solicitarla en el banco o con /tarjeta. La emisión tiene un plazo entre solicitudes; una tarjeta nueva anula la anterior. Si pierdes la tuya, revisa la opción de reposición en vez de compartir tu PIN.'],
+ ['Qué hace el cajero','Permite depositar billetes, retirar efectivo, consultar saldo y movimientos, cambiar el PIN y emitir o cobrar cheques. Los cheques se cobran en el cajero; no sustituyen al dinero en una compra.'],
+ ['Transferencias y compras','La app Banco permite transferir a un número de teléfono. Comprueba el destinatario y la cantidad antes de confirmar. Las compras de sistemas como propiedades o vehículos muestran el importe correspondiente.'],
+ ['Efectivo y billetera','Abre la billetera con clic derecho. Guarda billetes y moneda, y muestra tu efectivo y saldo. El efectivo tiene riesgos dentro del rol: conserva en el banco lo que no necesitas llevar contigo.']
+ ],['telefono','intercambio','ganar-dinero']),
+ a('mercado','economia','El mercado','Consulta las existencias y el precio antes de vender.',[
+ ['Cómo entrar','Escribe /mercado o habla con el NPC del mercado. El catálogo agrupa recursos de minería, cantería, agricultura, madera, pesca, caza y mística.'],
+ ['Por qué cambia el precio','Las cotizaciones dependen del stock: los recursos abundantes pierden valor y los escasos pueden valer más. Dividir una venta en muchas pequeñas no evita ese cálculo.'],
+ ['Antes de confirmar','Revisa el recurso, la cantidad y el total mostrado. Una parte de las ventas contribuye al presupuesto del Estado. Elige el destino del cobro que ofrezca el panel: efectivo o banco.'],
+ ['También desde el teléfono','La app Mercado utiliza los mismos precios del sistema. Una interfaz distinta no crea una cotización independiente.']
+ ],['ganar-dinero','banco','telefono']),
+ a('intercambio','economia','Intercambio entre jugadores','Una mesa compartida y dos confirmaciones.',[
+ ['Envía una solicitud','Mira al otro jugador y utiliza G → PERSONA → COMERCIAR. La otra persona recibe una solicitud que puede aceptar o rechazar.'],
+ ['Revisa lo que hay en la mesa','Cada lado dispone de ranuras para objetos y una cantidad de dinero. Lo que ofreces queda reservado para ese intercambio. Comprueba cada objeto y el importe antes de aceptar.'],
+ ['Los cambios reinician la aceptación','Si alguien modifica su oferta, se borran ambas confirmaciones. El intercambio sólo se completa cuando las dos personas aceptan la oferta actual. Si se cierra o alguien se desconecta, los objetos se devuelven.'],
+ ['Controla las solicitudes','Puedes desactivar los pedidos de intercambio desde Configuración. Para una incidencia, conserva la hora, el nombre de la otra persona y una captura del problema.']
+ ],['banco','configuracion','soporte']),
+ a('comprar-terreno','propiedades','Comprar una propiedad','Revisa la oferta completa y elige dónde vivir.',[
+ ['Busca una oferta','Los carteles SE VENDE identifican terrenos disponibles. También puedes abrir el catálogo con /offers lista o /terrenos. Consulta ubicación, tipo, tamaño, propietario y precio.'],
+ ['Compra desde el terreno','Sitúate dentro y abre G → TERRENO, o usa /offers comprar si está a la venta. Revisa la ficha y el coste antes de confirmar; no compres sólo por el aspecto exterior del edificio.'],
+ ['Consulta lo que ya es tuyo','/propiedad abre el panel del terreno actual. /propiedad lista muestra tus propiedades con sus coordenadas. J → Propiedades reúne los sistemas de propiedad.'],
+ ['Después de comprar','Comprueba la confianza y los permisos del terreno antes de dejar objetos o invitar a otras personas. Dar permiso para construir permite modificar tu propiedad.']
+ ],['administrar-terreno','vender-terreno','banco']),
+ a('administrar-terreno','propiedades','Permisos y confianza','Decide quién puede construir y usar tu terreno.',[
+ ['Abre el panel','Estando en tu propiedad, usa G → TERRENO o /propiedad. El panel muestra los permisos, la confianza y el ambiente con su estado actual.'],
+ ['Invita con cuidado','La confianza permite a otra persona actuar en tu terreno. Puedes usar el panel o /plot trust add <jugador>. Para retirarla, /plot trust remove <jugador>. Verifica el nombre antes de guardar.'],
+ ['Comprueba cada permiso','No todos los permisos significan lo mismo: construir, romper, usar y acceder a contenedores afectan acciones distintas. Revisa el panel antes de dar acceso a un grupo amplio.'],
+ ['Si algo no funciona','Confirma que estás en el terreno correcto y que eres su propietario o tienes el permiso necesario. Un edificio del Estado puede tener reglas de acceso diferentes a una vivienda.']
+ ],['comprar-terreno','vender-terreno','soporte']),
+ a('vender-terreno','propiedades','Vender tu terreno','Publica una oferta y comprueba cómo la verán los compradores.',[
+ ['Ponlo en venta','Dentro de tu terreno, abre sus opciones de venta o utiliza /offers vender <precio>. Sustituye <precio> por el importe que quieras pedir.'],
+ ['Revisa la publicación','Comprueba el precio y la propiedad en el catálogo. El cartel SE VENDE y la ficha deben corresponder a la oferta que querías publicar.'],
+ ['Si cambias de idea','Usa /offers quitar para retirar la oferta. No confundas retirar una venta con eliminar una propiedad.'],
+ ['Antes de cerrar un trato','Organiza tus pertenencias y revisa los permisos. Mantén los acuerdos y pagos dentro de los sistemas del servidor; no negocies bienes del juego por dinero real.']
+ ],['comprar-terreno','administrar-terreno','reglas-de-rol']),
+ a('vehiculos','vehiculos','Comprar y reclamar un vehículo','De la concesionaria a tu vehículo registrado.',[
+ ['Consulta la concesionaria','Habla con Eleuterio o usa /concesionaria para abrir la vitrina. La sección de usados reúne ofertas de jugadores. Revisa el precio y las condiciones antes de comprar.'],
+ ['Reclama el vehículo','Un vehículo sin dueño no se maneja como propio. Mira el vehículo y abre G → VEHÍCULO → RECLAMAR cuando corresponda. El panel te indicará si la acción está permitida.'],
+ ['Gestiona tu garaje','G → VEHÍCULO → MI GARAJE y la sección Garaje del menú permiten consultar tus vehículos. Guardar y sacar un auto depende de su estado y de las condiciones que muestra el sistema.'],
+ ['Cuida el vehículo','Comprueba las llaves, el cierre, el combustible y las personas autorizadas. Si aparece un mensaje de error, conserva su texto antes de repetir acciones.']
+ ],['llaves-y-garaje','menus-y-teclas','banco']),
+ a('llaves-y-garaje','vehiculos','Llaves, cierre y garaje','Acceso al auto, permisos y recuperación.',[
+ ['La llave y el dueño','El vehículo tiene propietario y acceso controlado. Usa la llave correspondiente y las opciones de G → VEHÍCULO. Poseer una llave y tener permiso para administrar no son necesariamente la misma cosa.'],
+ ['Trabar y autorizar','Desde la rueda puedes gestionar el cierre y los permitidos. Revisa a quién autorizas y retira accesos cuando termine un acuerdo. La tecla X sirve como atajo para el cierre según tus controles.'],
+ ['Localizarlo','/vehiculo mapa <id> marca la última ubicación conocida de tu auto. Un vehículo denunciado como robado no se marca. Consulta el identificador en tu garaje.'],
+ ['Si quedó destruido','/vehiculo seguro <id> permite tramitar la reposición de un vehículo destruido, pagando. La reposición es de base, sin las mejoras; revisa el coste antes de confirmar. No es un botón para duplicar un auto activo.']
+ ],['vehiculos','soporte','reglas-de-rol']),
+ a('ciudadania','estado','DNI y ciudadanía','Los documentos de tu personaje y su vida en el país.',[
+ ['Empieza en el Registro Civil','El DNI identifica a tu personaje y acompaña su paso a civil. Habla con el NPC del Registro Civil para consultar el trámite y lo que necesitas.'],
+ ['Documentos y licencias','J → Documentos reúne tus papeles. Las licencias y títulos habilitan actividades concretas; consulta sus requisitos y vigencia antes de realizar un oficio o compra.'],
+ ['Muestra tus papeles dentro del rol','Usa las opciones de interacción con otra persona cuando necesites mostrar documentación. Evita compartir datos de tu cuenta real para resolver un trámite del personaje.'],
+ ['El Estado lo forman jugadores','Gobierno, Policía y Ejército tienen sus responsabilidades y jerarquías. Tener un documento civil no equivale a tener rango o permisos de una facción.']
+ ],['tramites','universidad','primeros-pasos']),
+ a('tramites','estado','Trámites y emergencias','Distingue una gestión del personaje de un problema técnico.',[
+ ['Para gestiones del personaje','Abre J → Trámites para consultar las opciones del Estado. Explica la solicitud con datos de tu personaje y revisa la respuesta del organismo correspondiente.'],
+ ['Para una emergencia','/911 <qué está pasando> avisa a la Policía conectada y comunica tu ubicación. Describe lo ocurrido con claridad; no lo uses como chat general ni para pedir ayuda con el launcher.'],
+ ['Denuncias y consecuencias','Las detenciones, multas y antecedentes pertenecen a la vida del personaje. Respeta la escena y los procedimientos de rol. Una discrepancia con una regla puede trasladarse después al equipo por soporte.'],
+ ['Para un error del juego','Abre soporte y explica el fallo, la hora y cómo reproducirlo. Un ticket técnico no sustituye a una denuncia dentro del rol, y el 911 no sustituye a soporte.']
+ ],['ciudadania','soporte','reglas-de-rol']),
+ a('universidad','estado','Universidad y profesiones','Consulta tu carrera y sus requisitos antes de matricularte.',[
+ ['Estudiar en Victoria','La Universidad forma parte de los sistemas del país. Acércate a su servicio y consulta las carreras, la matrícula y las condiciones que ofrece el panel.'],
+ ['Títulos con una función','Las profesiones pueden requerir un título. Derecho se relaciona con el ejercicio de abogado e Ingeniería con la fabricación de vehículos y piezas. Revisa la actividad concreta que habilita la carrera elegida.'],
+ ['Planifica el gasto','Comprueba el importe actual y tu saldo. La wiki explica cómo orientarte; la oferta y los requisitos visibles en el juego determinan la operación que vas a confirmar.']
+ ],['ciudadania','ganar-dinero','banco']),
+ a('telefono','telefono','Tu teléfono y sus apps','Contactos, banco, mercado y clasificados en un mismo lugar.',[
+ ['Ábrelo y conoce tu número','Con el teléfono en la mano, haz clic derecho. Consulta tu número y compártelo mediante la interacción con otra persona. Tu número del juego no es tu teléfono personal.'],
+ ['Apps de Victoria','El teléfono reúne servicios como Banco, Mercado, Anuncios y las herramientas de la vida del país. Cada app conecta con su sistema: revisa los importes y destinatarios antes de aceptar una operación.'],
+ ['Contactos y comunicación','Guarda los contactos de tu personaje y respeta la diferencia entre información del rol y conversaciones fuera de él. No uses un mensaje externo para dar a tu personaje información que no obtuvo dentro del juego.'],
+ ['Si una app falla','Anota qué app abriste, qué acción intentaste y qué mensaje apareció. Adjunta una captura en soporte y tu versión del pack; nunca incluyas contraseñas ni códigos de Microsoft.']
+ ],['banco','mercado','configuracion']),
+ a('configuracion','telefono','Configura tu experiencia','Ajustes de cuenta y ajustes de este equipo.',[
+ ['Abre Configuración','Entra en J y pulsa el engranaje. Puedes ajustar las solicitudes de intercambio, los pedidos de número y los avisos del menú.'],
+ ['Tu cuenta y tu equipo','Algunos ajustes corresponden a tu cuenta y otros al equipo en el que juegas: filtro del chat, tarjeta del jugador, panel de teclas y tamaño del HUD. Revisa la sección correcta si cambias de PC.'],
+ ['Teclas, vídeo y voz','Desde Configuración puedes acceder a las teclas y a las opciones de Minecraft. Para la voz, comprueba el dispositivo y el modo de hablar en Plasmo Voice. Cambia un ajuste por vez si estás buscando un conflicto.'],
+ ['Actualizaciones','El launcher distribuye los archivos oficiales del pack. Conserva tus preferencias personales y usa sus opciones de reparación si detecta un archivo dañado. No añadas mods por tu cuenta para resolver un problema.']
+ ],['menus-y-teclas','instalacion','soporte']),
+ a('reglas-de-rol','reglas','Reglas de rol y convivencia','Haz que tus decisiones también dejen jugar a los demás.',[
+ ['Lee la normativa oficial','La página Normas publica la normativa oficial. Este artículo orienta sobre los conceptos de rol; para requisitos, excepciones y sanciones consulta siempre el texto vigente.'],
+ ['Separa persona y personaje','Metagaming es usar dentro del rol información externa que tu personaje no obtuvo. Powergaming es forzar un resultado o decidir por el personaje de otra persona sin darle posibilidad de respuesta.'],
+ ['Valora la vida y las consecuencias','No mates ni atropelles sin motivo de rol. No te desconectes para evitar una escena o una sanción. Un conflicto debe tener contexto y permitir que otras personas respondan.'],
+ ['Respeta la comunidad','No acoses, discrimines, amenaces ni expongas datos personales. No abuses de bugs, radares o modificaciones ajenas al pack permitido. Reporta los errores en vez de aprovecharlos.'],
+ ['Dudas y apelaciones','Pregunta al equipo si una norma no está clara. Para un reporte o apelación, abre un ticket privado y aporta contexto y pruebas, sin difundir datos personales de otras personas.']
+ ],['soporte','tramites','bienvenido']),
+ a('instalacion','soporte','Instalar y mantener el launcher','Una descarga oficial y el pack preparado al pulsar Jugar.',[
+ ['Descarga oficial','En victoriakingdom.com está el instalador Victoria-Kingdom-Setup.exe. El instalador consulta la última versión publicada al ejecutarse y verifica el archivo antes de instalar; necesita conexión a Internet.'],
+ ['Inicia sesión','Si tienes Minecraft original, elige la opción Microsoft y completa el acceso en sus páginas oficiales. Para las otras opciones de cuenta, sigue el flujo que muestra el launcher. Nunca entregues tu contraseña al staff.'],
+ ['Prepara el juego','Pulsa Jugar y deja que termine de comprobar y descargar los archivos. No mezcles versiones de Forge o mods descargados de otros packs.'],
+ ['Guía detallada','La guía de instalación de la web explica los requisitos, los pasos de instalación, las actualizaciones y los problemas habituales. Si necesitas ayuda, abre un ticket e indica tu versión y el mensaje exacto.']
+ ],['error-conexion','soporte','primeros-pasos']),
+ a('error-conexion','soporte','Problemas de conexión y «fetch failed»','Cómo aportar datos útiles y evitar repetir intentos a ciegas.',[
+ ['Qué significa','«fetch failed» indica que el launcher no logró completar una petición de red. No demuestra por sí solo que Internet esté caído ni que tu contraseña sea incorrecta. Identifica si aparece al abrir, al entrar con Microsoft o al descargar.'],
+ ['Comprueba la versión','Usa el instalador actual de la página oficial y revisa la versión del launcher. Si tu copia ya estaba instalada, reiniciar la PC no corrige necesariamente un fallo de conexión o de la aplicación.'],
+ ['Revisa la conexión del equipo','Comprueba fecha y hora de Windows y prueba la web oficial. Si usas VPN o proxy, prueba tu conexión habitual. Revisa si el antivirus o cortafuegos informa de un bloqueo concreto; no desactives todas sus protecciones.'],
+ ['Para entrar al servidor','La dirección de Minecraft es mc.victoriakingdom.com, sin escribir el puerto. Necesitas el pack de Victoria compatible y que el servidor permita el acceso en ese momento. El launcher sigue siendo la vía recomendada.'],
+ ['Si sigue ocurriendo','Abre /soporte en Discord. Incluye la versión, el paso exacto, la hora y una captura del error. Oculta datos personales y códigos de acceso; el equipo puede comprobar si afecta a más jugadores.']
+ ],['instalacion','soporte','configuracion']),
+ a('soporte','soporte','Soporte, sugerencias y reportes','Elige el canal adecuado y explica el problema con contexto.',[
+ ['Abre un ticket privado','En Discord usa /soporte o el panel del canal de soporte. Elige Launcher, Minecraft/mods, Cuenta/acceso, Reporte u Otra consulta. Tu caso tendrá un espacio privado con el equipo.'],
+ ['Qué incluir','Explica qué esperabas, qué ocurrió, cuándo pasó y cómo repetirlo. Añade tu versión del launcher o pack, una captura y el fragmento relevante del error si lo tienes. Revisa los archivos antes de adjuntarlos.'],
+ ['Propón una mejora','Usa /sugerencia para explicar el problema y la solución que propones. Una propuesta concreta con un ejemplo es más fácil de evaluar que una petición sin contexto.'],
+ ['Otros comandos útiles','/ayuda muestra las funciones del bot. /wiki ofrece orientación. /estado consulta el servidor y /launcher facilita la descarga cuando la apertura esté habilitada.'],
+ ['Cuida tu cuenta','El equipo no necesita tu contraseña, tokens, códigos de Microsoft ni archivos de sesión. Para recuperar el acceso utiliza los canales oficiales y el flujo de la cuenta.']
+ ],['error-conexion','reglas-de-rol','instalacion'])
+];
