@@ -52,6 +52,8 @@
      compensa con sombra en el texto, igual que en Steam. */
   --boton-principal: linear-gradient(90deg, #df2f42 0%, #b81d32 100%);
   --boton-jugar: linear-gradient(90deg, #47c22f 0%, #2e9c38 100%);
+  /* INSTALAR y ACTUALIZAR en el azul de Steam (13-10-2026). */
+  --boton-actualizar: linear-gradient(90deg, #47bfff 0%, #1a44c2 100%);
 
   /* Nombres viejos del acento: medio launcher los usa. Siguen al acento. */
   --gold: var(--acento);

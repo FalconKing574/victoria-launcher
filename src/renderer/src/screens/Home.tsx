@@ -146,16 +146,17 @@ export default function Home({
     setLaunching(true)
 
     try {
+      // Como en Steam: con algo pendiente el botón dice INSTALAR o ACTUALIZAR y
+      // sólo hace eso; al terminar vuelve a ser JUGAR.
       if (shouldBlockPlay(pending)) {
+        const instalacion = !pending?.installedVersion
         setUpdating(true)
-        const report = await window.api.modpack.sync()
+        await window.api.modpack.sync()
         setUpdating(false)
-        setUpdateNote(
-          report.downloaded === 0 && report.removed === 0
-            ? null
-            : `Modpack listo: ${report.downloaded} archivos instalados.`
-        )
+        setLaunching(false)
+        setUpdateNote(instalacion ? 'Modpack instalado. Ya puedes jugar.' : 'Modpack actualizado. Ya puedes jugar.')
         refreshPending()
+        return
       }
 
       await window.api.launch.start({ mclcUser, offlineUsername })
@@ -347,6 +348,8 @@ export default function Home({
   // Whether play will install something first. Not a block any more — the
   // button does the work — but the label should say what is about to happen.
   const willInstall = shouldBlockPlay(pending)
+  // Sin modpack instalado es la primera vez: INSTALAR. Si ya hay uno: ACTUALIZAR.
+  const primeraVez = willInstall && !pending?.installedVersion
 
   // Un solo aviso para las dos actualizaciones. La del launcher va primero: dice
   // cuándo se instala, que es lo que confundía (ver lib/aviso-launcher.ts).
@@ -354,8 +357,9 @@ export default function Home({
   const updateNotice =
     aviso?.texto ??
     (willInstall
-      ? `Hay una actualización del modpack pendiente: ${pending?.toDownload ?? 0} archivos` +
-        `${pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}.`
+      ? primeraVez
+        ? 'Falta instalar el modpack de Victoria Kingdom.'
+        : 'Hay una actualización del modpack.'
       : null)
   const alerta = aviso?.tono === 'alerta'
 
@@ -500,7 +504,7 @@ export default function Home({
                   one this mount never started, so `launching` is false while a
                   download is very much in progress. */}
               <Button
-                variant="jugar"
+                variant={willInstall && !validando ? 'actualizar' : 'jugar'}
                 full
                 loading={launching || updating}
                 onClick={() => void handlePlay()}
@@ -508,13 +512,13 @@ export default function Home({
                 {validando ? (
                   'VALIDANDO...'
                 ) : updating ? (
-                  'INSTALANDO...'
+                  primeraVez ? 'INSTALANDO...' : 'ACTUALIZANDO...'
                 ) : launching ? (
                   'INICIANDO...'
                 ) : (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-                    <Icon name="play" size={15} />
-                    JUGAR
+                    <Icon name={willInstall ? (primeraVez ? 'download' : 'refresh') : 'play'} size={15} />
+                    {willInstall ? (primeraVez ? 'INSTALAR' : 'ACTUALIZAR') : 'JUGAR'}
                   </span>
                 )}
               </Button>
@@ -611,10 +615,10 @@ export default function Home({
                   {error}
                 </p>
               ) : willInstall ? (
-                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--gold-bright)', lineHeight: 1.5 }}>
-                  Hay {pending?.toDownload ?? 0} archivos por descargar
-                  {pending?.latestVersion ? ` (v${pending.latestVersion})` : ''}. Se instalan solos
-                  al pulsar JUGAR.
+                <p style={{ margin: 0, fontSize: 12.5, color: '#66c0f4', lineHeight: 1.5 }}>
+                  {primeraVez
+                    ? 'Es la primera vez: pulsa INSTALAR para bajar el modpack.'
+                    : 'Hay una actualización del modpack. Pulsa ACTUALIZAR y después JUGAR.'}
                 </p>
               ) : updateNote ? (
                 <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ok)', lineHeight: 1.5 }}>

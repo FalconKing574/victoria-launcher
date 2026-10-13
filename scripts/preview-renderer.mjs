@@ -127,7 +127,13 @@ const STUB = `<script>
     modpack: {
       sync: async () => ({ upToDate: true, downloaded: 0, removed: 0, keptOwn: [], packVersion: '1.4.0' }),
       validate: async () => { await new Promise((r) => setTimeout(r, 1500)); return { upToDate: false, downloaded: 3, removed: 0, keptOwn: ['reforgedplaymod-1.20.1-0.3.1.jar'], packVersion: '2.1.1', validado: true, configuracion: true } },
-      check: async () => ({ needsUpdate: false, unavailable: false, toDownload: 0, toRemove: 0, installedVersion: '1.4.0', latestVersion: '1.4.0' }),
+      // ?modpack=actualizar | instalar para ver el botón azul de Steam.
+      check: async () => {
+        const m = new URLSearchParams(location.search).get('modpack')
+        if (m === 'actualizar') return { needsUpdate: true, unavailable: false, toDownload: 12, toRemove: 0, installedVersion: '2.2.0', latestVersion: '2.3.0' }
+        if (m === 'instalar') return { needsUpdate: true, unavailable: false, toDownload: 900, toRemove: 0, installedVersion: null, latestVersion: '2.3.0' }
+        return { needsUpdate: false, unavailable: false, toDownload: 0, toRemove: 0, installedVersion: '1.4.0', latestVersion: '1.4.0' }
+      },
       manifest: async () => manifest,
       state: async () => ({ managed: [], enabledOptional: [...enabledOptional], packVersion: '1.4.0', overridesSha1: null, overrideParts: {} }),
       setOptional: async (id, on) => {

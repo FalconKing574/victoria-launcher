@@ -535,8 +535,9 @@ function ModpackUpdateRow(): JSX.Element {
               : unavailable
                 ? 'No se pudo contactar con el servidor del modpack.'
                 : needsUpdate
-                  ? `Hay ${check?.toDownload ?? 0} archivos por descargar` +
-                    (check?.latestVersion ? ` (v${check.latestVersion}).` : '.')
+                  ? check?.installedVersion
+                    ? 'Hay una actualización del modpack.'
+                    : 'Falta instalar el modpack.'
                   : (message ?? 'El modpack está al día.')}
           </div>
 
