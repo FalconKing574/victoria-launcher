@@ -18,6 +18,7 @@ import { Client, Authenticator } from 'minecraft-launcher-core'
 import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
 import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
 import { launcherRoot, instanceDir } from '../lib/paths'
+import { asegurarListaServidores } from '../lib/lista-servidores'
 import { ensureJava } from '../lib/java-runtime'
 import { loadSettings } from '../lib/settings'
 import { jvmPerformanceArgs } from '../lib/settings-core'
@@ -430,6 +431,14 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     // apagarla era hacerle pasar el error. Lo único que se pierde es la barrita del principio.
     // Shaders y placa dedicada siguen siendo sólo del modo compatible (después de un cierre).
     aplicarModoCompatible()
+
+    // Victoria arriba de la lista de servidores, con IP y puerto: en el 25565 de la misma IP
+    // contesta otro servidor (ver lib/lista-servidores.ts).
+    try {
+      asegurarListaServidores(instanceDir())
+    } catch {
+      // La lista es una comodidad: nunca frena el arranque.
+    }
 
     send('launch:status', { stage: 'starting', message: 'Iniciando Minecraft...' })
     const child = await client.launch(options)
