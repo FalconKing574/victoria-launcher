@@ -12,9 +12,9 @@ import { SERVIDOR_MINECRAFT } from '../config'
  * «¡Cliente no compatible! Por favor, usa 26.3» (13-10-2026).
  *
  * Antes de cada arranque el launcher deja arriba de todo una entrada «Victoria Kingdom» con la IP
- * y el puerto escritos, sin depender del SRV, y corrige las entradas que el jugador haya agregado
- * a mano apuntando a Victoria sin puerto o con el puerto equivocado. El resto de la lista no se
- * toca.
+ * y el puerto escritos, sin depender del SRV, y saca las otras entradas que apuntan a Victoria
+ * (agregadas a mano, sin puerto, con el puerto equivocado o repetidas). El resto de la lista no
+ * se toca.
  */
 
 export const NOMBRE_VICTORIA = 'Victoria Kingdom'
@@ -178,21 +178,18 @@ function texto(c: Map<string, Etiqueta>, clave: string): string {
  *
  * - Una sola entrada «Victoria Kingdom», primera, con `DIRECCION_VICTORIA`. Si ya había una de
  *   Victoria (aunque se llame distinto), se reusa y se sube, con su ícono.
- * - Cualquier otra entrada de Victoria con el puerto mal se corrige al bueno.
+ * - Las demás entradas de Victoria se borran: son el mismo servidor repetido.
  * - Las entradas de otros servidores quedan iguales y en su orden.
+ *
+ * Por qué se borran (17-10-2026): la 1.8.5 les corregía el puerto en vez de sacarlas. El botón
+ * JUGAR del menú (FancyMenu) busca en la lista una entrada con su dirección escrita igual, letra
+ * por letra; con `mc.victoriakingdom.com` no encontraba la que el launcher había pasado a
+ * `mc.victoriakingdom.com:25567` y agregaba otra. Cada partida sumaba una «mc.victoriakingdom.com»
+ * más a la lista de Multijugador.
  */
 export function repararLista(entradas: Map<string, Etiqueta>[]): { lista: Map<string, Etiqueta>[]; cambio: boolean } {
-  const lista = entradas.map((e) => new Map(e))
+  let lista = entradas.map((e) => new Map(e))
   let cambio = false
-
-  for (const e of lista) {
-    const ip = texto(e, 'ip')
-    if (ip && apuntaMal(ip)) {
-      const { host } = separar(ip)
-      e.set('ip', { t: 8, v: host === SERVIDOR_MINECRAFT.host ? DIRECCION_VICTORIA : `${host}:${SERVIDOR_MINECRAFT.puerto}` })
-      cambio = true
-    }
-  }
 
   let i = lista.findIndex((e) => texto(e, 'name') === NOMBRE_VICTORIA && esVictoria(texto(e, 'ip')))
   if (i < 0) i = lista.findIndex((e) => esVictoria(texto(e, 'ip')))
@@ -214,6 +211,11 @@ export function repararLista(entradas: Map<string, Etiqueta>[]): { lista: Map<st
   if (i !== 0) {
     lista.splice(i, 1)
     lista.unshift(principal)
+    cambio = true
+  }
+  const sinRepetidas = lista.filter((e) => e === principal || !esVictoria(texto(e, 'ip')))
+  if (sinRepetidas.length !== lista.length) {
+    lista = sinRepetidas
     cambio = true
   }
   return { lista, cambio }

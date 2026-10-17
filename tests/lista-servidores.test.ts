@@ -48,7 +48,7 @@ describe('lista de servidores', () => {
     expect(servidores(dir)).toEqual([{ name: NOMBRE_VICTORIA, ip: DIRECCION_VICTORIA, icon: undefined }])
   })
 
-  it('corrige la entrada sin puerto, la sube y conserva el resto', () => {
+  it('corrige la entrada sin puerto, la sube, saca la otra de Victoria y conserva el resto', () => {
     const dir = mkdtempSync(join(tmpdir(), 'vk-srv-'))
     guardar(dir, [
       entrada('Hypixel', 'mc.hypixel.net'),
@@ -58,10 +58,26 @@ describe('lista de servidores', () => {
     expect(asegurarListaServidores(dir)).toBe(true)
     expect(servidores(dir)).toEqual([
       { name: NOMBRE_VICTORIA, ip: DIRECCION_VICTORIA, icon: 'AAAA' },
-      { name: 'Hypixel', ip: 'mc.hypixel.net', icon: undefined },
-      { name: 'Otro nombre', ip: 'mc.victoriakingdom.com:25567', icon: undefined }
+      { name: 'Hypixel', ip: 'mc.hypixel.net', icon: undefined }
     ])
     // La segunda vez no hay nada que hacer.
+    expect(asegurarListaServidores(dir)).toBe(false)
+  })
+
+  it('borra las «mc.victoriakingdom.com» que fue sumando el botón JUGAR del menú', () => {
+    // El servers.dat real de un jugador el 17-10-2026, después de seis partidas.
+    const dir = mkdtempSync(join(tmpdir(), 'vk-srv-'))
+    guardar(dir, [
+      entrada(NOMBRE_VICTORIA, DIRECCION_VICTORIA),
+      ...Array.from({ length: 5 }, () => entrada('mc.victoriakingdom.com', 'mc.victoriakingdom.com:25567')),
+      entrada('Hypixel', 'mc.hypixel.net'),
+      entrada('mc.victoriakingdom.com', 'mc.victoriakingdom.com')
+    ])
+    expect(asegurarListaServidores(dir)).toBe(true)
+    expect(servidores(dir)).toEqual([
+      { name: NOMBRE_VICTORIA, ip: DIRECCION_VICTORIA, icon: undefined },
+      { name: 'Hypixel', ip: 'mc.hypixel.net', icon: undefined }
+    ])
     expect(asegurarListaServidores(dir)).toBe(false)
   })
 
