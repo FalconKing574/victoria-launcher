@@ -24,11 +24,17 @@
 /** Frases que Minecraft, LWJGL, GLFW o la JVM escriben cuando falla el video. */
 const SENALES_VIDEO: RegExp[] = [
   /OpenGLException/i,
-  /GLFW error/i,
+  // Sólo los errores de GLFW que dicen que no hay driver o contexto (API/versión/formato no
+  // disponible, error de plataforma). «GLFW error» a secas también sale por cosas inofensivas
+  // como una tecla sin código, y hacía pasar cualquier cierre por falla de video.
+  /GLFW error 6554[2-5]\b/i,
   /WGL: The driver does not appear to support OpenGL/i,
   /Pixel format not accelerated/i,
   /Failed to create the GLFW window/i,
-  /OpenGL 3\.2/i,
+  // 17-10-2026: antes era /OpenGL 3\.2/ a secas, y eso está en TODO crash report («GL Caps: Using
+  // framebuffer using OpenGL 3.2») y en el log de cualquier partida sana («OpenGL 3.2.0 NVIDIA…»).
+  // Cualquier cierre al cargar terminaba en «tu placa de video no pudo» y la causa real no se veía.
+  /(?:requires?|not supported|unsupported|no soporta)[^\n]{0,40}OpenGL 3\.2|OpenGL 3\.2[^\n]{0,40}(?:is required|not supported|unsupported)/i,
   /No OpenGL context found/i,
   /GL_OUT_OF_MEMORY/i,
   // Cierres nativos de la JVM dentro del driver: Intel, AMD y NVIDIA.

@@ -17,6 +17,16 @@ describe('esFallaDeVideo', () => {
     expect(esFallaDeVideo('# Problematic frame:\n# C  [atio6axx.dll+0x55]'.replace('\n# C', ' C'))).toBe(true)
   })
 
+  it('no confunde un crash report o un log sanos con una falla de video (17-10-2026)', () => {
+    // Están en TODO crash report y en cualquier latest.log: antes alcanzaban para decir «OpenGL».
+    expect(esFallaDeVideo('\tGL Caps: Using framebuffer using OpenGL 3.2\n\tGraphics mode: fancy')).toBe(false)
+    expect(esFallaDeVideo('[Render thread/INFO]: Backend library: LWJGL version 3.3.1 (OpenGL 3.2.0 NVIDIA 610.88)')).toBe(false)
+    expect(esFallaDeVideo('[Render thread/ERROR]: GLFW error 65539: Invalid scancode 0')).toBe(false)
+    // y sí lo dicho de verdad
+    expect(esFallaDeVideo('GLFW error 65543: WGL: OpenGL profile requested but WGL_ARB_create_context_profile is unavailable')).toBe(true)
+    expect(esFallaDeVideo('Your graphics card does not support OpenGL 3.2, which is required')).toBe(true)
+  })
+
   it('no confunde un crash de mod con una falla de video', () => {
     expect(esFallaDeVideo('java.lang.IllegalStateException: Image is not allocated.')).toBe(false)
     expect(esFallaDeVideo('java.lang.NullPointerException: null')).toBe(false)
