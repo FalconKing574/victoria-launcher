@@ -17,6 +17,7 @@ import { Readable } from 'stream'
 import { Client, Authenticator } from 'minecraft-launcher-core'
 import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
 import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
+import { repararMinecraft, marcarFalloForge, esFalloDeForge } from '../lib/reparar-minecraft'
 import { launcherRoot, instanceDir } from '../lib/paths'
 import { asegurarListaServidores } from '../lib/lista-servidores'
 import { ensureJava } from '../lib/java-runtime'
@@ -367,8 +368,23 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       (percent) => send('launch:progress', { type: 'java', percent })
     )
 
-    const forgePath = await ensureForgeInstaller()
+    let forgePath = await ensureForgeInstaller()
+    // «Failed to run processor: EOFException: Unexpected end of ZLIB input stream» (17-10-2026): un jar
+    // de Minecraft o de una librería quedó roto de una descarga cortada y MCLC sólo mira si existe. Se
+    // revisa con los hashes de Mojang y Forge y se borra lo dañado para que se baje entero.
+    try {
+      const r = await repararMinecraft(launcherRoot(), MC_VERSION, FORGE_VERSION, forgePath, (message) =>
+        send('launch:status', { stage: 'download', message })
+      )
+      if (r.borrados.length > 0 || r.forgeRehecho) {
+        send('launch:log', `[Victoria] Reparación: ${r.borrados.length} archivos dañados borrados${r.forgeRehecho ? ', Forge se vuelve a armar' : ''}.`)
+      }
+      if (!existsSync(forgePath)) forgePath = await ensureForgeInstaller()
+    } catch {
+      // revisar es una ayuda: nunca frena el arranque
+    }
     const client = new Client()
+    let falloForgeAnotado = false
 
     client.on('progress', (event: { type: string; task: number; total: number }) => {
       send('launch:progress', {
@@ -379,7 +395,14 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     client.on('download-status', (event: { name: string }) => {
       send('launch:status', { stage: 'download', message: `Descargando ${event.name}` })
     })
-    client.on('data', (line: string) => send('launch:log', String(line)))
+    client.on('data', (line: string) => {
+      send('launch:log', String(line))
+      // si Forge no pudo procesar sus archivos, el próximo JUGAR los rehace (ver reparar-minecraft.ts)
+      if (!falloForgeAnotado && esFalloDeForge(String(line))) {
+        falloForgeAnotado = true
+        void marcarFalloForge(launcherRoot()).catch(() => undefined)
+      }
+    })
     client.on('close', (code: number) => {
       running = false
       // Bring the launcher back when the game exits, even if it was hidden.
