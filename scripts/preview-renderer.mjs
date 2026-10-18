@@ -242,7 +242,29 @@ const STUB = `<script>
     settings: { get: async () => settings, save: async (p) => Object.assign(settings, p) },
     launch: {
       start: async () => {}, isRunning: async () => false,
-      onProgress: noop, onStatus: noop, onError: noop, onClosed: noop
+      onProgress: noop, onStatus: noop, onError: noop, onClosed: noop,
+      reparar: async () => { await espera(1200); return { borrados: 6 } }
+    },
+    registros: {
+      lista: async () => [
+        { id: 'juego', nombre: 'Último arranque', descripcion: 'Todo lo que escribió el juego al iniciar, incluida la instalación de Forge. Es el primero que hay que mirar.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\logs\\\\juego.log', tamano: 48213, modificado: Date.now() - 600000 },
+        { id: 'latest', nombre: 'Minecraft (latest.log)', descripcion: 'El registro del juego desde que carga los mods hasta que se cierra.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\instance\\\\logs\\\\latest.log', tamano: 2310455, modificado: Date.now() - 86400000 },
+        { id: 'launcher', nombre: 'Errores del launcher', descripcion: 'Fallos de la aplicación misma, no del juego.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\crash.log', tamano: 812, modificado: Date.now() - 5 * 86400000 }
+      ],
+      leer: async () => ({ recortado: false, tamano: 900, texto: [
+        '[Victoria] Launcher 1.8.9 · 2026-10-18T20:11:02Z · intento 1 · Minecraft 1.20.1 · Forge 47.4.0',
+        '[Victoria] Java: C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\java\\\\bin\\\\javaw.exe',
+        '[MCLC]: Downloaded version jar and wrote version json',
+        'Task: net.minecraftforge.installertools.ConsoleTool',
+        '  MainClass: net.minecraftforge.installertools.ConsoleTool',
+        'WARN: Could not find a cached mapping, downloading',
+        'Failed to run processor: java.io.EOFException:Unexpected end of ZLIB input stream',
+        'See log for more details.',
+        'java.io.EOFException: Unexpected end of ZLIB input stream',
+        '    at java.util.zip.InflaterInputStream.fill(InflaterInputStream.java:244)',
+        '[Victoria] El juego se cerró con el código 1.'
+      ].join(String.fromCharCode(10)) }),
+      abrir: async () => {}, carpeta: async () => {}
     }
   }
 </script>`

@@ -332,8 +332,9 @@ export default function Home({
         setError(
           info.diagnosis
             ? `Minecraft se cerró solo.\n${info.diagnosis.message}` +
-                (info.diagnosis.file ? `\n\nDetalle completo en:\n${info.diagnosis.file}` : '')
-            : `Minecraft se cerró con el código ${info.code}. Si se repite, mira los crash-reports de la instancia.`
+                (info.diagnosis.file ? `\n\nDetalle completo en:\n${info.diagnosis.file}` : '') +
+                '\n\nTodos los registros están en Ajustes → Registros.'
+            : `Minecraft se cerró con el código ${info.code}. Si se repite, revisá Ajustes → Registros.`
         )
       }
     })

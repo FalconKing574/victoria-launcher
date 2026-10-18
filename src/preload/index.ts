@@ -85,7 +85,14 @@ const api: VictoriaApi = {
     onProgress: (cb) => on('launch:progress', cb),
     onStatus: (cb) => on('launch:status', cb),
     onError: (cb) => on('launch:error', cb),
-    onClosed: (cb) => on('launch:closed', cb)
+    onClosed: (cb) => on('launch:closed', cb),
+    reparar: () => ipcRenderer.invoke('launch:reparar')
+  },
+  registros: {
+    lista: () => ipcRenderer.invoke('registros:lista'),
+    leer: (id) => ipcRenderer.invoke('registros:leer', id),
+    abrir: (id) => ipcRenderer.invoke('registros:abrir', id),
+    carpeta: (id) => ipcRenderer.invoke('registros:carpeta', id)
   }
 }
 

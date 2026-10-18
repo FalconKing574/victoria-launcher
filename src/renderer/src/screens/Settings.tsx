@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import Avatar from '../components/Avatar'
 import Icon, { type IconName } from '../components/Icon'
 import Panel from '../components/Panel'
+import Registros from '../components/Registros'
 import Toggle from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
 // Las mismas constantes que usa el proceso principal para decidir la memoria.
@@ -285,6 +286,14 @@ export default function Settings({
 
             <UpdaterRow />
             <ModpackUpdateRow />
+          </Section>
+
+          <Section
+            icon="file"
+            title="Registros"
+            help="Qué pasó al iniciar el juego: para revisarlo o mandárselo al staff."
+          >
+            <Registros />
           </Section>
         </div>
       </div>

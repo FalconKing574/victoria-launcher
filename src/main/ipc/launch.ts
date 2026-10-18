@@ -1,8 +1,9 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { app, ipcMain, BrowserWindow } from 'electron'
 import {
   existsSync,
   mkdirSync,
   createWriteStream,
+  createReadStream,
   readdirSync,
   readFileSync,
   renameSync,
@@ -11,13 +12,15 @@ import {
   writeFileSync
 } from 'fs'
 import { execFile } from 'child_process'
+import { createHash } from 'crypto'
 import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
 import { Client, Authenticator } from 'minecraft-launcher-core'
 import type { ILauncherOptions, IUser } from 'minecraft-launcher-core'
-import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL } from '../config'
-import { repararMinecraft, marcarFalloForge, esFalloDeForge } from '../lib/reparar-minecraft'
+import { MC_VERSION, FORGE_VERSION, FORGE_INSTALLER_URL, FORGE_INSTALLER_SHA1 } from '../config'
+import { repararMinecraft, marcarFalloForge, esFalloDeForge, type ResultadoRevision } from '../lib/reparar-minecraft'
+import { abrirRegistroJuego, rutaRegistroJuego } from '../lib/registros'
 import { launcherRoot, instanceDir } from '../lib/paths'
 import { asegurarListaServidores } from '../lib/lista-servidores'
 import { ensureJava } from '../lib/java-runtime'
@@ -245,12 +248,78 @@ async function ensureForgeInstaller(): Promise<string> {
   const partial = `${target}.part`
   try {
     await pipeline(Readable.fromWeb(response.body as never), createWriteStream(partial))
+    // Entero no alcanza: tiene que ser EL instalador. Uno que llegó con un dato roto en el medio pasaba
+    // por sano y Forge fallaba después con «Unexpected end of ZLIB input stream».
+    if ((await sha1DeArchivo(partial)) !== FORGE_INSTALLER_SHA1) {
+      throw new Error('El instalador de Forge llegó dañado. Revisá tu conexión y volvé a intentar.')
+    }
     renameSync(partial, target)
   } catch (error) {
     rmSync(partial, { force: true })
     throw error
   }
   return target
+}
+
+function sha1DeArchivo(ruta: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const h = createHash('sha1')
+    createReadStream(ruta)
+      .on('data', (c) => h.update(c))
+      .on('error', reject)
+      .on('end', () => resolve(h.digest('hex')))
+  })
+}
+
+/**
+ * Revisa los archivos de Minecraft y Forge y borra lo dañado (ver reparar-minecraft.ts). Con `profundo`
+ * borra todo lo de Forge para que se baje de cero. Devuelve la ruta del instalador, que puede haberse
+ * vuelto a bajar.
+ */
+async function revisarInstalacion(
+  forgePath: string,
+  profundo: boolean,
+  registrar: (linea: string) => void
+): Promise<{ forgePath: string; resultado: ResultadoRevision | null }> {
+  let resultado: ResultadoRevision | null = null
+  try {
+    resultado = await repararMinecraft(
+      launcherRoot(),
+      MC_VERSION,
+      FORGE_VERSION,
+      forgePath,
+      (message) => send('launch:status', { stage: 'download', message }),
+      { profundo, instaladorSha1: FORGE_INSTALLER_SHA1 }
+    )
+    if (resultado.borrados.length > 0 || resultado.forgeRehecho) {
+      registrar(
+        `[Victoria] Reparación${profundo ? ' profunda' : ''}: ${resultado.borrados.length} borrados` +
+          (resultado.borrados.length > 0 ? ` (${resultado.borrados.slice(0, 12).join(', ')})` : '') +
+          (resultado.forgeRehecho ? '; Forge se vuelve a armar.' : '.')
+      )
+    }
+  } catch (error) {
+    // revisar es una ayuda: nunca frena el arranque
+    registrar(`[Victoria] No se pudo revisar la instalación: ${(error as Error).message}`)
+  }
+  if (!existsSync(forgePath)) forgePath = await ensureForgeInstaller()
+  return { forgePath, resultado }
+}
+
+/**
+ * El botón «Reparar Minecraft y Forge» de Ajustes: la misma reparación profunda que el reintento
+ * automático, sin lanzar el juego.
+ */
+export async function repararInstalacion(): Promise<{ borrados: number }> {
+  if (running) throw new Error('Cerrá el juego antes de reparar.')
+  running = true
+  try {
+    const forgePath = await ensureForgeInstaller()
+    const { resultado } = await revisarInstalacion(forgePath, true, () => undefined)
+    return { borrados: resultado?.borrados.length ?? 0 }
+  } finally {
+    running = false
+  }
 }
 
 /** Prefijo del error que el renderer reconoce para mostrar la sanción o los pasos. */
@@ -294,9 +363,20 @@ async function conseguirVale(): Promise<void> {
   throw new Error(PREFIJO_BLOQUEO + JSON.stringify(publico))
 }
 
-export async function launchGame(request: LaunchRequest): Promise<void> {
+/**
+ * @param intento 1 al apretar JUGAR; 2 es el reintento automático después de que Forge no pudo armarse,
+ *   con la instalación de Forge borrada y bajada de cero.
+ */
+export async function launchGame(request: LaunchRequest, intento = 1): Promise<void> {
   if (running) throw new Error('El juego ya se está iniciando.')
   running = true
+
+  // Todo lo del arranque queda en un archivo que el jugador puede ver en Ajustes → Registros.
+  const registro = abrirRegistroJuego(app.getPath('userData'))
+  registro.escribir(
+    `[Victoria] Launcher ${app.getVersion()} · ${new Date().toISOString()} · intento ${intento}` +
+      ` · Minecraft ${MC_VERSION} · Forge ${FORGE_VERSION}`
+  )
 
   try {
     const settings = loadSettings()
@@ -368,23 +448,19 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
       (percent) => send('launch:progress', { type: 'java', percent })
     )
 
-    let forgePath = await ensureForgeInstaller()
+    registro.escribir(`[Victoria] Java: ${javaPath}`)
     // «Failed to run processor: EOFException: Unexpected end of ZLIB input stream» (17-10-2026): un jar
     // de Minecraft o de una librería quedó roto de una descarga cortada y MCLC sólo mira si existe. Se
-    // revisa con los hashes de Mojang y Forge y se borra lo dañado para que se baje entero.
-    try {
-      const r = await repararMinecraft(launcherRoot(), MC_VERSION, FORGE_VERSION, forgePath, (message) =>
-        send('launch:status', { stage: 'download', message })
-      )
-      if (r.borrados.length > 0 || r.forgeRehecho) {
-        send('launch:log', `[Victoria] Reparación: ${r.borrados.length} archivos dañados borrados${r.forgeRehecho ? ', Forge se vuelve a armar' : ''}.`)
-      }
-      if (!existsSync(forgePath)) forgePath = await ensureForgeInstaller()
-    } catch {
-      // revisar es una ayuda: nunca frena el arranque
-    }
+    // revisa con los hashes de Mojang y Forge y se borra lo dañado para que se baje entero. En el
+    // reintento, además, Forge entero se baja de cero.
+    const { forgePath } = await revisarInstalacion(await ensureForgeInstaller(), intento > 1, (linea) => {
+      registro.escribir(linea)
+      send('launch:log', linea)
+    })
     const client = new Client()
-    let falloForgeAnotado = false
+    let falloForge = false
+    // los renglones pueden llegar partidos entre dos trozos: se mira el final del anterior también
+    let colaAnterior = ''
 
     client.on('progress', (event: { type: string; task: number; total: number }) => {
       send('launch:progress', {
@@ -395,21 +471,52 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     client.on('download-status', (event: { name: string }) => {
       send('launch:status', { stage: 'download', message: `Descargando ${event.name}` })
     })
+    client.on('debug', (line: string) => registro.escribir(String(line)))
     client.on('data', (line: string) => {
-      send('launch:log', String(line))
-      // si Forge no pudo procesar sus archivos, el próximo JUGAR los rehace (ver reparar-minecraft.ts)
-      if (!falloForgeAnotado && esFalloDeForge(String(line))) {
-        falloForgeAnotado = true
+      const texto = String(line)
+      send('launch:log', texto)
+      registro.escribir(texto)
+      // Si Forge no pudo procesar sus archivos se anota: al cerrarse el juego se repara y se reintenta
+      // solo, y si el launcher se cierra antes, el próximo JUGAR lo rehace (ver reparar-minecraft.ts).
+      if (!falloForge && esFalloDeForge(colaAnterior + texto)) {
+        falloForge = true
         void marcarFalloForge(launcherRoot()).catch(() => undefined)
       }
+      colaAnterior = texto.slice(-200)
     })
     client.on('close', (code: number) => {
       running = false
+      registro.escribir(`[Victoria] El juego se cerró con el código ${code}.`)
+      registro.cerrar()
       // Bring the launcher back when the game exits, even if it was hidden.
       for (const win of BrowserWindow.getAllWindows()) win.show()
+
+      if (falloForge && intento === 1) {
+        // El jugador no tiene que entender qué es un procesador de Forge: se borra lo de Forge, se baja de
+        // cero y se vuelve a lanzar, una sola vez. launchGame informa sus propios errores.
+        send('launch:status', {
+          stage: 'forge',
+          message: 'Forge no se instaló bien. Reparando y volviendo a intentar...'
+        })
+        void launchGame(request, 2).catch(() => undefined)
+        return
+      }
+
       // Solo se busca la causa si se cerró mal: en una salida normal no hay
       // nada que diagnosticar y leer archivos sería trabajo tirado.
-      send('launch:closed', { code, diagnosis: code === 0 ? null : diagnoseCrash(javaPath) })
+      const diagnosis = falloForge
+        ? {
+            message:
+              'Forge no se pudo instalar ni después de bajarlo de cero. Casi siempre es el antivirus ' +
+              'cortando archivos mientras se descargan, o el disco lleno. Agregá la carpeta del launcher ' +
+              'a las excepciones del antivirus y volvé a intentar; si sigue, mandá «Último arranque» ' +
+              '(Ajustes → Registros) al staff.',
+            file: rutaRegistroJuego(app.getPath('userData'))
+          }
+        : code === 0
+          ? null
+          : diagnoseCrash(javaPath)
+      send('launch:closed', { code, diagnosis })
     })
 
     const options: ILauncherOptions = {
@@ -486,6 +593,8 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
     }
   } catch (error) {
     running = false
+    registro.escribir(`[Victoria] No se pudo iniciar: ${(error as Error).message}`)
+    registro.cerrar()
     // If closeOnLaunch already hid the launcher, a failure here would leave an
     // invisible process holding the single-instance lock, so the user could
     // never reopen it. Always bring it back before reporting.
@@ -500,4 +609,5 @@ export async function launchGame(request: LaunchRequest): Promise<void> {
 export function registerLaunchHandlers(): void {
   ipcMain.handle('launch:start', (_event, request: LaunchRequest) => launchGame(request))
   ipcMain.handle('launch:is-running', () => running)
+  ipcMain.handle('launch:reparar', () => repararInstalacion())
 }

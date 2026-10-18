@@ -121,4 +121,43 @@ describe('repararMinecraft', () => {
     expect(existsSync(inst)).toBe(false)
     expect(r.borrados).toContain('forge installer')
   })
+
+  it('con el hash publicado, un instalador que abre pero no es el correcto se borra', async () => {
+    const inst = join(root, 'forge-installer.jar')
+    writeFileSync(inst, 'instalador con un byte cambiado')
+    const r = await repararMinecraft(root, '1.20.1', '47.4.0', inst, () => undefined, {
+      instaladorSha1: sha1('instalador original')
+    })
+    expect(existsSync(inst)).toBe(false)
+    expect(r.borrados).toContain('forge installer')
+    expect(r.forgeRehecho).toBe(true)
+  })
+
+  it('con el hash publicado, el instalador correcto se queda', async () => {
+    rmSync(join(root, 'libraries', 'a', 'rota.jar'))
+    const inst = join(root, 'forge-installer.jar')
+    writeFileSync(inst, 'instalador original')
+    const r = await repararMinecraft(root, '1.20.1', '47.4.0', inst, () => undefined, {
+      instaladorSha1: sha1('instalador original').toUpperCase()
+    })
+    expect(existsSync(inst)).toBe(true)
+    expect(r.forgeRehecho).toBe(false)
+  })
+
+  it('la reparación profunda borra todo lo de Forge y deja lo de Mojang sano', async () => {
+    rmSync(join(root, 'libraries', 'a', 'rota.jar'))
+    const forgeLib = join(root, 'libraries', 'net', 'minecraftforge', 'fmlcore', '1.0')
+    mkdirSync(forgeLib, { recursive: true })
+    writeFileSync(join(forgeLib, 'fmlcore-1.0.jar'), 'fml')
+    mkdirSync(join(root, 'libraries', 'de', 'oceanlabs', 'mcp'), { recursive: true })
+    writeFileSync(join(root, 'libraries', 'de', 'oceanlabs', 'mcp', 'mcp_config.zip'), 'mcp')
+    const r = await repararMinecraft(root, '1.20.1', '47.4.0', null, () => undefined, { profundo: true })
+    expect(r.forgeRehecho).toBe(true)
+    expect(existsSync(join(root, 'libraries', 'net', 'minecraftforge'))).toBe(false)
+    expect(existsSync(join(root, 'libraries', 'de', 'oceanlabs'))).toBe(false)
+    expect(existsSync(join(root, 'libraries', 'net', 'minecraft', 'client'))).toBe(false)
+    expect(existsSync(join(root, 'forge', '1.20.1'))).toBe(false)
+    expect(existsSync(join(root, 'libraries', 'a', 'sana.jar'))).toBe(true)
+    expect(existsSync(join(root, 'versions', '1.20.1', '1.20.1.jar'))).toBe(true)
+  })
 })

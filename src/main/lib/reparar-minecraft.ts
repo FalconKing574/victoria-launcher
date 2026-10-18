@@ -23,6 +23,14 @@ import { isFresh, parseCache, type HashCache } from './hash-cache'
  * mismo arranque. Si se borró algo, o si el arranque anterior falló procesando Forge, también se borran las
  * salidas de los procesadores para que Forge las arme de nuevo con los archivos sanos. El hash de cada
  * archivo se guarda por tamaño y fecha (como el de los mods): después de la primera vez cuesta un stat.
+ *
+ * <h2>Lo que faltaba (18-10-2026)</h2>
+ *
+ * El error volvió a aparecer. Dos huecos: el instalador de Forge sólo se abría como zip (un instalador con
+ * el índice sano y un dato del medio roto pasaba la prueba), y la reparación esperaba al PRÓXIMO JUGAR, así
+ * que el jugador veía el error, no sabía qué hacer y lo reportaba. Ahora el instalador se compara con el
+ * SHA-1 que publica Forge, y `profundo` borra todo lo de Forge para que se baje de cero: es lo que usa el
+ * reintento automático después de un fallo y el botón «Reparar» de Ajustes.
  */
 
 export interface Artefacto {
@@ -104,6 +112,22 @@ export async function marcarFalloForge(root: string): Promise<void> {
   await writeFile(join(root, 'cache', MARCA), new Date().toISOString())
 }
 
+export interface OpcionesReparacion {
+  /** Borra todo lo de Forge (librerías, salidas de los procesadores, JSON) para que se baje de cero. */
+  profundo?: boolean
+  /** El SHA-1 publicado del instalador; si no coincide, se borra y se vuelve a bajar. */
+  instaladorSha1?: string
+}
+
+/** Las carpetas de `libraries` que son de Forge o de sus procesadores: lo que borra la reparación profunda. */
+export const CARPETAS_FORGE = [
+  ['net', 'minecraftforge'],
+  ['net', 'minecraft', 'client'],
+  ['de', 'oceanlabs'],
+  ['cpw', 'mods'],
+  ['io', 'github', 'zekerzhayard']
+]
+
 export interface ResultadoRevision {
   revisados: number
   borrados: string[]
@@ -118,9 +142,24 @@ export async function repararMinecraft(
   mc: string,
   forge: string,
   instalador: string | null,
-  avisar: (mensaje: string) => void
+  avisar: (mensaje: string) => void,
+  opciones: OpcionesReparacion = {}
 ): Promise<ResultadoRevision> {
   const borrados: string[] = []
+
+  if (opciones.profundo) {
+    avisar('Reinstalando Forge desde cero...')
+    for (const partes of CARPETAS_FORGE) {
+      const dir = join(root, 'libraries', ...partes)
+      if (existsSync(dir)) {
+        rmSync(dir, { recursive: true, force: true })
+        borrados.push(`libraries/${partes.join('/')}`)
+      }
+    }
+    // sin la JSON de Forge, MCLC la vuelve a armar desde el instalador y baja todo lo que nombra
+    rmSync(join(root, 'forge', mc), { recursive: true, force: true })
+  }
+
   const cachePath = join(root, 'cache', 'verificacion-minecraft.json')
   const cache: HashCache = parseCache(await leerJson(cachePath))
   const nuevo: HashCache = {}
@@ -159,11 +198,29 @@ export async function repararMinecraft(
     nuevo[a.ruta] = { ...stamp, sha1 }
   }
 
-  // El instalador de Forge: un zip que no abre se borra (ensureForgeInstaller lo vuelve a bajar).
+  // El instalador de Forge: con el hash publicado se compara entero; sin él, al menos que abra como zip.
+  // Lo que falla se borra y ensureForgeInstaller lo vuelve a bajar.
   if (instalador && existsSync(instalador)) {
-    try {
-      new AdmZip(instalador).getEntries()
-    } catch {
+    let sano = true
+    if (opciones.instaladorSha1) {
+      const clave = 'forge/installer'
+      try {
+        const st = statSync(instalador)
+        const stamp = { size: st.size, mtimeMs: st.mtimeMs }
+        const sha1 = isFresh(cache[clave], stamp) ? cache[clave].sha1 : await sha1De(instalador)
+        sano = sha1 === opciones.instaladorSha1.toLowerCase()
+        if (sano) nuevo[clave] = { ...stamp, sha1 }
+      } catch {
+        sano = false
+      }
+    } else {
+      try {
+        new AdmZip(instalador).getEntries()
+      } catch {
+        sano = false
+      }
+    }
+    if (!sano) {
       rmSync(instalador, { force: true })
       borrados.push('forge installer')
     }
@@ -171,7 +228,7 @@ export async function repararMinecraft(
 
   const marca = join(root, 'cache', MARCA)
   const falloAntes = existsSync(marca)
-  const forgeRehecho = falloAntes || borrados.length > 0
+  const forgeRehecho = falloAntes || borrados.length > 0 || opciones.profundo === true
   if (forgeRehecho) {
     avisar('Reparando la instalación de Forge...')
     // las salidas de los procesadores: el jar de Minecraft parcheado y el de Forge para el cliente

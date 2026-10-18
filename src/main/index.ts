@@ -10,6 +10,7 @@ import { registerSyncHandlers } from './ipc/sync'
 import { registerShaderHandlers } from './ipc/shaders'
 import { registerUpdaterHandlers } from './ipc/updater'
 import { registerServidorHandlers } from './ipc/servidor'
+import { registerRegistrosHandlers } from './ipc/registros'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
 import { crashLogPath } from './lib/paths'
 import { permisoPermitido } from './lib/permisos'
@@ -153,6 +154,7 @@ if (!app.requestSingleInstanceLock()) {
     registerShaderHandlers()
     registerUpdaterHandlers()
     registerServidorHandlers()
+    registerRegistrosHandlers()
     registerSettingsHandlers()
 
     const win = createWindow()
