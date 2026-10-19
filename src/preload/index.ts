@@ -75,6 +75,9 @@ const api: VictoriaApi = {
   servidor: {
     estado: () => ipcRenderer.invoke('servidor:estado')
   },
+  novedades: {
+    lista: () => ipcRenderer.invoke('novedades:lista')
+  },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     save: (patch) => ipcRenderer.invoke('settings:save', patch)

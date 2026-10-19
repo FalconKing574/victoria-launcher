@@ -22,6 +22,11 @@ export interface RemoteImageProps {
    * stays sharp and reads as the mod's badge, which is what it is.
    */
   fit?: 'cover' | 'contain'
+  /**
+   * Una imagen local para cuando `src` no carga: las novedades vienen de la
+   * web, y sin red se ven con las fotos que trae el launcher.
+   */
+  respaldo?: string
 }
 
 /**
@@ -35,11 +40,14 @@ export default function RemoteImage({
   label,
   style,
   position = 'center',
-  fit = 'cover'
+  fit = 'cover',
+  respaldo
 }: RemoteImageProps): JSX.Element {
-  const [failed, setFailed] = useState(false)
+  // Cuántas fuentes fallaron: primero `src`, después el respaldo.
+  const [fallos, setFallos] = useState(0)
   const [loaded, setLoaded] = useState(false)
-  const showImage = Boolean(src) && !failed
+  const fuente = [src, respaldo].filter(Boolean)[fallos]
+  const showImage = Boolean(fuente)
 
   return (
     <div
@@ -70,10 +78,14 @@ export default function RemoteImage({
 
       {showImage && (
         <img
-          src={src}
+          key={fuente}
+          src={fuente}
           alt={alt}
           draggable={false}
-          onError={() => setFailed(true)}
+          onError={() => {
+            setLoaded(false)
+            setFallos((n) => n + 1)
+          }}
           onLoad={() => setLoaded(true)}
           style={{
             position: 'absolute',

@@ -190,9 +190,21 @@ de 1600 px y deja también las copias de la web (galería y portada). El pie de
 foto de la web es el nombre del archivo. Sin ninguna, queda el arte fijo
 `assets/victoria.png`.
 
-**Tarjetas de Novedades:** `assets/news/servidor.jpg`, `comunidad.jpg` y
-`modpack.jpg`, las mismas que en la web. Se recortan con
+**Tarjetas de Novedades:** desde el 19-10-2026 vienen de la web, del mismo
+`datos/novedades.json` que pinta su portada (`ipc/novedades.ts`, con lo puro en
+`lib/novedades.ts` y tests). Se piden al abrir Jugar, con 10 minutos de caché;
+cada tarjeta abre la novedad entera en la web y «Ver todas», la página de
+novedades. Sin red quedan las tres que trae el launcher (`NEWS` en `Home.tsx`),
+con `assets/news/servidor.jpg`, `comunidad.jpg` y `modpack.jpg`, que también son
+el respaldo de cada foto de la web que no cargue. Se recortan con
 `node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png`.
+Para publicar una novedad no hace falta publicar el launcher: alcanza con la web
+(ver `06-web.md`).
+
+**La web, desde el launcher:** las direcciones están en `src/preload/web.ts`
+(como `tuning.ts`, la usan el proceso principal y la interfaz). La barra lateral
+abre la wiki además del Discord, y Ajustes → Ayuda lleva a la guía, las
+preguntas frecuentes, la wiki, las normas, las novedades y la privacidad.
 
 **Estado del servidor en Jugar:** `lib/estado-servidor.ts` hace el mismo ping
 que la lista de servidores de Minecraft (Server List Ping) contra
@@ -220,7 +232,8 @@ Sirve `out/renderer` en `http://localhost:4310` con un `window.api` falso, así
 que se pueden mirar todas las pantallas sin lanzar el launcher del usuario.
 
 Escenarios por la URL: `?cuenta=nueva|pasos|lista|sancion`,
-`?launcher=al-dia|descarga|lenta|lista|bloqueada|sin-red` y `?servidor=caido`.
+`?launcher=al-dia|descarga|lenta|lista|bloqueada|sin-red`, `?servidor=caido` y
+`?novedades=sin-red` (las tres que trae el launcher, sin las de la web).
 **El `window.api` falso vive en la memoria del servidor de la vista previa:** si
 cambiás `scripts/preview-renderer.mjs`, reinicialo. Con el viejo, una pantalla
 que llama a algo nuevo del api revienta y se ve en negro.

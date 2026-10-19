@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import Avatar from './Avatar'
 import Icon, { type IconName } from './Icon'
 import logo from '../assets/logo.png'
+import { ENLACES_WEB } from '@shared/web'
 
 export type NavKey = 'play' | 'mods' | 'shaders' | 'settings'
 
@@ -14,6 +15,34 @@ const ITEMS: Array<{ key: NavKey; label: string; icon: IconName }> = [
 
 /** Opens in the system browser rather than switching screens. */
 const DISCORD_INVITE = 'https://discord.gg/HFvsGaxc7G'
+
+/**
+ * Lo que abre el navegador en vez de cambiar de pantalla. El Discord, con el
+ * azul de Discord al pasar el mouse; la wiki (cómo se juega: banco, terrenos,
+ * vehículos, teléfono), en gris.
+ */
+const EXTERNOS: Array<{
+  label: string
+  icon: IconName
+  url: string
+  fondo: string
+  color: string
+}> = [
+  {
+    label: 'Discord',
+    icon: 'discord',
+    url: DISCORD_INVITE,
+    fondo: 'rgba(88,101,242,0.14)',
+    color: '#a3adf7'
+  },
+  {
+    label: 'Wiki',
+    icon: 'book',
+    url: ENLACES_WEB.wiki,
+    fondo: 'rgba(255,255,255,0.04)',
+    color: 'var(--text)'
+  }
+]
 
 export interface SideNavProps {
   active: NavKey
@@ -104,39 +133,42 @@ export default function SideNav({
 
         <span style={{ height: 1, background: 'var(--stroke)', margin: '9px 12px' }} />
 
-        <button
-          onClick={() => {
-            // Fire and forget: a blocked or missing browser must not break the nav.
-            void window.api.window.openExternal(DISCORD_INVITE).catch(() => undefined)
-          }}
-          title={DISCORD_INVITE}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 11,
-            padding: '10px 12px',
-            borderRadius: 10,
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--text-dim)',
-            fontSize: 13.5,
-            fontWeight: 500,
-            textAlign: 'left',
-            transition: 'background 0.16s, color 0.16s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(88,101,242,0.14)'
-            e.currentTarget.style.color = '#a3adf7'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--text-dim)'
-          }}
-        >
-          <Icon name="discord" size={16} />
-          <span style={{ flex: 1 }}>Discord</span>
-          <Icon name="external" size={12} />
-        </button>
+        {EXTERNOS.map((externo) => (
+          <button
+            key={externo.label}
+            onClick={() => {
+              // Fire and forget: a blocked or missing browser must not break the nav.
+              void window.api.window.openExternal(externo.url).catch(() => undefined)
+            }}
+            title={externo.url}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 11,
+              padding: '10px 12px',
+              borderRadius: 10,
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--text-dim)',
+              fontSize: 13.5,
+              fontWeight: 500,
+              textAlign: 'left',
+              transition: 'background 0.16s, color 0.16s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = externo.fondo
+              e.currentTarget.style.color = externo.color
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--text-dim)'
+            }}
+          >
+            <Icon name={externo.icon} size={16} />
+            <span style={{ flex: 1 }}>{externo.label}</span>
+            <Icon name="external" size={12} />
+          </button>
+        ))}
       </div>
 
       <div style={{ display: 'grid', gap: 4 }}>

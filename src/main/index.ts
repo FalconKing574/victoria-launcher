@@ -11,6 +11,7 @@ import { registerShaderHandlers } from './ipc/shaders'
 import { registerUpdaterHandlers } from './ipc/updater'
 import { registerServidorHandlers } from './ipc/servidor'
 import { registerRegistrosHandlers } from './ipc/registros'
+import { registerNovedadesHandlers } from './ipc/novedades'
 import { loadSettings, saveSettings, type Settings } from './lib/settings'
 import { crashLogPath } from './lib/paths'
 import { permisoPermitido } from './lib/permisos'
@@ -155,6 +156,7 @@ if (!app.requestSingleInstanceLock()) {
     registerUpdaterHandlers()
     registerServidorHandlers()
     registerRegistrosHandlers()
+    registerNovedadesHandlers()
     registerSettingsHandlers()
 
     const win = createWindow()

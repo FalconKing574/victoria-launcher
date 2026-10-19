@@ -14,10 +14,12 @@ import type {
   LaunchProgress,
   LaunchStatus,
   EstadoServidor,
+  Novedad,
   RespuestaCuenta,
   SyncCheck,
   UpdaterState
 } from '@shared/api'
+import { ENLACES_WEB } from '@shared/web'
 import { shouldBlockPlay } from '../lib/play-gate'
 import { leerBloqueo } from '../lib/bloqueo'
 import { avisoLauncher } from '../lib/aviso-launcher'
@@ -59,35 +61,88 @@ export interface HomeProps {
   onBloqueo?: (respuesta: RespuestaCuenta) => void
 }
 
+/** Lo que muestra cada tarjeta de Novedades. */
+interface Tarjeta {
+  id: string
+  tag: string
+  color: string
+  /** La foto: de la web, o la local si es una de las de abajo. */
+  image: string
+  /** La local, para cuando la de la web no carga. */
+  respaldo: string
+  title: string
+  body: string
+  fecha?: string
+  /** La novedad entera en la web. */
+  enlace?: string
+}
+
 /**
  * Cada tarjeta con su color (pedido del dueño, 07-10-2026), sólo en el texto de
  * la etiqueta: el servidor en el rojo de Victoria, la comunidad en el azul de
  * Discord y el modpack en el dorado del «KINGDOM» del logo. Una versión con
  * franja de color arriba y la imagen teñida le pareció demasiado.
+ *
+ * Desde el 19-10-2026 las novedades vienen de la web (`novedades:lista`, el
+ * mismo datos/novedades.json que pinta su portada). Estas tres quedan para
+ * cuando no hay red.
  */
-const NEWS = [
+const NEWS: Tarjeta[] = [
   {
+    id: 'servidor',
     tag: 'Servidor',
     color: '#e63946',
     image: NEWS_IMAGES.servidor,
+    respaldo: NEWS_IMAGES.servidor,
     title: 'Victoria Kingdom — temporada abierta',
     body: 'Minecraft 1.20.1 con Forge 47.4.0 y el modpack completo ya instalado.'
   },
   {
+    id: 'comunidad',
     tag: 'Comunidad',
     color: '#5865f2',
     image: NEWS_IMAGES.comunidad,
+    respaldo: NEWS_IMAGES.comunidad,
     title: 'Eventos y avisos en Discord',
     body: 'Las novedades, caídas y eventos se anuncian primero en el Discord del servidor.'
   },
   {
+    id: 'modpack',
     tag: 'Modpack',
     color: '#e0a526',
     image: NEWS_IMAGES.modpack,
+    respaldo: NEWS_IMAGES.modpack,
     title: 'Mods opcionales a tu gusto',
-    body: 'En la pestaña Modpack eliges qué extras instalar sin romper la partida.'
+    body: 'En la pestaña Mods eliges qué extras instalar sin romper la partida.'
   }
 ]
+
+/** Qué foto local usar si la de una novedad de la web no carga. */
+const RESPALDO: Record<string, string> = {
+  Servidor: NEWS_IMAGES.servidor,
+  Comunidad: NEWS_IMAGES.comunidad,
+  Modpack: NEWS_IMAGES.modpack,
+  Launcher: NEWS_IMAGES.modpack
+}
+
+function desdeLaWeb(n: Novedad): Tarjeta {
+  return {
+    id: n.id,
+    tag: n.etiqueta,
+    color: n.color ?? '#e63946',
+    image: n.imagen,
+    respaldo: RESPALDO[n.etiqueta] ?? NEWS_IMAGES.servidor,
+    title: n.titulo,
+    body: n.texto,
+    fecha: n.fecha,
+    enlace: n.enlace
+  }
+}
+
+const DIA = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', timeZone: 'UTC' })
+
+/** Abre en el navegador; si no hay navegador, no rompe la pantalla. */
+const abrir = (url: string): void => void window.api.window.openExternal(url).catch(() => undefined)
 
 export default function Home({
   username,
@@ -122,6 +177,9 @@ export default function Home({
   // En línea y cuánta gente hay, como el «Jugando ahora» de Majestic. Antes el
   // puntito verde era fijo: decía «en línea» aunque el servidor estuviera caído.
   const [servidor, setServidor] = useState<EstadoServidor | null>(null)
+
+  // Las de la web; mientras no llegan (o sin red), las que trae el launcher.
+  const [noticias, setNoticias] = useState<Tarjeta[]>(NEWS)
 
   // VALIDAR ARCHIVOS (02-10-2026): primero se explica qué hace, después se hace.
   const [confirmarValidar, setConfirmarValidar] = useState(false)
@@ -277,6 +335,19 @@ export default function Home({
     return () => {
       vivo = false
       clearInterval(reloj)
+    }
+  }, [])
+
+  useEffect(() => {
+    let vivo = true
+    window.api.novedades
+      .lista()
+      .then((lista) => {
+        if (vivo && lista?.length) setNoticias(lista.map(desdeLaWeb))
+      })
+      .catch(() => undefined)
+    return () => {
+      vivo = false
     }
   }, [])
 
@@ -664,11 +735,24 @@ export default function Home({
         />
       </div>
 
-      {/* Novedades. */}
+      {/* Novedades: las mismas de la web. Cada una abre la novedad entera. */}
       <div style={{ display: 'grid', gap: 10 }}>
-        <p className="eyebrow" style={{ margin: 0 }}>
-          Novedades
-        </p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12
+          }}
+        >
+          <p className="eyebrow" style={{ margin: 0 }}>
+            Novedades
+          </p>
+          <button onClick={() => abrir(ENLACES_WEB.novedades)} style={enlaceChico}>
+            Ver todas
+            <Icon name="external" size={11} />
+          </button>
+        </div>
         <div
           style={{
             display: 'grid',
@@ -676,45 +760,75 @@ export default function Home({
             gap: 12
           }}
         >
-          {NEWS.map((item, index) => (
+          {noticias.map((item, index) => (
             <Panel
-              key={item.title}
+              key={item.id}
               delay={0.05 * (index + 1)}
               style={{ padding: 0, overflow: 'hidden' }}
             >
-              <div style={{ position: 'relative' }}>
-                <RemoteImage src={item.image} alt="" label={item.tag} style={{ height: 82 }} />
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
-                  }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    bottom: 10,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: 0.8,
-                    textTransform: 'uppercase',
-                    padding: '4px 8px',
-                    borderRadius: 5,
-                    background: 'rgba(14,14,15,0.72)',
-                    color: `color-mix(in srgb, ${item.color} 80%, white)`
-                  }}
-                >
-                  {item.tag}
-                </span>
-              </div>
-              <div style={{ padding: '12px 14px 15px' }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 5 }}>{item.title}</div>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
-                  {item.body}
-                </p>
-              </div>
+              <button
+                onClick={item.enlace ? () => abrir(item.enlace as string) : undefined}
+                disabled={!item.enlace}
+                title={item.enlace ? 'Leer la novedad en la web' : undefined}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: '100%',
+                  padding: 0,
+                  border: 0,
+                  background: 'transparent',
+                  color: 'inherit',
+                  textAlign: 'left',
+                  cursor: item.enlace ? 'pointer' : 'default'
+                }}
+              >
+                <div style={{ position: 'relative' }}>
+                  <RemoteImage
+                    src={item.image}
+                    respaldo={item.respaldo}
+                    alt=""
+                    label={item.tag}
+                    style={{ height: 82 }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(rgba(14,14,15,0.25), rgba(14,14,15,0.88))'
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      left: 12,
+                      bottom: 10,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: 0.8,
+                      textTransform: 'uppercase',
+                      padding: '4px 8px',
+                      borderRadius: 5,
+                      background: 'rgba(14,14,15,0.72)',
+                      color: `color-mix(in srgb, ${item.color} 80%, white)`
+                    }}
+                  >
+                    {item.tag}
+                  </span>
+                </div>
+                <div style={{ padding: '12px 14px 15px' }}>
+                  {item.fecha && (
+                    <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginBottom: 3 }}>
+                      {DIA.format(new Date(`${item.fecha}T12:00:00Z`))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 5 }}>
+                    {item.title}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
+                    {item.body}
+                  </p>
+                </div>
+              </button>
             </Panel>
           ))}
         </div>
@@ -766,6 +880,19 @@ function StatTile({
       <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{hint}</span>
     </div>
   )
+}
+
+const enlaceChico: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  padding: '4px 8px',
+  borderRadius: 7,
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--text-faint)',
+  fontSize: 11.5,
+  cursor: 'pointer'
 }
 
 const avisoBoton: React.CSSProperties = {

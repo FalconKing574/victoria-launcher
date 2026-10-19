@@ -214,6 +214,21 @@ export interface CrashDiagnosis {
 }
 
 /** Un registro (log) que se puede revisar desde Ajustes. Ver `main/lib/registros.ts`. */
+/** Una novedad de la web, ya revisada (`src/main/lib/novedades.ts`). */
+export interface Novedad {
+  id: string
+  /** AAAA-MM-DD */
+  fecha: string
+  etiqueta: string
+  color: string | null
+  /** Dirección completa de la imagen, en la web. */
+  imagen: string
+  titulo: string
+  texto: string
+  /** La novedad entera, en la web. */
+  enlace: string
+}
+
 export interface RegistroInfo {
   id: string
   nombre: string
@@ -309,6 +324,10 @@ export interface VictoriaApi {
   servidor: {
     /** Si el servidor de Minecraft está en línea y cuánta gente hay. Nunca falla. */
     estado(): Promise<EstadoServidor>
+  }
+  novedades: {
+    /** Las tres últimas de la web. `null` sin red: la pantalla usa las suyas. Nunca falla. */
+    lista(): Promise<Novedad[] | null>
   }
   settings: {
     get(): Promise<Settings>

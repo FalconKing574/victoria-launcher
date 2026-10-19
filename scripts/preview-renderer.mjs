@@ -44,6 +44,20 @@ const TYPES = {
   '.woff2': 'font/woff2'
 }
 
+/**
+ * Las novedades que devolvería `novedades:lista`: las tres más nuevas del
+ * mismo archivo que publica la web, con la dirección de la web. Sin red, las
+ * imágenes caen a las del launcher, igual que en el de verdad.
+ */
+const WEB = 'https://victoriakingdom.com'
+const NOVEDADES = JSON.parse(readFileSync(join(ROOT, '..', '..', 'web', 'public', 'datos', 'novedades.json'), 'utf8'))
+  .sort((a, b) => b.fecha.localeCompare(a.fecha))
+  .slice(0, 3)
+  .map((n) => ({
+    id: n.id, fecha: n.fecha, etiqueta: n.etiqueta, color: n.color ?? null, imagen: `${WEB}/${n.imagen}`,
+    titulo: n.titulo, texto: n.texto, enlace: `${WEB}/novedades#${n.id}`
+  }))
+
 /** Every channel the preload exposes, answered with something believable. */
 const STUB = `<script>
   // En una pestaña que no está delante, Chrome congela requestAnimationFrame.
@@ -237,6 +251,13 @@ const STUB = `<script>
         return new URLSearchParams(location.search).get('servidor') === 'caido'
           ? { enLinea: false, jugadores: null, maximo: null, version: null, latencia: null }
           : { enLinea: true, jugadores: 23, maximo: 120, version: '1.20.1', latencia: 84 }
+      }
+    },
+    // ?novedades=sin-red para ver las que trae el launcher.
+    novedades: {
+      lista: async () => {
+        await espera(400)
+        return new URLSearchParams(location.search).get('novedades') === 'sin-red' ? null : ${JSON.stringify(NOVEDADES)}
       }
     },
     settings: { get: async () => settings, save: async (p) => Object.assign(settings, p) },
