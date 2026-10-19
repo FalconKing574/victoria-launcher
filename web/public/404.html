@@ -18,15 +18,17 @@
   <body>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
 
+    <!-- comun:cabecera -->
     <header class="cabecera">
       <div class="contenedor cabecera__interior">
         <a class="marca" href="/" aria-label="Victoria Kingdom, inicio">
           <img src="/img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
         </a>
         <nav class="nav" aria-label="Principal">
+          <a href="/#sistemas">Sistemas</a>
           <a href="/#empezar">Cómo empezar</a>
           <a href="/#pais">El país</a>
-          <a href="/#novedades">Novedades</a>
+          <a href="/novedades">Novedades</a>
           <a href="/guia">Guía</a>
           <a href="https://wiki.victoriakingdom.com">Wiki</a>
           <a href="/normas">Normas</a>
@@ -37,12 +39,7 @@
             <span class="en-linea__numero" data-jugadores>—</span>
             <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
           </div>
-          <a
-            class="boton boton--principal"
-            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-            data-descarga
-            aria-label="Descargar el launcher"
-          >
+          <a class="boton boton--principal" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga aria-label="Descargar el launcher">
             <svg class="icono" aria-hidden="true"><use href="/iconos.svg#download" /></svg>
             <span>Descargar</span>
           </a>
@@ -54,18 +51,16 @@
     </header>
 
     <div class="menu-movil" id="menu-movil" inert>
-      <a class="menu-movil__enlace" style="--i: 0" href="/#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 1" href="/#pais">El país <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 2" href="/#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 3" href="/guia">Guía <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 4" href="/normas">Normas <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 5" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 0" href="/#sistemas">Sistemas <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="/#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="/#pais">El país <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="/novedades">Novedades <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="/#preguntas">Preguntas <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 5" href="/guia">Guía <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 6" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 7" href="/normas">Normas <svg class="icono" aria-hidden="true"><use href="/iconos.svg#arrow-right" /></svg></a>
       <div class="menu-movil__acciones">
-        <a
-          class="boton boton--principal boton--grande"
-          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-          data-descarga
-        >
+        <a class="boton boton--principal boton--grande" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>
           <svg class="icono" aria-hidden="true"><use href="/iconos.svg#download" /></svg>Descargar launcher
         </a>
         <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
@@ -73,6 +68,7 @@
         </a>
       </div>
     </div>
+    <!-- /comun:cabecera -->
 
     <main id="contenido">
       <section class="perdido" style="position: relative; isolation: isolate; overflow: hidden">

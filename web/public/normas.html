@@ -31,15 +31,17 @@
   <body>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
 
+    <!-- comun:cabecera -->
     <header class="cabecera">
       <div class="contenedor cabecera__interior">
         <a class="marca" href="./" aria-label="Victoria Kingdom, inicio">
           <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
         </a>
         <nav class="nav" aria-label="Principal">
+          <a href="./#sistemas">Sistemas</a>
           <a href="./#empezar">Cómo empezar</a>
           <a href="./#pais">El país</a>
-          <a href="./#novedades">Novedades</a>
+          <a href="novedades">Novedades</a>
           <a href="guia">Guía</a>
           <a href="https://wiki.victoriakingdom.com">Wiki</a>
           <a href="normas" aria-current="page">Normas</a>
@@ -50,12 +52,7 @@
             <span class="en-linea__numero" data-jugadores>—</span>
             <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
           </div>
-          <a
-            class="boton boton--principal"
-            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-            data-descarga
-            aria-label="Descargar el launcher"
-          >
+          <a class="boton boton--principal" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga aria-label="Descargar el launcher">
             <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>
             <span>Descargar</span>
           </a>
@@ -67,18 +64,16 @@
     </header>
 
     <div class="menu-movil" id="menu-movil" inert>
-      <a class="menu-movil__enlace" style="--i: 0" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 1" href="./#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 2" href="./#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 3" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 4" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 5" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 0" href="./#sistemas">Sistemas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="./#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="./#preguntas">Preguntas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 5" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 6" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 7" href="normas" aria-current="page">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
       <div class="menu-movil__acciones">
-        <a
-          class="boton boton--principal boton--grande"
-          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-          data-descarga
-        >
+        <a class="boton boton--principal boton--grande" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>
           <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
         </a>
         <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
@@ -86,6 +81,7 @@
         </a>
       </div>
     </div>
+    <!-- /comun:cabecera -->
 
     <main id="contenido">
       <section class="cabecera-pagina" aria-labelledby="titulo-normas">
@@ -114,8 +110,16 @@
             <ul data-normas-indice></ul>
           </div>
           <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Si alguien no las cumple</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#sanciones"><svg class="icono" aria-hidden="true"><use href="iconos.svg#scale" /></svg>Sanciones</a></li>
+              <li><a class="wiki__enlace" href="#reportar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#flag" /></svg>Reportar o apelar</a></li>
+            </ul>
+          </div>
+          <div class="wiki__grupo">
             <p class="wiki__grupo-titulo">Más</p>
             <ul>
+              <li><a class="wiki__enlace" href="https://wiki.victoriakingdom.com/wiki/reglas-de-rol"><svg class="icono" aria-hidden="true"><use href="iconos.svg#compass" /></svg>Reglas de rol, explicadas</a></li>
               <li><a class="wiki__enlace" href="guia"><svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>Guía de instalación</a></li>
               <li>
                 <a class="wiki__enlace" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener"><svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Discord</a>
@@ -124,10 +128,51 @@
           </div>
         </nav>
 
+        <!-- Las normas llegan del manifiesto (/api/normas) y se ponen antes de
+             «Sanciones», que es fija: la escalera la decide VictoriaAuth. -->
         <article class="articulo" data-normas aria-live="polite">
           <div class="esqueleto"></div>
           <div class="esqueleto"></div>
           <div class="esqueleto"></div>
+
+          <section id="sanciones" class="revelar" data-normas-despues>
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#scale" /></svg></span>Sanciones</h2>
+            <p>
+              Las sanciones alcanzan a la persona, no solo al nombre: a la cuenta, la conexión, el equipo y el correo. Crear otra cuenta
+              para volver a entrar no sirve.
+            </p>
+            <p>Las advertencias van en escalera. Lo que pasa depende de cuántas advertencias tengas activas:</p>
+            <ol class="escalera">
+              <li class="escalon" style="--tono: 6%"><b>Con 1</b><strong>Aviso</strong>Te avisa el equipo.</li>
+              <li class="escalon" style="--tono: 12%"><b>Con 2</b><strong>1 día</strong>Un día fuera del servidor.</li>
+              <li class="escalon" style="--tono: 20%"><b>Con 3</b><strong>7 días</strong>Una semana fuera.</li>
+              <li class="escalon" style="--tono: 30%"><b>Con 4</b><strong>Permanente</strong>No vuelves a entrar.</li>
+            </ol>
+            <div class="nota nota--consejo">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#check" /></svg>
+              <p>Si pasas un mes sin recibir ninguna advertencia, se te borra una. El que se equivoca una vez no la arrastra para siempre.</p>
+            </div>
+            <p>Una falta grave no espera a la escalera: el equipo también puede suspender o banear directamente.</p>
+          </section>
+
+          <section id="reportar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#flag" /></svg></span>Reportar o apelar</h2>
+            <p>
+              Si alguien rompe una norma, o crees que una sanción tuya fue un error, abre un ticket en el Discord con <code>/soporte</code>.
+              Es privado: solo lo ve el equipo.
+            </p>
+            <ul class="lista-marcas">
+              <li>Cuenta qué pasó, cuándo y dónde, con el nombre de los jugadores.</li>
+              <li>Suma capturas o un video si los tienes.</li>
+              <li>No publiques datos personales de nadie, tampoco en el ticket.</li>
+            </ul>
+            <div class="nota">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#info" /></svg>
+              <p>
+                ¿Compartes internet o la PC con alguien sancionado y te tocó de rebote? Abre un ticket: el equipo puede habilitarte.
+              </p>
+            </div>
+          </section>
         </article>
 
         <aside class="wiki__ficha" data-servidor data-estado="cargando" aria-label="Sobre las normas">
@@ -149,6 +194,7 @@
       </div>
     </main>
 
+    <!-- comun:pie -->
     <footer class="pie">
       <div class="contenedor">
         <div class="pie__grilla">
@@ -159,6 +205,12 @@
               <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener" aria-label="Discord de Victoria Kingdom">
                 <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>
               </a>
+              <a href="https://wiki.victoriakingdom.com" aria-label="Wiki de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>
+              </a>
+              <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener" aria-label="Código del launcher en GitHub">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#github" /></svg>
+              </a>
             </div>
           </div>
           <div>
@@ -168,15 +220,16 @@
               <li><a href="./#empezar">Cómo empezar</a></li>
               <li><a href="guia">Guía de instalación</a></li>
               <li><a href="guia#requisitos">Requisitos</a></li>
+              <li><a href="./#preguntas">Preguntas frecuentes</a></li>
             </ul>
           </div>
           <div>
             <h4>Comunidad</h4>
             <ul>
               <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
-              <li><a href="https://wiki.victoriakingdom.com">Wiki</a></li>
+              <li><a href="https://wiki.victoriakingdom.com" target="_blank" rel="noopener">Wiki</a></li>
               <li><a href="normas">Normas</a></li>
-              <li><a href="./#novedades">Novedades</a></li>
+              <li><a href="novedades">Novedades</a></li>
               <li><a href="./#pais">Capturas</a></li>
             </ul>
           </div>
@@ -185,13 +238,18 @@
             <ul>
               <li><a href="guia#smartscreen">Windows protegió su PC</a></li>
               <li><a href="guia#antivirus">El antivirus lo bloquea</a></li>
-              <li><a href="guia#lento">El juego va lento</a></li>
+              <li><a href="guia#contrasena">Olvidé mi contraseña</a></li>
+              <li><a href="guia#registros">El juego se cierra</a></li>
               <li><a href="guia#conectar">No puedo entrar</a></li>
             </ul>
           </div>
         </div>
         <div class="pie__base">
           <span>© <span data-anio>2026</span> Victoria Kingdom</span>
+          <span class="pie__legal">
+            <a href="privacidad">Privacidad</a>
+            <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener">Código abierto</a>
+          </span>
           <span>No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado con ellos.</span>
         </div>
       </div>
@@ -215,5 +273,6 @@
       <svg class="arriba__anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /></svg>
       <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-up" /></svg>
     </button>
+    <!-- /comun:pie -->
   </body>
 </html>

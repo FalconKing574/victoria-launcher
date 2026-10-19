@@ -155,13 +155,41 @@
   }
 
   async function modpack() {
-    if (!$('[data-mods], [data-forge], [data-minecraft]')) return
+    if (!$('[data-mods], [data-forge], [data-minecraft], [data-modpack-version]')) return
     const m = await pedir('/api/modpack')
     // Sin datos quedan los que vienen escritos en el HTML.
     if (!m || m.error) return
     if (Number.isFinite(m.mods)) for (const el of $$('[data-mods]')) ponerNumero(el, m.mods)
     if (m.forge) for (const el of $$('[data-forge]')) el.textContent = m.forge
     if (m.minecraft) for (const el of $$('[data-minecraft]')) el.textContent = m.minecraft
+    if (m.version) for (const el of $$('[data-modpack-version]')) el.textContent = m.version
+  }
+
+  /**
+   * La versión publicada del launcher, la misma que instala el instalador de la
+   * web (`/api/launcher` la lee de GitHub). Lo que la muestra empieza oculto o
+   * con un guion: si la consulta falla no se inventa ninguna.
+   */
+  async function versionLauncher() {
+    if (!$('[data-launcher-version]')) return
+    const l = await pedir('/api/launcher')
+    if (!l || typeof l.version !== 'string') return
+    for (const el of $$('[data-launcher-version]')) el.textContent = l.version
+    for (const el of $$('[data-version-launcher]')) el.hidden = false
+  }
+
+  /** Cuánta gente hay en el Discord (`/api/discord`). Sin datos no se muestra. */
+  async function discord() {
+    const zonas = $$('[data-discord]')
+    if (!zonas.length) return
+    const d = await pedir('/api/discord')
+    if (!d || !Number.isFinite(d.miembros)) return
+    for (const z of zonas) {
+      z.hidden = false
+      z.dataset.estado = 'arriba'
+    }
+    for (const el of $$('[data-discord-miembros]')) ponerNumero(el, d.miembros)
+    for (const el of $$('[data-discord-conectados]')) ponerNumero(el, d.conectados)
   }
 
   /* -----------------------------------------------------------------------
@@ -198,7 +226,7 @@
         boton.focus()
       }
     })
-    matchMedia('(min-width: 1101px)').addEventListener('change', (m) => {
+    matchMedia('(min-width: 1181px)').addEventListener('change', (m) => {
       if (m.matches) usar(false)
     })
   }
@@ -512,45 +540,72 @@
   }
 
   /* -----------------------------------------------------------------------
-     Novedades
+     Sistemas: pestañas, como pide WAI-ARIA (flechas, Inicio y Fin)
      ----------------------------------------------------------------------- */
 
-  async function novedades() {
-    const contenedor = $('[data-noticias]')
-    if (!contenedor) return
-    const lista = await pedir('datos/novedades.json')
-    if (!Array.isArray(lista)) return
-    contenedor.textContent = ''
-    lista.forEach((n, i) => {
-      const externo = /^https?:/.test(n.enlace || '')
-      const tarjeta = document.createElement(n.enlace ? 'a' : 'article')
-      if (n.enlace) {
-        tarjeta.href = n.enlace
-        if (externo) {
-          tarjeta.target = '_blank'
-          tarjeta.rel = 'noopener'
-        }
+  function pestanas() {
+    const raiz = $('[data-sistemas]')
+    if (!raiz) return
+    const botones = $$('[role="tab"]', raiz)
+    const elegir = (boton, enfocar) => {
+      for (const b of botones) {
+        const activo = b === boton
+        b.setAttribute('aria-selected', String(activo))
+        b.tabIndex = activo ? 0 : -1
+        document.getElementById(b.getAttribute('aria-controls'))?.classList.toggle('activo', activo)
       }
-      tarjeta.className = 'noticia revelar'
-      tarjeta.style.setProperty('--retraso', `${i * 110}ms`)
-      if (n.color) tarjeta.style.setProperty('--color', n.color)
-      tarjeta.innerHTML =
-        '<div class="noticia__imagen"><img alt="" loading="lazy" decoding="async" /><span class="noticia__etiqueta"></span></div>' +
-        '<div class="noticia__cuerpo"><h3></h3><p></p></div>'
-      $('img', tarjeta).src = n.imagen
-      $('.noticia__etiqueta', tarjeta).textContent = n.etiqueta || ''
-      $('h3', tarjeta).textContent = n.titulo || ''
-      $('p', tarjeta).textContent = n.texto || ''
-      if (n.enlace) {
-        const mas = document.createElement('span')
-        mas.className = 'enlace-flecha'
-        mas.textContent = n.textoEnlace || 'Ver más'
-        mas.insertAdjacentHTML('beforeend', ' <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right"/></svg>')
-        $('.noticia__cuerpo', tarjeta).append(mas)
-      }
-      contenedor.append(tarjeta)
-      observarRevelar(tarjeta)
+      if (enfocar) boton.focus()
+      // En el celular la fila de pestañas se arrastra: que la elegida quede a la vista.
+      boton.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducido ? 'auto' : 'smooth' })
+    }
+    botones.forEach((b, i) => {
+      b.addEventListener('click', () => elegir(b, false))
+      b.addEventListener('keydown', (e) => {
+        const destino = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: botones.length - 1 }[e.key]
+        if (destino === undefined) return
+        e.preventDefault()
+        elegir(botones[(destino + botones.length) % botones.length], true)
+      })
     })
+  }
+
+  /* -----------------------------------------------------------------------
+     Novedades: filtrar por etiqueta. Las entradas ya vienen escritas en el
+     HTML (web/generar-paginas.mjs), así que sin JavaScript se ven todas.
+     ----------------------------------------------------------------------- */
+
+  function filtrarNovedades() {
+    const filtros = $('[data-filtros]')
+    const entradas = $$('.entrada[data-etiqueta]')
+    if (!filtros || !entradas.length) return
+    const enlaces = $$('.wiki__enlace[data-etiqueta]')
+    const cuenta = new Map()
+    for (const e of entradas) cuenta.set(e.dataset.etiqueta, (cuenta.get(e.dataset.etiqueta) || 0) + 1)
+    if (cuenta.size < 2) return
+
+    const crear = (texto, etiqueta, total) => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'filtro'
+      b.textContent = texto
+      const n = document.createElement('span')
+      n.textContent = String(total)
+      b.append(n)
+      b.setAttribute('aria-pressed', String(etiqueta === null))
+      b.addEventListener('click', () => {
+        for (const x of $$('.filtro', filtros)) x.setAttribute('aria-pressed', String(x === b))
+        for (const e of entradas) e.hidden = etiqueta !== null && e.dataset.etiqueta !== etiqueta
+        // El índice de la izquierda muestra lo mismo; un mes que queda vacío se esconde.
+        for (const a of enlaces) a.closest('li').hidden = etiqueta !== null && a.dataset.etiqueta !== etiqueta
+        for (const g of $$('.wiki__grupo', $('.wiki__lateral') || document)) {
+          g.hidden = !$$('li', g).some((li) => !li.hidden)
+        }
+      })
+      filtros.append(b)
+    }
+    crear('Todas', null, entradas.length)
+    for (const [etiqueta, total] of cuenta) crear(etiqueta, etiqueta, total)
+    filtros.hidden = false
   }
 
   /* -----------------------------------------------------------------------
@@ -589,18 +644,25 @@
     const contenedor = $('[data-normas]')
     if (!contenedor) return
     const indice = $('[data-normas-indice]')
+    // Lo fijo de la página (las sanciones) queda después de las normas.
+    const despues = $('[data-normas-despues]', contenedor)
+    const poner = (el) => contenedor.insertBefore(el, despues)
     const n = await pedir('/api/normas')
+    $$('.esqueleto', contenedor).forEach((e) => e.remove())
     if (!n || !Array.isArray(n.secciones) || !n.secciones.length) {
-      contenedor.innerHTML =
-        '<div class="nota nota--aviso"><svg class="icono" aria-hidden="true"><use href="iconos.svg#warning"/></svg>' +
+      const aviso = document.createElement('div')
+      aviso.className = 'nota nota--aviso'
+      aviso.innerHTML =
+        '<svg class="icono" aria-hidden="true"><use href="iconos.svg#warning"/></svg>' +
         '<div><p><strong>No se pudieron cargar las normas ahora.</strong></p>' +
-        '<p>Prueba de nuevo en un rato. También las ves en el launcher antes de jugar, y en el Discord.</p></div></div>'
+        '<p>Prueba de nuevo en un rato. También las ves en el launcher antes de jugar, y en el Discord.</p></div>'
+      poner(aviso)
+      espiar()
       return
     }
     for (const el of $$('[data-normas-titulo]')) el.textContent = n.titulo || 'Normas de Victoria'
     for (const el of $$('[data-normas-version]')) el.textContent = n.version ? `Versión ${n.version}` : '—'
     for (const el of $$('[data-normas-cantidad]')) el.textContent = String(n.secciones.length)
-    contenedor.textContent = ''
     n.secciones.forEach((s, i) => {
       const id = `norma-${i + 1}`
       const seccion = document.createElement('section')
@@ -615,7 +677,7 @@
         p.textContent = parrafo.trim()
         cuerpo.append(p)
       }
-      contenedor.append(seccion)
+      poner(seccion)
       observarRevelar(seccion)
       if (indice) {
         const li = document.createElement('li')
@@ -663,16 +725,20 @@
     revelar()
     alDesplazar()
     avisoDescarga()
-    espiar()
+    if (!$('[data-normas]')) espiar()
+
+    pestanas()
+    filtrarNovedades()
 
     estadoServidor()
     setInterval(() => {
       if (!document.hidden) estadoServidor()
     }, 60000)
     modpack()
+    versionLauncher()
+    discord()
     portada()
     galeria()
-    novedades()
     normas()
   }
 

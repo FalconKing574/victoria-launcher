@@ -5,7 +5,7 @@ export async function onRequest({ request, next }) {
   const origen = url.hostname === 'victoriakingdom.pages.dev';
   const vistaPrevia = url.hostname.endsWith('.victoriakingdom.pages.dev');
   const paginaWiki = /^\/wiki(?:\/|$|\.html$)/.test(url.pathname);
-  const paginaWeb = /^\/(?:index(?:\.html)?|guia(?:\.html)?|normas(?:\.html)?)?\/?$/.test(url.pathname);
+  const paginaWeb = /^\/(?:index(?:\.html)?|guia(?:\.html)?|normas(?:\.html)?|novedades(?:\.html)?|privacidad(?:\.html)?)?\/?$/.test(url.pathname);
 
   if (url.hostname === 'www.victoriakingdom.com' || (origen && (paginaWiki || paginaWeb))) {
     url.hostname = paginaWiki ? 'wiki.victoriakingdom.com' : 'victoriakingdom.com';

@@ -60,3 +60,18 @@ canónicas, separación de mapas, redirecciones y compatibilidad de las API.
 Search Console debe conservar la verificación DNS para poder enviar mapas,
 inspeccionar URL y medir consultas. Un envío no garantiza indexación ni una
 posición determinada. No añadir palabras clave ocultas ni reseñas ficticias.
+
+## Portada completa, novedades y privacidad (19-10-2026)
+
+La portada suma Sistemas (pestañas que enlazan a la wiki), Tu historia,
+preguntas frecuentes con su JSON-LD y la gente del Discord en vivo
+(`/api/discord`). Hay dos páginas nuevas, `novedades` y `privacidad`, en el
+sitemap y en las redirecciones del middleware.
+
+La cabecera, el pie y las novedades ya no se copian a mano en cada página:
+
+    node web/generar-paginas.mjs
+
+Las novedades salen de `public/datos/novedades.json`, que **también lee el
+launcher** para su pantalla Jugar. Todo el detalle, en
+`docs/mantenimiento/06-web.md`.

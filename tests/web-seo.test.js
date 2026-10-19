@@ -23,7 +23,9 @@ describe('Direcciones e indexación pública', () => {
       ['https://victoriakingdom.com/wiki/telefono?origen=web','https://wiki.victoriakingdom.com/wiki/telefono?origen=web'],
       ['https://www.victoriakingdom.com/guia','https://victoriakingdom.com/guia'],
       ['https://victoriakingdom.pages.dev/wiki/banco','https://wiki.victoriakingdom.com/wiki/banco'],
-      ['https://wiki.victoriakingdom.com/','https://wiki.victoriakingdom.com/wiki']
+      ['https://wiki.victoriakingdom.com/','https://wiki.victoriakingdom.com/wiki'],
+      ['https://victoriakingdom.pages.dev/novedades','https://victoriakingdom.com/novedades'],
+      ['https://wiki.victoriakingdom.com/privacidad','https://victoriakingdom.com/privacidad']
     ]) {
       const res = await pedir(desde);
       expect(res.status).toBe(301);
@@ -31,7 +33,7 @@ describe('Direcciones e indexación pública', () => {
     }
   });
   it('mantiene las API del dominio antiguo para los launchers distribuidos', async () => {
-    for (const path of ['/api/launcher?actual=1','/api/modpack','/api/estado','/api/normas']) {
+    for (const path of ['/api/launcher?actual=1','/api/modpack','/api/estado','/api/normas','/api/discord','/datos/novedades.json']) {
       const next = vi.fn(async () => new Response('compatible'));
       const res = await pedir('https://victoriakingdom.pages.dev'+path, next);
       expect(next).toHaveBeenCalledOnce();
@@ -50,10 +52,12 @@ describe('Contenido entregado a los buscadores sin JavaScript', () => {
     ['index.html','https://victoriakingdom.com/'],
     ['guia.html','https://victoriakingdom.com/guia'],
     ['normas.html','https://victoriakingdom.com/normas'],
+    ['novedades.html','https://victoriakingdom.com/novedades'],
+    ['privacidad.html','https://victoriakingdom.com/privacidad'],
     ['wiki.html','https://wiki.victoriakingdom.com/wiki'],
     ...articulos.map(a=>[`wiki/${a.id}.html`,`https://wiki.victoriakingdom.com/wiki/${a.id}`])
   ];
-  it('tiene títulos únicos, canónicas y datos estructurados válidos para las 25 páginas', () => {
+  it('tiene títulos únicos, canónicas y datos estructurados válidos para las 27 páginas', () => {
     const titulos = [];
     for (const [archivo,url] of paginas) {
       const html = leer(archivo);
@@ -66,10 +70,10 @@ describe('Contenido entregado a los buscadores sin JavaScript', () => {
       expect(schema['@graph'].some(n=>n.url===url && ['WebPage','CollectionPage','TechArticle'].includes(n['@type']))).toBe(true);
       expect(html).not.toMatch(/name="robots" content="noindex/);
     }
-    expect(new Set(titulos).size).toBe(25);
+    expect(new Set(titulos).size).toBe(27);
   });
   it('cada sitemap contiene únicamente páginas canónicas de su propio host', () => {
-    for (const [archivo,host,total] of [['sitemap.xml','victoriakingdom.com',3],['sitemap-wiki.xml','wiki.victoriakingdom.com',22]]) {
+    for (const [archivo,host,total] of [['sitemap.xml','victoriakingdom.com',5],['sitemap-wiki.xml','wiki.victoriakingdom.com',22]]) {
       const urls = [...leer(archivo).matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>m[1]);
       expect(urls).toHaveLength(total);
       expect(new Set(urls).size).toBe(total);

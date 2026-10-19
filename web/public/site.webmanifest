@@ -1,0 +1,14 @@
+{
+  "name": "Victoria Kingdom",
+  "short_name": "Victoria",
+  "description": "Servidor de Minecraft roleplay en español, con launcher propio.",
+  "lang": "es",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0e0e0f",
+  "theme_color": "#d7263d",
+  "icons": [
+    { "src": "/img/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/img/icono-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

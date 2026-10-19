@@ -1,8 +1,9 @@
 # La web
 
-La web pública de Victoria Kingdom: portada, guía de instalación y normas. Está
-en Cloudflare Pages, **gratis**, y tiene el mismo aspecto que el launcher (rojo
-Victoria, Outfit, botones en mayúsculas, JUGAR en verde).
+La web pública de Victoria Kingdom: portada, guía de instalación, normas,
+novedades y privacidad, más la wiki (ver `web/README.md`). Está en Cloudflare
+Pages, **gratis**, y tiene el mismo aspecto que el launcher (rojo Victoria,
+Outfit, botones en mayúsculas, JUGAR en verde).
 
 La portada sigue el modelo de la de GrandRP (contador «en línea» arriba, título
 enorme sobre las capturas, «Cómo empezar a jugar» en pasos, galería) y la guía
@@ -16,25 +17,58 @@ cifras de más abajo ya lo dicen.
 ```
 web/
   wrangler.toml          nombre del proyecto en Cloudflare: victoriakingdom
+  generar-paginas.mjs    cabecera, pie y novedades de cada página (ver abajo)
+  generar-wiki.mjs       la wiki y los sitemaps (web/README.md)
   public/                lo que se sirve tal cual
-    index.html           portada
-    guia.html            instalar, cuenta, SmartScreen, antivirus, problemas
-    normas.html          las normas, leídas del manifiesto
+    index.html           portada: sistemas, tu historia, pasos, galería,
+                         novedades y preguntas frecuentes
+    guia.html            instalar, cuenta, SmartScreen, antivirus, problemas,
+                         contraseña, registros, desinstalar
+    normas.html          las normas (leídas del manifiesto) y las sanciones
+    novedades.html       todas las novedades, con filtro y fecha
+    privacidad.html      qué datos usan el launcher y la web (PRIVACIDAD.md)
     404.html             «Esta calle no existe en Victoria»
     estilos.css          todo el estilo; los colores en :root, los del launcher
     app.js               lo que se mueve o se carga solo (sin compilar)
     iconos.svg           los íconos, los mismos trazos que el launcher
-    datos/novedades.json las tarjetas de Novedades
+    datos/novedades.json las novedades: las leen la web Y el launcher
     datos/capturas.json  la galería (la escribe importar-capturas.mjs)
-    img/  fonts/  _headers  robots.txt
-  functions/api/         funciones de Cloudflare
-    estado.js            /api/estado: ping al servidor de Minecraft, caché 30 s
-    modpack.js           /api/modpack: cuántos mods, Minecraft, Forge
-    normas.js            /api/normas: las normas del manifiesto
+    site.webmanifest     nombre e íconos al guardar la web en el celular
+    img/  fonts/  _headers  robots.txt  sitemap*.xml  wiki/
+  functions/
+    _middleware.js       dominios, redirecciones y robots.txt (web/README.md)
+    api/estado.js        /api/estado: ping al servidor de Minecraft, caché 30 s
+    api/modpack.js       /api/modpack: cuántos mods, Minecraft, Forge, versión
+    api/normas.js        /api/normas: las normas del manifiesto
+    api/launcher.js      /api/launcher: la última versión publicada en GitHub
+    api/discord.js       /api/discord: miembros y conectados del Discord
   lib/                   código de las funciones, con tests
     ping.ts              tests/web-ping.test.ts
     manifiesto.js        tests/web-api.test.js
+    discord.js           tests/web-api.test.js
 ```
+
+### Lo que se repite en las páginas lo escribe un script
+
+La cabecera con el menú del celular, el pie (con el aviso de descarga y el
+botón de volver arriba) y las novedades están escritos una sola vez, en
+`web/generar-paginas.mjs`. En cada página van entre marcadores:
+
+```html
+<!-- comun:cabecera -->
+…lo escribe el script: no editar a mano…
+<!-- /comun:cabecera -->
+```
+
+Después de cambiar el menú, el pie o `datos/novedades.json`:
+
+```bash
+node web/generar-paginas.mjs
+```
+
+`tests/web-paginas.test.js` falla si una página quedó distinta de lo que
+escribiría el script, si un enlace interno lleva a una sección que no existe,
+si falta un ícono o una imagen, o si un enlace a la wiki no es un artículo.
 
 Sin frameworks ni paso de compilación: HTML, CSS y un `app.js`. Lo que cambia
 solo (jugadores en línea, cantidad de mods, normas) se pide a las funciones; si
@@ -135,15 +169,20 @@ la portada está abierta. Sobra para un servidor como este.
 
 | Qué | Dónde |
 |---|---|
-| Novedades | `web/public/datos/novedades.json`: `etiqueta`, `color` (sólo tiñe el texto de la etiqueta), `imagen`, `titulo`, `texto` y, opcional, `enlace` y `textoEnlace` |
+| Novedades | `web/public/datos/novedades.json`: `id` (minúsculas y guiones, es el ancla), `fecha` (`AAAA-MM-DD`), `etiqueta`, `color` (sólo tiñe el texto de la etiqueta), `imagen`, `titulo`, `texto` y, opcionales, `detalle` (lista), `enlace` y `textoEnlace`. Después, `node web/generar-paginas.mjs`. **El launcher lee el mismo archivo** para la pantalla Jugar (las tres más nuevas): lo que se publique ahí lo ve todo el mundo al abrirlo |
+| Preguntas frecuentes | Los `<details class="pregunta">` de `index.html`. El JSON-LD (FAQPage) lo escribe `generar-paginas.mjs` con el mismo texto: no se edita a mano |
+| Sistemas y «Tu historia» | `index.html`, secciones `#sistemas` e `#historia`. El detalle de cada sistema está en la wiki, así que cada panel enlaza a su artículo |
+| Sanciones | `normas.html`, sección `#sanciones`: la escalera la decide VictoriaAuth (`sanciones.escalera` de su config). Si cambia allá, cambia acá |
+| Privacidad | `privacidad.html` repite `PRIVACIDAD.md` (lo muestra el instalador) más lo de la web: si cambia uno, cambia el otro |
 | Capturas de la galería y de la portada | `node scripts/importar-capturas.mjs …` (ver `src/renderer/src/assets/capturas/LEEME.md`). El orden manda: las 4 primeras rotan en la portada, la 5.ª abre el «video», la 1.ª es la imagen al compartir. Los pies de foto también se pueden corregir a mano en `datos/capturas.json` |
 | Imágenes de las tarjetas de Novedades | `node scripts/tarjetas-novedades.mjs servidor.png comunidad.png modpack.png` |
 | Capturas del launcher en los pasos | `web/public/img/launcher/` (sacadas de la vista previa del renderer, sin la barra de título) |
 | Normas | en el manifiesto, como siempre: la web las toma sola |
 | Mods, Minecraft, Forge | salen del manifiesto solos. El HTML trae valores de respaldo (117, 1.20.1, 47.4.0) para cuando la función falla: actualízalos si cambian mucho |
 | IP o puerto del servidor | `web/functions/api/estado.js` **y** `src/main/config.ts` del launcher |
-| Enlace de descarga y de Discord | repetidos en las cuatro páginas: busca `releases/download/instalador` y `discord.gg/` |
-| Cabecera, menú del celular y pie | repetidos en las cuatro páginas (index, guia, normas, 404): un cambio va en las cuatro |
+| Enlace de descarga y de Discord | `DESCARGA` y `DISCORD` en `web/generar-paginas.mjs`, y además en los botones de cada página: busca `releases/download/instalador` y `discord.gg/`. El test avisa si alguno quedó distinto. La invitación del contador del Discord está en `web/lib/discord.js` |
+| Cabecera, menú del celular y pie | `MENU`, `MENU_MOVIL` y `PIE` en `web/generar-paginas.mjs`, y correr el script |
+| Una página nueva | Cinco lugares: el HTML con sus marcadores, `PAGINAS` en `generar-paginas.mjs`, el sitemap en `generar-wiki.mjs`, `paginaWeb` en `functions/_middleware.js` (si no, la copia de pages.dev no redirige) y la lista de `tests/web-seo.test.js` |
 | Colores | `web/public/estilos.css` → `:root`. Son los del launcher (`theme/tokens.css`): si cambia uno, cambia el otro |
 
 ## Textos: Victoria es un país
@@ -190,6 +229,14 @@ Reglas para lo que se agregue:
   portada quieta 6 s (`TaskDuration`).
 
 ## Trampas
+
+- **Un número que no llega no se inventa.** Jugadores, plazas, mods, la versión
+  del launcher y del modpack y la gente del Discord salen de `/api/...`. Si
+  alguna falla, queda el guion o el valor escrito en el HTML, y la línea del
+  Discord directamente no aparece. Cualquier cifra nueva sigue la misma regla.
+- **Las pestañas de Sistemas sin JavaScript.** Sin JS no hay pestañas: se ven los
+  seis paneles seguidos, cada uno con su etiqueta. Por eso las pestañas y la
+  etiqueta se muestran o esconden con `.js` en el CSS, no con `hidden` en el HTML.
 
 - **El ping colgaba la página.** Con la máquina del servidor apagada o la red
   cortada, abrir la conexión no falla: se queda esperando (más de 40 s en la

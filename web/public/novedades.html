@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Novedades del servidor y del launcher | Victoria Kingdom</title>
+    <meta
+      name="description"
+      content="Todas las actualizaciones de Victoria Kingdom, servidor de Minecraft roleplay en español: cambios del servidor, del launcher y de la web, con fecha y detalle."
+    />
+    <meta name="theme-color" content="#d7263d" />
+    <link rel="icon" type="image/png" href="img/icono.png" />
+    <link rel="apple-touch-icon" href="img/icono-180.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Victoria Kingdom" />
+    <meta property="og:title" content="Novedades del servidor y del launcher | Victoria Kingdom" />
+    <meta property="og:description" content="Todas las actualizaciones de Victoria Kingdom, con fecha y detalle: el servidor, el launcher y la web." />
+    <meta property="og:image" content="https://victoriakingdom.com/img/capturas/captura-06.jpg" />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="estilos.css" />
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
+    <script src="app.js" defer></script>
+    <link rel="canonical" href="https://victoriakingdom.com/novedades" />
+    <meta property="og:url" content="https://victoriakingdom.com/novedades" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://victoriakingdom.com/#organizacion","name":"Victoria Kingdom","url":"https://victoriakingdom.com/","logo":"https://victoriakingdom.com/img/icono.png","sameAs":["https://discord.gg/HFvsGaxc7G"]},{"@type":"WebSite","@id":"https://victoriakingdom.com/#sitio","url":"https://victoriakingdom.com/","name":"Victoria Kingdom","inLanguage":"es","publisher":{"@id":"https://victoriakingdom.com/#organizacion"}},{"@type":"WebPage","@id":"https://victoriakingdom.com/novedades#pagina","url":"https://victoriakingdom.com/novedades","name":"Novedades del servidor y del launcher | Victoria Kingdom","description":"Todas las actualizaciones de Victoria Kingdom, servidor de Minecraft roleplay en español: cambios del servidor, del launcher y de la web, con fecha y detalle.","inLanguage":"es","isPartOf":{"@id":"https://victoriakingdom.com/#sitio"},"publisher":{"@id":"https://victoriakingdom.com/#organizacion"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Victoria Kingdom","item":"https://victoriakingdom.com/"},{"@type":"ListItem","position":2,"name":"Novedades del servidor y del launcher | Victoria Kingdom","item":"https://victoriakingdom.com/novedades"}]}]}</script>
+  </head>
+
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <!-- comun:cabecera -->
+    <header class="cabecera">
+      <div class="contenedor cabecera__interior">
+        <a class="marca" href="./" aria-label="Victoria Kingdom, inicio">
+          <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+        </a>
+        <nav class="nav" aria-label="Principal">
+          <a href="./#sistemas">Sistemas</a>
+          <a href="./#empezar">Cómo empezar</a>
+          <a href="./#pais">El país</a>
+          <a href="novedades" aria-current="page">Novedades</a>
+          <a href="guia">Guía</a>
+          <a href="https://wiki.victoriakingdom.com">Wiki</a>
+          <a href="normas">Normas</a>
+        </nav>
+        <div class="cabecera__acciones">
+          <div class="en-linea" data-servidor data-estado="cargando" title="Jugadores conectados ahora">
+            <span class="punto"></span>
+            <span class="en-linea__numero" data-jugadores>—</span>
+            <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
+          </div>
+          <a class="boton boton--principal" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga aria-label="Descargar el launcher">
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>
+            <span>Descargar</span>
+          </a>
+          <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir el menú">
+            <svg class="icono" aria-hidden="true"><use href="iconos.svg#menu" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="menu-movil" id="menu-movil" inert>
+      <a class="menu-movil__enlace" style="--i: 0" href="./#sistemas">Sistemas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="./#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="novedades" aria-current="page">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="./#preguntas">Preguntas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 5" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 6" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 7" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <div class="menu-movil__acciones">
+        <a class="boton boton--principal boton--grande" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
+        </a>
+        <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+          <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Unirse al Discord
+        </a>
+      </div>
+    </div>
+    <!-- /comun:cabecera -->
+
+    <main id="contenido">
+      <section class="cabecera-pagina" aria-labelledby="titulo-novedades">
+        <div class="cabecera-pagina__fondo" aria-hidden="true" style="background-image: url('img/capturas/captura-06.jpg')"></div>
+        <div class="contenedor">
+          <ol class="migas aparecer" aria-label="Estás en">
+            <li><a href="./">Inicio</a></li>
+            <li aria-hidden="true"><svg class="icono"><use href="iconos.svg#chevron" /></svg></li>
+            <li aria-current="page">Novedades</li>
+          </ol>
+          <span class="eyebrow aparecer" style="--retraso: 100ms">Novedades</span>
+          <h1 id="titulo-novedades" style="margin-top: 16px">
+            <span class="linea"><span style="--i: 0">Lo último</span></span>
+            <span class="linea"><span class="rojo" style="--i: 1">de Victoria</span></span>
+          </h1>
+          <p class="bajada aparecer" style="--retraso: 500ms">
+            Lo que cambió en el servidor, en el launcher y en la web, de lo más nuevo a lo más viejo. Las mismas novedades que ves en el
+            launcher.
+          </p>
+        </div>
+      </section>
+
+      <div class="contenedor wiki">
+        <!-- El índice y las entradas los escribe web/generar-paginas.mjs desde
+             datos/novedades.json: se edita el JSON y se corre el script. -->
+        <nav class="wiki__lateral" aria-label="Novedades por mes">
+          <!-- comun:novedades-indice -->
+    <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Octubre de 2026</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#launcher-se-repara-solo" data-etiqueta="Launcher"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>El launcher se repara solo</span></a></li>
+              <li><a class="wiki__enlace" href="#instalar-y-actualizar" data-etiqueta="Launcher"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>INSTALAR y ACTUALIZAR, como en Steam</span></a></li>
+              <li><a class="wiki__enlace" href="#web-y-wiki" data-etiqueta="Web"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Nueva web y wiki de Victoria</span></a></li>
+              <li><a class="wiki__enlace" href="#instalador-ultima-version" data-etiqueta="Launcher"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>El instalador trae siempre la última versión</span></a></li>
+              <li><a class="wiki__enlace" href="#launcher-rojo-victoria" data-etiqueta="Launcher"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Un launcher con los colores de Victoria</span></a></li>
+            </ul>
+          </div>
+          <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Septiembre de 2026</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#cuentas-de-victoria" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Se terminó el /login</span></a></li>
+              <li><a class="wiki__enlace" href="#autos-como-antes" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Los autos vuelven a andar como antes</span></a></li>
+              <li><a class="wiki__enlace" href="#garaje-y-propiedades" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Tu garaje y tus propiedades, en un panel</span></a></li>
+            </ul>
+          </div>
+          <div class="wiki__grupo">
+            <p class="wiki__grupo-titulo">Agosto de 2026</p>
+            <ul>
+              <li><a class="wiki__enlace" href="#tres-poderes" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>El Estado tiene tres poderes</span></a></li>
+              <li><a class="wiki__enlace" href="#cajero-y-platino" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>Un cajero de verdad y la tarjeta Platino</span></a></li>
+              <li><a class="wiki__enlace" href="#mercado-oferta-demanda" data-etiqueta="Servidor"><svg class="icono" aria-hidden="true"><use href="iconos.svg#newspaper" /></svg><span>El mercado tiene oferta y demanda</span></a></li>
+            </ul>
+          </div>
+    <!-- /comun:novedades-indice -->
+        </nav>
+
+        <article class="articulo">
+          <div class="filtros" role="group" aria-label="Mostrar novedades de" data-filtros hidden></div>
+          <!-- comun:novedades-lista -->
+    <article class="entrada revelar" id="launcher-se-repara-solo" data-etiqueta="Launcher" style="--retraso: 0ms; --color: #47bfff">
+              <div class="entrada__imagen"><img src="img/launcher/jugar.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Launcher</span><time datetime="2026-10-18">18 de octubre de 2026</time></p>
+                <h2>El launcher se repara solo</h2>
+                <p class="entrada__texto">Si una descarga cortada dañó Minecraft o Forge, el launcher lo detecta, lo vuelve a bajar y reintenta sin que tengas que hacer nada.</p>
+                <ul class="entrada__detalle">
+                  <li>Antes de jugar revisa el juego y sus librerías contra las huellas oficiales de Mojang y de Forge, y reemplaza lo que esté dañado.</li>
+                  <li>Si Forge falla al armarse, lo borra, lo baja de cero y vuelve a abrir el juego una vez. Si falla de nuevo, te explica qué revisar.</li>
+                  <li>Nuevo en Ajustes → Registros: el último arranque, el crash report y los registros del juego, para leerlos, copiarlos o mandarlos al soporte.</li>
+                  <li>El aviso de «error de OpenGL» ya no sale con cualquier cierre: sólo cuando de verdad falla la placa de video.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="instalar-y-actualizar" data-etiqueta="Launcher" style="--retraso: 0ms; --color: #47bfff">
+              <div class="entrada__imagen"><img src="img/novedades/modpack.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Launcher</span><time datetime="2026-10-17">17 de octubre de 2026</time></p>
+                <h2>INSTALAR y ACTUALIZAR, como en Steam</h2>
+                <p class="entrada__texto">Cuando falta el modpack o hay una actualización, el botón principal lo dice en azul y hace sólo eso. Al terminar vuelve a ser JUGAR, en verde.</p>
+                <ul class="entrada__detalle">
+                  <li>La primera vez el botón dice INSTALAR y baja el modpack completo. Cuando hay cambios dice ACTUALIZAR y baja sólo lo nuevo.</li>
+                  <li>El launcher deja a Victoria Kingdom primera en tu lista de servidores, con la dirección correcta. Quien la escribía a mano con otro puerto caía en un servidor ajeno y veía «Cliente no compatible».</li>
+                  <li>Entrar desde el menú del juego ya no suma una entrada repetida cada vez. El resto de tu lista no se toca.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="web-y-wiki" data-etiqueta="Web" style="--retraso: 0ms; --color: #ff6b7a">
+              <div class="entrada__imagen"><img src="img/capturas/captura-05-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Web</span><time datetime="2026-10-11">11 de octubre de 2026</time></p>
+                <h2>Nueva web y wiki de Victoria</h2>
+                <p class="entrada__texto">Victoria estrena dirección propia, victoriakingdom.com, y una wiki con guías de cada sistema: banco, terrenos, vehículos, teléfono, trámites y más.</p>
+                <ul class="entrada__detalle">
+                  <li>La wiki tiene buscador: escribe «banco», «terreno» o «teléfono» y te lleva a la guía.</li>
+                  <li>La dirección anterior, victoriakingdom.pages.dev, lleva sola a la nueva.</li>
+                </ul>
+                <a class="enlace-flecha" href="https://wiki.victoriakingdom.com/wiki" target="_blank" rel="noopener">Abrir la wiki <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+              </div>
+            </article>
+            <article class="entrada revelar" id="instalador-ultima-version" data-etiqueta="Launcher" style="--retraso: 0ms; --color: #47bfff">
+              <div class="entrada__imagen"><img src="img/launcher/cuenta.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Launcher</span><time datetime="2026-10-11">11 de octubre de 2026</time></p>
+                <h2>El instalador trae siempre la última versión</h2>
+                <p class="entrada__texto">El instalador de la web busca la versión más reciente del launcher, la descarga y comprueba que esté intacta antes de instalarla.</p>
+                <ul class="entrada__detalle">
+                  <li>Ya no se instala una versión vieja que después tenía que actualizarse: entras directo a la última.</li>
+                  <li>Puedes guardar el instalador. La próxima vez que lo abras también va a buscar la versión más nueva.</li>
+                  <li>Si la red falla justo al pedir los datos de las cuentas, el launcher usa un respaldo y te deja entrar igual.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="launcher-rojo-victoria" data-etiqueta="Launcher" style="--retraso: 0ms; --color: #47bfff">
+              <div class="entrada__imagen"><img src="img/capturas/captura-02-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Launcher</span><time datetime="2026-10-07">7 de octubre de 2026</time></p>
+                <h2>Un launcher con los colores de Victoria</h2>
+                <p class="entrada__texto">El rojo de la bandera, capturas del servidor en la pantalla de cuenta y el estado del servidor en vivo en Jugar.</p>
+                <ul class="entrada__detalle">
+                  <li>En Jugar ves si el servidor está en línea y cuánta gente hay, consultado de verdad.</li>
+                  <li>VALIDAR ARCHIVOS, al lado de JUGAR: deja los mods y la configuración del modpack como vienen, sin tocar tus mundos ni tus teclas.</li>
+                  <li>Las actualizaciones del launcher se instalan en silencio, sin volver a mostrar el asistente del instalador.</li>
+                  <li>Si el antivirus bloquea una actualización, el launcher sigue funcionando y te explica qué hacer.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="cuentas-de-victoria" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-01-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-09-15">15 de septiembre de 2026</time></p>
+                <h2>Se terminó el /login</h2>
+                <p class="entrada__texto">Tu cuenta ahora vive en el launcher: entras una vez y ya no escribes la contraseña dentro del juego.</p>
+                <ul class="entrada__detalle">
+                  <li>Con Minecraft original entras con Microsoft. Sin él, creas tu cuenta de Victoria con nombre, contraseña y correo, y la confirmas con un código de 6 números.</li>
+                  <li>La sesión dura 30 días y queda guardada cifrada en tu PC.</li>
+                  <li>La primera vez, el launcher te recomienda memoria, shaders y mods opcionales según tu PC, y te deja probar el micrófono.</li>
+                  <li>Las advertencias van en escalera y, si pasas un mes sin recibir ninguna, se te borra una.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="autos-como-antes" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-06-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-09-12">12 de septiembre de 2026</time></p>
+                <h2>Los autos vuelven a andar como antes</h2>
+                <p class="entrada__texto">Los vehículos iban más lentos por un ajuste mal unificado. Ahora la velocidad la manda el servidor y no puede volver a desincronizarse.</p>
+                <ul class="entrada__detalle">
+                  <li>El Conquest, el Keeper y sus patrulleros cambian de marcha solos, como el resto.</li>
+                  <li>Sacar un auto del garaje lo devuelve con ruedas, asientos y motor, como lo guardaste.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="garaje-y-propiedades" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-04-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-09-11">11 de septiembre de 2026</time></p>
+                <h2>Tu garaje y tus propiedades, en un panel</h2>
+                <p class="entrada__texto">Los autos y los terrenos se administran desde un panel, estés donde estés. Y los NPC de servicio, por fin, conversan.</p>
+                <ul class="entrada__detalle">
+                  <li>Garaje: traba o destraba a distancia, marca tu auto en el mapa, elige quién puede usarlo, ponle nombre o véndelo.</li>
+                  <li>Usados en la concesionaria: compras lo que publican otros jugadores, y la plata le llega al vendedor aunque no esté conectado.</li>
+                  <li>Mis propiedades: llaves por persona, y para cada llave decides qué puede hacer esa persona.</li>
+                  <li>Llegan la limusina de Victoria Motors y los modelos de Belroft Motors.</li>
+                  <li>Primeros pasos, la primera misión para los recién llegados: el DNI, la tarjeta del banco y una vuelta por la concesionaria.</li>
+                  <li>La billetera se abre: tu DNI, tu saldo y seis lugares para billetes. Y se puede robar.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="tres-poderes" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-03-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-08-28">28 de agosto de 2026</time></p>
+                <h2>El Estado tiene tres poderes</h2>
+                <p class="entrada__texto">El Gobierno publica la ley en el Boletín del Estado y reparte el presupuesto, y la Fiscalía y el Juzgado deciden las causas.</p>
+                <ul class="entrada__detalle">
+                  <li>Los edictos del Gobierno se ven en la portada de la app Victoria, firmados.</li>
+                  <li>El que acusa no juzga: el servidor comprueba que el juez no sea el fiscal de la causa.</li>
+                  <li>Seis apps del teléfono que no contestaban volvieron a funcionar, y el teléfono ya no se borra solo.</li>
+                  <li>Puedes armar tu propia tienda con cinco tablones, un cuarzo y un cofre, y dejarla vendiendo aunque no estés.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="cajero-y-platino" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-08-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-08-23">23 de agosto de 2026</time></p>
+                <h2>Un cajero de verdad y la tarjeta Platino</h2>
+                <p class="entrada__texto">Las pantallas del cajero se rehicieron de cero, y llegó la tarjeta Platino: nominal, sólo la puede usar su titular.</p>
+                <ul class="entrada__detalle">
+                  <li>La tecla G abre el menú de interacción, en forma de rueda.</li>
+                  <li>Sin temperatura, sed ni vendas: lo de supervivencia que no aportaba al rol se fue.</li>
+                  <li>El fuego ya no se propaga, los mobs no rompen bloques y dormir no saltea la noche.</li>
+                  <li>Los autos y las armas ya no rompen la ciudad.</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entrada revelar" id="mercado-oferta-demanda" data-etiqueta="Servidor" style="--retraso: 0ms; --color: #e63946">
+              <div class="entrada__imagen"><img src="img/capturas/captura-07-chica.jpg" alt="" loading="lazy" decoding="async" /></div>
+              <div class="entrada__cuerpo">
+                <p class="entrada__meta"><span class="entrada__etiqueta">Servidor</span><time datetime="2026-08-02">2 de agosto de 2026</time></p>
+                <h2>El mercado tiene oferta y demanda</h2>
+                <p class="entrada__texto">Cuanto más se vende algo, menos vale. Lo raro paga, y lo que se satura se recupera solo con el tiempo.</p>
+                <ul class="entrada__detalle">
+                  <li>Ocho comerciantes, cada uno con su rubro: agricultura, verdulería, minería, cantería, silvicultura, pesca, caza y mística.</li>
+                  <li>La plata de cada venta va directo al banco.</li>
+                  <li>Las insignias y los rangos se ven en la lista de jugadores.</li>
+                </ul>
+              </div>
+            </article>
+    <!-- /comun:novedades-lista -->
+        </article>
+
+        <aside class="wiki__ficha" data-servidor data-estado="cargando" aria-label="Versiones actuales">
+          <div class="ficha__portada" style="background-image: url('img/capturas/captura-06-chica.jpg')">
+            <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
+          </div>
+          <ul class="ficha__filas">
+            <li><span>Servidor</span><strong><span class="punto"></span><span data-estado-texto>Consultando…</span></strong></li>
+            <li><span>Launcher</span><strong data-launcher-version>—</strong></li>
+            <li><span>Modpack</span><strong data-modpack-version>—</strong></li>
+            <li><span>Minecraft</span><strong data-minecraft>1.20.1</strong></li>
+          </ul>
+          <div class="ficha__acciones">
+            <a
+              class="boton boton--principal boton--ancho"
+              href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
+              data-descarga
+            >
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar
+            </a>
+            <a class="boton boton--discord boton--ancho" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Avisos en Discord
+            </a>
+          </div>
+          <p class="ficha__ayuda">
+            No hace falta bajar nada de acá: el launcher se actualiza solo, y cuando hay modpack nuevo el botón dice ACTUALIZAR.
+          </p>
+        </aside>
+      </div>
+    </main>
+
+    <!-- comun:pie -->
+    <footer class="pie">
+      <div class="contenedor">
+        <div class="pie__grilla">
+          <div class="pie__marca">
+            <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" loading="lazy" />
+            <p>Servidor de rol de Minecraft Java 1.20.1, con launcher propio que instala todo solo.</p>
+            <div class="pie__redes">
+              <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener" aria-label="Discord de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>
+              </a>
+              <a href="https://wiki.victoriakingdom.com" aria-label="Wiki de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>
+              </a>
+              <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener" aria-label="Código del launcher en GitHub">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#github" /></svg>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4>Jugar</h4>
+            <ul>
+              <li><a href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>Descargar el launcher</a></li>
+              <li><a href="./#empezar">Cómo empezar</a></li>
+              <li><a href="guia">Guía de instalación</a></li>
+              <li><a href="guia#requisitos">Requisitos</a></li>
+              <li><a href="./#preguntas">Preguntas frecuentes</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Comunidad</h4>
+            <ul>
+              <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
+              <li><a href="https://wiki.victoriakingdom.com" target="_blank" rel="noopener">Wiki</a></li>
+              <li><a href="normas">Normas</a></li>
+              <li><a href="novedades">Novedades</a></li>
+              <li><a href="./#pais">Capturas</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Ayuda</h4>
+            <ul>
+              <li><a href="guia#smartscreen">Windows protegió su PC</a></li>
+              <li><a href="guia#antivirus">El antivirus lo bloquea</a></li>
+              <li><a href="guia#contrasena">Olvidé mi contraseña</a></li>
+              <li><a href="guia#registros">El juego se cierra</a></li>
+              <li><a href="guia#conectar">No puedo entrar</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="pie__base">
+          <span>© <span data-anio>2026</span> Victoria Kingdom</span>
+          <span class="pie__legal">
+            <a href="privacidad">Privacidad</a>
+            <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener">Código abierto</a>
+          </span>
+          <span>No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado con ellos.</span>
+        </div>
+      </div>
+    </footer>
+
+    <div class="tostada" role="status" aria-live="polite" data-tostada>
+      <span class="tostada__icono"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg></span>
+      <div>
+        <strong>Bajando el instalador…</strong>
+        <p>
+          Si aparece «Windows protegió su PC», toca <b>Más información</b> y luego <b>Ejecutar de todas formas</b>.
+          <a href="guia#smartscreen">Ver cómo</a>
+        </p>
+      </div>
+      <button class="tostada__cerrar" type="button" aria-label="Cerrar el aviso" data-tostada-cerrar>
+        <svg class="icono" aria-hidden="true"><use href="iconos.svg#close" /></svg>
+      </button>
+    </div>
+
+    <button class="arriba" type="button" aria-label="Volver arriba" data-arriba>
+      <svg class="arriba__anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /></svg>
+      <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-up" /></svg>
+    </button>
+    <!-- /comun:pie -->
+  </body>
+</html>
