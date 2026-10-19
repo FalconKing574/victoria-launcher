@@ -14,6 +14,7 @@ import { join } from 'path'
 import { pipeline } from 'stream/promises'
 import AdmZip from 'adm-zip'
 import { MANIFEST_URL } from '../config'
+import { loadManifest } from '../lib/manifest-runtime'
 import { launcherRoot, instanceDir } from '../lib/paths'
 import { downloadVerified } from '../lib/download'
 import { writeJsonAtomic } from '../lib/write-atomic'
@@ -202,13 +203,12 @@ function sendProgress(done: number, total: number): void {
   send('sync:progress', { percent, done, total })
 }
 
+/**
+ * Descarga acotada y compartida. El cliente prueba la red del sistema y un
+ * segundo transporte; no instala versiones viejas de un caché persistente.
+ */
 export async function fetchManifest(): Promise<Manifest> {
-  if (!MANIFEST_URL) throw new Error('No hay ninguna URL de modpack configurada.')
-  const response = await fetch(MANIFEST_URL, { cache: 'no-store' } as RequestInit)
-  if (!response.ok) {
-    throw new Error(`No se pudo descargar el manifiesto (HTTP ${response.status}).`)
-  }
-  return (await response.json()) as Manifest
+  return loadManifest()
 }
 
 async function downloadMod(mod: ManifestMod): Promise<void> {

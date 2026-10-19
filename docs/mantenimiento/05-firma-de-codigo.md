@@ -18,7 +18,8 @@ programa.
 ## 1. Pedirla (lo hace el dueño del repo)
 
 1. **Verificación en dos pasos en GitHub** (obligatoria):
-   https://github.com/settings/security
+   https://github.com/settings/security. Activada (lo confirmó el dueño el
+   09-10-2026). La cuenta que se cree en SignPath también la necesita.
 2. Formulario: https://signpath.org/apply
    Datos para completar:
 
@@ -31,7 +32,8 @@ programa.
    | Code signing policy | https://github.com/FalconKing574/victoria-launcher/blob/main/FIRMA-DE-CODIGO.md |
    | Privacy policy | https://github.com/FalconKing574/victoria-launcher/blob/main/PRIVACIDAD.md |
    | Build system | GitHub Actions (`.github/workflows/publicar.yml`) |
-   | What will be signed | `Victoria Kingdom.exe`, its NSIS uninstaller and the NSIS installer `Victoria Kingdom Setup <version>.exe` |
+   | What will be signed | `Victoria Kingdom.exe`, its NSIS uninstaller and the NSIS installer `Victoria-Kingdom-actualizacion-<version>.exe` |
+   | Project website (si lo pide) | https://victoriakingdom.pages.dev |
 
    Descripción sugerida (en inglés, que es como leen):
 
@@ -43,9 +45,17 @@ programa.
    > electron-builder on GitHub Actions. Installers are per-user and never
    > request administrator rights. No telemetry.
 
-3. **Importante:** SignPath pide que el proyecto ya esté publicado y que la rama
-   `main` tenga los archivos de arriba. Antes de mandar el formulario hay que
-   mergear `feat/cuentas-victoria` a `main` y publicar la 1.6.0.
+3. Lo que SignPath pide antes de mirar el formulario ya está: `main` tiene
+   `LICENSE`, `FIRMA-DE-CODIGO.md` y `PRIVACIDAD.md`, el repo es público, y hay
+   versiones publicadas armadas en GitHub Actions (la 1.8.1, 07-10-2026, fue la
+   primera que salió entera por `publicar.yml`).
+4. Si el formulario pide algo que no está en la tabla (cantidad de usuarios,
+   motivo, etc.), contestar con datos reales; no inventar números.
+
+**Ojo con los nombres.** `.signpath/instalador.xml` tiene que buscar el mismo
+nombre que `nsis.artifactName` de `electron-builder.yml`. Hasta el 09-10-2026
+buscaba `Victoria Kingdom Setup *.exe`, el nombre de antes del instalador fijo:
+la primera firma se habría cortado sin firmar nada.
 
 ## 2. Cuando aprueben
 
@@ -82,39 +92,42 @@ se puede pasar a `true` con `publisherName: SignPath Foundation`, **pero sólo
 cuando los jugadores ya tengan una versión firmada**: un launcher sin firma que
 exige firma al actualizarse queda trabado.
 
-## 4. Mientras no haya firma: el instalador fijo (lo que está en uso)
+## 4. Mientras no haya firma
 
-El 27-09-2026 el usuario eligió no depender de SignPath por ahora. Lo que se
-hizo en su lugar:
+**Desde el 10-10-2026 los jugadores bajan siempre el instalador de la última
+versión** (`scripts/instalador-jugadores.mjs`, ver `02-actualizar-launcher.md`
+§6). Sin firma, el aviso de SmartScreen puede salir con cada versión nueva:
+es lo que pasa hasta que esté la firma de SignPath.
+
+Antes, del 27-09 al 10-10-2026, se probó otra cosa: un **instalador fijo**.
 
 - **Un único instalador para todos**: `Victoria-Kingdom-Setup.exe` (launcher
   1.6.1, SHA-256 `f3853e7b7be46de9b542c7e32111ffa20251bc4b628b1ede924ea672683ea3e5`)
-  en la release `instalador` (prerelease) y en `Desktop/Victoria Kingdom Launcher/`.
-  SmartScreen ata la reputación al hash: si el archivo no cambia, la reputación
-  que junte no se pierde.
-- **Cada versión lleva una copia** del fijo (`scripts/instalador-fijo.mjs`, que
-  corre solo al final de `npm run release` y del workflow), así el botón
-  «Descargar» del Discord, que apunta a `/releases/latest`, entrega el fijo.
-- **El `.exe` de cada versión** se llama `Victoria-Kingdom-actualizacion-<versión>.exe`:
-  lo baja el actualizador, no los jugadores. El actualizador no pasa por
-  SmartScreen (no le pone la marca de «descargado de internet»).
+  en la release `instalador`, copiado a cada versión. La idea: SmartScreen ata
+  la reputación al archivo, y si el archivo no cambia, lo que junte no se pierde.
 - **Enviado a Microsoft** como «Software developer» → producto «Microsoft
   Defender Smartscreen» → «Incorrectly detected as malware/malicious». El envío
   del 27-09 no llegó a salir (el historial estaba vacío el 01-10); el que vale es
   el del 01-10-2026, ID `fe36e6ff-1531-48d6-83ef-a48a4de46ea9`:
   https://www.microsoft.com/en-us/wdsi/submission/fe36e6ff-1531-48d6-83ef-a48a4de46ea9
   (cuenta Microsoft del usuario; el historial guarda 30 días).
-- **En el navegador integrado de Claude**: ya logueado, entrar directo a
-  `filesubmission?persona=SoftwareDeveloper` (el botón «Continue» de la
-  portada deja una página en blanco). No deja adjuntar archivos de la PC ni
-  pasar el captcha final: eso lo hace el usuario.
-
-**Reemplazar el fijo** (sólo si hace falta, ver `02-actualizar-launcher.md` §6):
-subir el nuevo a la release `instalador` con `gh release upload instalador
-<archivo> --clobber` (con el nombre `Victoria-Kingdom-Setup.exe`), copiarlo a la
-carpeta de reparto, actualizar el SHA-256 de este documento y de las notas de la
-release, y **volver a mandarlo a Microsoft**: la reputación del viejo no pasa
-al nuevo.
+- **Respuesta de Microsoft (llegó el 09-10-2026):** no habla de malware. Dice
+  que el aviso es falta de reputación, que se junta sola con el uso (descargas,
+  historial, resultados de antivirus, reputación de la URL) y que nadie la
+  aprueba a mano. Volver a mandar el mismo archivo no cambia nada. Dos frases
+  que deciden lo de este documento:
+  - «unsigned files will have to establish reputation each time a new version
+    is released»: sin firma, cada archivo nuevo empieza de cero.
+  - «once your signing certificate has gained reputation in our system, all
+    applications or releases signed with your certificate should have
+    warn-free experience»: por eso lo que lo cierra es la firma.
+- **Por qué se dejó:** el 1.6.1 quedó viejo. Quien instalaba de cero arrancaba
+  en una versión de semanas atrás y el 10-10 el dueño lo vio quedarse en el
+  logo al abrir. Y la reputación del fijo no alcanzaba para quitar el aviso.
+- **En el navegador integrado de Claude** (para un envío nuevo a Microsoft): ya
+  logueado, entrar directo a `filesubmission?persona=SoftwareDeveloper` (el
+  botón «Continue» de la portada deja una página en blanco). No deja adjuntar
+  archivos de la PC ni pasar el captcha final: eso lo hace el usuario.
 
 ## 5. Reputación: lo que hace que deje de avisar
 

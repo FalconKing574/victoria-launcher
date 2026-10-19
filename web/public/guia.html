@@ -3,19 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Guía de instalación — Victoria Kingdom</title>
+    <title>Descargar e instalar el launcher | Victoria Kingdom</title>
     <meta
       name="description"
-      content="Cómo instalar el launcher de Victoria Kingdom, crear tu cuenta y qué hacer si Windows SmartScreen o el antivirus bloquean el instalador."
+      content="Descarga e instala el launcher oficial de Victoria Kingdom para Minecraft Java. Aprende a crear tu cuenta y a solucionar problemas de instalación en Windows."
     />
     <meta name="theme-color" content="#d7263d" />
     <link rel="icon" type="image/png" href="img/icono.png" />
     <link rel="apple-touch-icon" href="img/icono-180.png" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Victoria Kingdom" />
-    <meta property="og:title" content="Guía de instalación — Victoria Kingdom" />
-    <meta property="og:description" content="Instala el launcher, crea tu cuenta y soluciona los avisos de Windows y del antivirus." />
-    <meta property="og:image" content="https://victoriakingdom.pages.dev/img/capturas/captura-05.jpg" />
+    <meta property="og:title" content="Descargar e instalar el launcher | Victoria Kingdom" />
+    <meta property="og:description" content="Descarga e instala el launcher oficial de Victoria Kingdom para Minecraft Java. Aprende a crear tu cuenta y a solucionar problemas de instalación en Windows." />
+    <meta property="og:image" content="https://victoriakingdom.com/img/capturas/captura-05.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="estilos.css" />
@@ -23,21 +23,27 @@
       document.documentElement.classList.add('js')
     </script>
     <script src="app.js" defer></script>
+    <link rel="canonical" href="https://victoriakingdom.com/guia" />
+    <meta property="og:url" content="https://victoriakingdom.com/guia" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://victoriakingdom.com/#organizacion","name":"Victoria Kingdom","url":"https://victoriakingdom.com/","logo":"https://victoriakingdom.com/img/icono.png","sameAs":["https://discord.gg/HFvsGaxc7G"]},{"@type":"WebSite","@id":"https://victoriakingdom.com/#sitio","url":"https://victoriakingdom.com/","name":"Victoria Kingdom","inLanguage":"es","publisher":{"@id":"https://victoriakingdom.com/#organizacion"}},{"@type":"WebPage","@id":"https://victoriakingdom.com/guia#pagina","url":"https://victoriakingdom.com/guia","name":"Descargar e instalar el launcher | Victoria Kingdom","description":"Descarga e instala el launcher oficial de Victoria Kingdom para Minecraft Java. Aprende a crear tu cuenta y a solucionar problemas de instalación en Windows.","inLanguage":"es","isPartOf":{"@id":"https://victoriakingdom.com/#sitio"},"publisher":{"@id":"https://victoriakingdom.com/#organizacion"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Victoria Kingdom","item":"https://victoriakingdom.com/"},{"@type":"ListItem","position":2,"name":"Descargar e instalar el launcher | Victoria Kingdom","item":"https://victoriakingdom.com/guia"}]}]}</script>
   </head>
 
   <body>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
 
+    <!-- comun:cabecera -->
     <header class="cabecera">
       <div class="contenedor cabecera__interior">
         <a class="marca" href="./" aria-label="Victoria Kingdom, inicio">
           <img src="img/logo.png" alt="Victoria Kingdom" width="1013" height="255" />
         </a>
         <nav class="nav" aria-label="Principal">
+          <a href="./#sistemas">Sistemas</a>
           <a href="./#empezar">Cómo empezar</a>
           <a href="./#pais">El país</a>
-          <a href="./#novedades">Novedades</a>
+          <a href="novedades">Novedades</a>
           <a href="guia" aria-current="page">Guía</a>
+          <a href="https://wiki.victoriakingdom.com">Wiki</a>
           <a href="normas">Normas</a>
         </nav>
         <div class="cabecera__acciones">
@@ -46,12 +52,7 @@
             <span class="en-linea__numero" data-jugadores>—</span>
             <span class="en-linea__texto" data-en-linea-texto>jugadores<br />en línea</span>
           </div>
-          <a
-            class="boton boton--principal"
-            href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-            data-descarga
-            aria-label="Descargar el launcher"
-          >
+          <a class="boton boton--principal" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga aria-label="Descargar el launcher">
             <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>
             <span>Descargar</span>
           </a>
@@ -63,17 +64,16 @@
     </header>
 
     <div class="menu-movil" id="menu-movil" inert>
-      <a class="menu-movil__enlace" style="--i: 0" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 1" href="./#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 2" href="./#novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 3" href="guia">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
-      <a class="menu-movil__enlace" style="--i: 4" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 0" href="./#sistemas">Sistemas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 1" href="./#empezar">Cómo empezar <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 2" href="./#pais">El país <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 3" href="novedades">Novedades <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 4" href="./#preguntas">Preguntas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 5" href="guia" aria-current="page">Guía <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 6" href="https://wiki.victoriakingdom.com">Wiki <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
+      <a class="menu-movil__enlace" style="--i: 7" href="normas">Normas <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-right" /></svg></a>
       <div class="menu-movil__acciones">
-        <a
-          class="boton boton--principal boton--grande"
-          href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe"
-          data-descarga
-        >
+        <a class="boton boton--principal boton--grande" href="https://github.com/FalconKing574/victoria-launcher/releases/download/instalador/Victoria-Kingdom-Setup.exe" data-descarga>
           <svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg>Descargar launcher
         </a>
         <a class="boton boton--discord boton--grande" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
@@ -81,6 +81,7 @@
         </a>
       </div>
     </div>
+    <!-- /comun:cabecera -->
 
     <main id="contenido">
       <section class="cabecera-pagina" aria-labelledby="titulo-guia">
@@ -122,12 +123,17 @@
               <li><a class="wiki__enlace" href="#actualizaciones"><svg class="icono" aria-hidden="true"><use href="iconos.svg#refresh" /></svg>Actualizaciones</a></li>
               <li><a class="wiki__enlace" href="#lento"><svg class="icono" aria-hidden="true"><use href="iconos.svg#gauge" /></svg>Va lento o se cierra</a></li>
               <li><a class="wiki__enlace" href="#archivos"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wrench" /></svg>Faltan archivos</a></li>
+              <li><a class="wiki__enlace" href="#registros"><svg class="icono" aria-hidden="true"><use href="iconos.svg#file-text" /></svg>Qué mandar al soporte</a></li>
               <li><a class="wiki__enlace" href="#conectar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#wifi" /></svg>No puedo entrar</a></li>
+              <li><a class="wiki__enlace" href="#contrasena"><svg class="icono" aria-hidden="true"><use href="iconos.svg#lock" /></svg>Olvidé mi contraseña</a></li>
+              <li><a class="wiki__enlace" href="#desinstalar"><svg class="icono" aria-hidden="true"><use href="iconos.svg#trash" /></svg>Desinstalar</a></li>
             </ul>
           </div>
           <div class="wiki__grupo">
             <p class="wiki__grupo-titulo">Comunidad</p>
             <ul>
+              <li><a class="wiki__enlace" href="./#preguntas"><svg class="icono" aria-hidden="true"><use href="iconos.svg#help" /></svg>Preguntas frecuentes</a></li>
+              <li><a class="wiki__enlace" href="https://wiki.victoriakingdom.com/wiki"><svg class="icono" aria-hidden="true"><use href="iconos.svg#compass" /></svg>Wiki del juego</a></li>
               <li><a class="wiki__enlace" href="normas"><svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>Normas</a></li>
               <li>
                 <a class="wiki__enlace" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener"><svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Discord</a>
@@ -170,8 +176,9 @@
           <section id="descargar" class="revelar">
             <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#download" /></svg></span>Descargar</h2>
             <p>
-              El instalador es siempre el mismo archivo, <code>Victoria-Kingdom-Setup.exe</code>. Lo bajas una vez: después el launcher se
-              actualiza solo.
+              Descarga <code>Victoria-Kingdom-Setup.exe</code>. Al pulsar <strong>Instalar última versión</strong>, consulta la publicación
+              más reciente, descarga el launcher oficial y comprueba su integridad. Necesita Internet. Puedes guardar este instalador:
+              también buscará las versiones futuras cuando vuelvas a usarlo.
             </p>
             <p>
               <a
@@ -196,7 +203,8 @@
                 Si aparece el aviso azul «Windows protegió su PC», toca <strong>Más información</strong> y después
                 <strong>Ejecutar de todas formas</strong>. <a href="#smartscreen">Por qué sale</a>.
               </li>
-              <li>Acepta la licencia y elige dónde instalarlo. La carpeta que viene propuesta está bien.</li>
+              <li>Pulsa <strong>Instalar última versión</strong> y espera la descarga y su verificación.</li>
+              <li>En el asistente, revisa la licencia y elige dónde instalarlo. La carpeta propuesta está bien.</li>
               <li>Al terminar se abre Victoria Kingdom. Las próximas veces, ábrelo desde el acceso directo del escritorio.</li>
             </ol>
             <div class="nota nota--consejo">
@@ -232,13 +240,22 @@
           <section id="jugar" class="revelar">
             <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#play" /></svg></span>Primera partida</h2>
             <p>
-              En la pantalla Jugar toca el botón verde <strong>JUGAR</strong>. La primera vez el launcher baja Minecraft 1.20.1, Forge,
-              Java y el modpack completo; según tu conexión puede tardar unos minutos. Las siguientes veces solo baja lo que cambió.
+              La primera vez, el botón grande de la pantalla Jugar es azul y dice <strong>INSTALAR</strong>: tócalo y el launcher baja el
+              modpack completo. Cuando termina se pone verde y dice <strong>JUGAR</strong>. Al jugar por primera vez también baja Minecraft
+              1.20.1, Forge y Java, así que según tu conexión puede tardar unos minutos.
+            </p>
+            <p>
+              Cuando haya una actualización del modpack, el mismo botón dirá <strong>ACTUALIZAR</strong> y bajará solo lo que cambió. El
+              launcher también se actualiza solo al abrirlo.
             </p>
             <figure class="figura">
               <img src="img/launcher/jugar.jpg" alt="La pantalla Jugar del launcher" width="1120" height="647" loading="lazy" />
               <figcaption>Arriba ves si el servidor está en línea y cuánta gente hay.</figcaption>
             </figure>
+            <p>
+              Una vez adentro, la <a href="https://wiki.victoriakingdom.com/wiki/primeros-pasos">wiki</a> te cuenta cómo sacar el DNI, la
+              tarjeta del banco y ganar tu primera plata.
+            </p>
             <div class="nota nota--consejo">
               <svg class="icono" aria-hidden="true"><use href="iconos.svg#sparkles" /></svg>
               <p>En la pestaña <strong>Mods</strong> activas o quitas los mods opcionales, y en <strong>Shaders</strong> eliges cómo se ve el juego.</p>
@@ -340,6 +357,35 @@
               En la pantalla Jugar toca <strong>Validar archivos</strong>: vuelve a dejar los mods y la configuración del modpack como vienen.
               No toca tus mundos, tus capturas ni tus teclas.
             </p>
+            <p>
+              Si lo que falla es el arranque de Forge (por ejemplo, «Failed to run processor»), el launcher lo repara solo y vuelve a
+              intentar. Si sigue, en <strong>Ajustes → Registros</strong> está el botón <strong>Reparar Minecraft y Forge</strong>: no toca
+              tus mods, tus mundos, tus ajustes ni tu cuenta.
+            </p>
+          </section>
+
+          <section id="registros" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#file-text" /></svg></span>Qué mandar al soporte</h2>
+            <p>
+              Si el juego se cierra solo o no arranca, lo que más ayuda al equipo es el registro de ese momento. Están todos juntos en el
+              launcher, en <strong>Ajustes → Registros</strong>:
+            </p>
+            <ul class="lista-marcas">
+              <li><strong>Último arranque</strong>: todo lo que escribió el juego al iniciar. Es el primero que hay que mirar.</li>
+              <li><strong>Último crash report</strong>: lo deja Minecraft cuando se cierra por un error, y dice qué mod estaba fallando.</li>
+              <li><strong>Cierre de Java</strong>: aparece cuando el juego se cierra de golpe, casi siempre por el driver de video.</li>
+            </ul>
+            <p>
+              Toca <strong>Ver</strong> para leerlo (puedes filtrar solo los errores), <strong>Copiar</strong> para pegarlo en tu ticket, o
+              abre la carpeta para adjuntar el archivo.
+            </p>
+            <div class="nota nota--aviso">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#warning" /></svg>
+              <p>
+                Nadie del equipo necesita tu contraseña, tus códigos de Microsoft ni tus archivos de sesión. Si alguien te los pide, no se
+                los des.
+              </p>
+            </div>
           </section>
 
           <section id="conectar" class="revelar">
@@ -348,11 +394,49 @@
               Mira primero si el servidor está en línea: lo dice la ficha de esta página y la pantalla Jugar del launcher. Si no responde, puede
               ser un reinicio o un mantenimiento: los avisos salen en el Discord.
             </p>
-            <p>¿Sigues con problemas? Escribe en el Discord con una captura del error y te ayudamos.</p>
+            <p>
+              Entra siempre desde el launcher: es el que pone los mods exactos del servidor. Si usas el menú de Minecraft, Victoria Kingdom
+              ya está primera en tu lista de servidores: el launcher la deja puesta con la dirección y el puerto correctos. No agregues otra
+              a mano.
+            </p>
+            <p>¿Sigues con problemas? Abre un ticket en el Discord con una captura del error y te ayudamos.</p>
             <p>
               <a class="boton boton--discord" href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">
                 <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>Pedir ayuda en Discord
               </a>
+            </p>
+          </section>
+
+          <section id="contrasena" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#lock" /></svg></span>Olvidé mi contraseña</h2>
+            <p>Si tu cuenta es de Victoria (la que creaste con tu correo), la recuperas desde el launcher:</p>
+            <ol class="lista-pasos">
+              <li>Toca <strong>Ya tengo cuenta</strong> y, debajo del botón, <strong>Recuperala</strong>.</li>
+              <li>Escribe el correo de tu cuenta: te llega un código de 6 números.</li>
+              <li>Escribe el código y elige una contraseña nueva, de 8 caracteres o más.</li>
+            </ol>
+            <div class="nota">
+              <svg class="icono" aria-hidden="true"><use href="iconos.svg#info" /></svg>
+              <p>
+                Si entras con Minecraft original, la contraseña es la de tu cuenta de Microsoft: se recupera en la página de Microsoft, no en
+                el launcher.
+              </p>
+            </div>
+          </section>
+
+          <section id="desinstalar" class="revelar">
+            <h2><span class="num"><svg class="icono" aria-hidden="true"><use href="iconos.svg#trash" /></svg></span>Desinstalar</h2>
+            <p>
+              Ve a Inicio → <strong>Configuración</strong> → <strong>Aplicaciones</strong> → <strong>Aplicaciones instaladas</strong>, busca
+              <strong>Victoria Kingdom</strong> y toca <strong>Desinstalar</strong>.
+            </p>
+            <p>
+              Eso quita el programa. Minecraft, los mods y tus mundos quedan en <code>%APPDATA%\victoria-launcher</code>, por si vuelves: si
+              quieres borrar todo, borra también esa carpeta. Tu cuenta y tu personaje no se pierden, porque viven en el servidor.
+            </p>
+            <p>
+              Para pedir que se borre tu cuenta, abre un ticket en el Discord. Más detalles en la
+              <a href="privacidad">política de privacidad</a>.
             </p>
           </section>
         </article>
@@ -367,6 +451,8 @@
             <li><span>Minecraft</span><strong data-minecraft>1.20.1</strong></li>
             <li><span>Forge</span><strong data-forge>47.4.0</strong></li>
             <li><span>Mods</span><strong data-mods>117</strong></li>
+            <li><span>Launcher</span><strong data-launcher-version>—</strong></li>
+            <li><span>Modpack</span><strong data-modpack-version>—</strong></li>
           </ul>
           <div class="ficha__acciones">
             <a
@@ -385,6 +471,7 @@
       </div>
     </main>
 
+    <!-- comun:pie -->
     <footer class="pie">
       <div class="contenedor">
         <div class="pie__grilla">
@@ -395,6 +482,12 @@
               <a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener" aria-label="Discord de Victoria Kingdom">
                 <svg class="icono" aria-hidden="true"><use href="iconos.svg#discord" /></svg>
               </a>
+              <a href="https://wiki.victoriakingdom.com" aria-label="Wiki de Victoria Kingdom">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#book" /></svg>
+              </a>
+              <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener" aria-label="Código del launcher en GitHub">
+                <svg class="icono" aria-hidden="true"><use href="iconos.svg#github" /></svg>
+              </a>
             </div>
           </div>
           <div>
@@ -404,14 +497,16 @@
               <li><a href="./#empezar">Cómo empezar</a></li>
               <li><a href="guia">Guía de instalación</a></li>
               <li><a href="#requisitos">Requisitos</a></li>
+              <li><a href="./#preguntas">Preguntas frecuentes</a></li>
             </ul>
           </div>
           <div>
             <h4>Comunidad</h4>
             <ul>
               <li><a href="https://discord.gg/HFvsGaxc7G" target="_blank" rel="noopener">Discord</a></li>
+              <li><a href="https://wiki.victoriakingdom.com" target="_blank" rel="noopener">Wiki</a></li>
               <li><a href="normas">Normas</a></li>
-              <li><a href="./#novedades">Novedades</a></li>
+              <li><a href="novedades">Novedades</a></li>
               <li><a href="./#pais">Capturas</a></li>
             </ul>
           </div>
@@ -420,13 +515,18 @@
             <ul>
               <li><a href="#smartscreen">Windows protegió su PC</a></li>
               <li><a href="#antivirus">El antivirus lo bloquea</a></li>
-              <li><a href="#lento">El juego va lento</a></li>
+              <li><a href="#contrasena">Olvidé mi contraseña</a></li>
+              <li><a href="#registros">El juego se cierra</a></li>
               <li><a href="#conectar">No puedo entrar</a></li>
             </ul>
           </div>
         </div>
         <div class="pie__base">
           <span>© <span data-anio>2026</span> Victoria Kingdom</span>
+          <span class="pie__legal">
+            <a href="privacidad">Privacidad</a>
+            <a href="https://github.com/FalconKing574/victoria-launcher" target="_blank" rel="noopener">Código abierto</a>
+          </span>
           <span>No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado con ellos.</span>
         </div>
       </div>
@@ -450,5 +550,6 @@
       <svg class="arriba__anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /></svg>
       <svg class="icono" aria-hidden="true"><use href="iconos.svg#arrow-up" /></svg>
     </button>
+    <!-- /comun:pie -->
   </body>
 </html>

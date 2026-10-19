@@ -44,6 +44,20 @@ const TYPES = {
   '.woff2': 'font/woff2'
 }
 
+/**
+ * Las novedades que devolvería `novedades:lista`: las tres más nuevas del
+ * mismo archivo que publica la web, con la dirección de la web. Sin red, las
+ * imágenes caen a las del launcher, igual que en el de verdad.
+ */
+const WEB = 'https://victoriakingdom.com'
+const NOVEDADES = JSON.parse(readFileSync(join(ROOT, '..', '..', 'web', 'public', 'datos', 'novedades.json'), 'utf8'))
+  .sort((a, b) => b.fecha.localeCompare(a.fecha))
+  .slice(0, 3)
+  .map((n) => ({
+    id: n.id, fecha: n.fecha, etiqueta: n.etiqueta, color: n.color ?? null, imagen: `${WEB}/${n.imagen}`,
+    titulo: n.titulo, texto: n.texto, enlace: `${WEB}/novedades#${n.id}`
+  }))
+
 /** Every channel the preload exposes, answered with something believable. */
 const STUB = `<script>
   // En una pestaña que no está delante, Chrome congela requestAnimationFrame.
@@ -127,7 +141,13 @@ const STUB = `<script>
     modpack: {
       sync: async () => ({ upToDate: true, downloaded: 0, removed: 0, keptOwn: [], packVersion: '1.4.0' }),
       validate: async () => { await new Promise((r) => setTimeout(r, 1500)); return { upToDate: false, downloaded: 3, removed: 0, keptOwn: ['reforgedplaymod-1.20.1-0.3.1.jar'], packVersion: '2.1.1', validado: true, configuracion: true } },
-      check: async () => ({ needsUpdate: false, unavailable: false, toDownload: 0, toRemove: 0, installedVersion: '1.4.0', latestVersion: '1.4.0' }),
+      // ?modpack=actualizar | instalar para ver el botón azul de Steam.
+      check: async () => {
+        const m = new URLSearchParams(location.search).get('modpack')
+        if (m === 'actualizar') return { needsUpdate: true, unavailable: false, toDownload: 12, toRemove: 0, installedVersion: '2.2.0', latestVersion: '2.3.0' }
+        if (m === 'instalar') return { needsUpdate: true, unavailable: false, toDownload: 900, toRemove: 0, installedVersion: null, latestVersion: '2.3.0' }
+        return { needsUpdate: false, unavailable: false, toDownload: 0, toRemove: 0, installedVersion: '1.4.0', latestVersion: '1.4.0' }
+      },
       manifest: async () => manifest,
       state: async () => ({ managed: [], enabledOptional: [...enabledOptional], packVersion: '1.4.0', overridesSha1: null, overrideParts: {} }),
       setOptional: async (id, on) => {
@@ -233,10 +253,39 @@ const STUB = `<script>
           : { enLinea: true, jugadores: 23, maximo: 120, version: '1.20.1', latencia: 84 }
       }
     },
+    // ?novedades=sin-red para ver las que trae el launcher.
+    novedades: {
+      lista: async () => {
+        await espera(400)
+        return new URLSearchParams(location.search).get('novedades') === 'sin-red' ? null : ${JSON.stringify(NOVEDADES)}
+      }
+    },
     settings: { get: async () => settings, save: async (p) => Object.assign(settings, p) },
     launch: {
       start: async () => {}, isRunning: async () => false,
-      onProgress: noop, onStatus: noop, onError: noop, onClosed: noop
+      onProgress: noop, onStatus: noop, onError: noop, onClosed: noop,
+      reparar: async () => { await espera(1200); return { borrados: 6 } }
+    },
+    registros: {
+      lista: async () => [
+        { id: 'juego', nombre: 'Último arranque', descripcion: 'Todo lo que escribió el juego al iniciar, incluida la instalación de Forge. Es el primero que hay que mirar.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\logs\\\\juego.log', tamano: 48213, modificado: Date.now() - 600000 },
+        { id: 'latest', nombre: 'Minecraft (latest.log)', descripcion: 'El registro del juego desde que carga los mods hasta que se cierra.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\instance\\\\logs\\\\latest.log', tamano: 2310455, modificado: Date.now() - 86400000 },
+        { id: 'launcher', nombre: 'Errores del launcher', descripcion: 'Fallos de la aplicación misma, no del juego.', ruta: 'C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\crash.log', tamano: 812, modificado: Date.now() - 5 * 86400000 }
+      ],
+      leer: async () => ({ recortado: false, tamano: 900, texto: [
+        '[Victoria] Launcher 1.8.9 · 2026-10-18T20:11:02Z · intento 1 · Minecraft 1.20.1 · Forge 47.4.0',
+        '[Victoria] Java: C:\\\\Users\\\\jugador\\\\AppData\\\\Roaming\\\\victoria-launcher\\\\java\\\\bin\\\\javaw.exe',
+        '[MCLC]: Downloaded version jar and wrote version json',
+        'Task: net.minecraftforge.installertools.ConsoleTool',
+        '  MainClass: net.minecraftforge.installertools.ConsoleTool',
+        'WARN: Could not find a cached mapping, downloading',
+        'Failed to run processor: java.io.EOFException:Unexpected end of ZLIB input stream',
+        'See log for more details.',
+        'java.io.EOFException: Unexpected end of ZLIB input stream',
+        '    at java.util.zip.InflaterInputStream.fill(InflaterInputStream.java:244)',
+        '[Victoria] El juego se cerró con el código 1.'
+      ].join(String.fromCharCode(10)) }),
+      abrir: async () => {}, carpeta: async () => {}
     }
   }
 </script>`

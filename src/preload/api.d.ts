@@ -213,6 +213,39 @@ export interface CrashDiagnosis {
   file: string | null
 }
 
+/** Un registro (log) que se puede revisar desde Ajustes. Ver `main/lib/registros.ts`. */
+/** Una novedad de la web, ya revisada (`src/main/lib/novedades.ts`). */
+export interface Novedad {
+  id: string
+  /** AAAA-MM-DD */
+  fecha: string
+  etiqueta: string
+  color: string | null
+  /** Dirección completa de la imagen, en la web. */
+  imagen: string
+  titulo: string
+  texto: string
+  /** La novedad entera, en la web. */
+  enlace: string
+}
+
+export interface RegistroInfo {
+  id: string
+  nombre: string
+  descripcion: string
+  ruta: string
+  tamano: number
+  /** ms desde epoch */
+  modificado: number
+}
+
+export interface RegistroContenido {
+  texto: string
+  /** true si el archivo era más largo y sólo se trae el final. */
+  recortado: boolean
+  tamano: number
+}
+
 export interface VictoriaApi {
   window: {
     minimize(): void
@@ -223,7 +256,7 @@ export interface VictoriaApi {
   auth: {
     microsoftLogin(): Promise<PremiumSession>
     microsoftRestore(): Promise<
-      { status: 'ok'; session: PremiumSession } | { status: 'expired' } | { status: 'none' }
+      { status: 'ok'; session: PremiumSession } | { status: 'expired' } | { status: 'none' } | { status: 'unavailable' }
     >
     microsoftLogout(): Promise<boolean>
   }
@@ -292,6 +325,10 @@ export interface VictoriaApi {
     /** Si el servidor de Minecraft está en línea y cuánta gente hay. Nunca falla. */
     estado(): Promise<EstadoServidor>
   }
+  novedades: {
+    /** Las tres últimas de la web. `null` sin red: la pantalla usa las suyas. Nunca falla. */
+    lista(): Promise<Novedad[] | null>
+  }
   settings: {
     get(): Promise<Settings>
     save(patch: Partial<Settings>): Promise<Settings>
@@ -308,6 +345,19 @@ export interface VictoriaApi {
     onStatus(cb: (status: LaunchStatus) => void): () => void
     onError(cb: (error: { message: string }) => void): () => void
     onClosed(cb: (info: { code: number; diagnosis: CrashDiagnosis | null }) => void): () => void
+    /**
+     * Borra todo lo de Forge y revisa Minecraft con los hashes de Mojang, sin lanzar. Lo que falte se baja
+     * en el próximo JUGAR. Rechaza si el juego está abierto.
+     */
+    reparar(): Promise<{ borrados: number }>
+  }
+  registros: {
+    /** Los que existen, en el orden en que conviene mirarlos. */
+    lista(): Promise<RegistroInfo[]>
+    /** El final del archivo (256 KB como máximo). */
+    leer(id: string): Promise<RegistroContenido>
+    abrir(id: string): Promise<void>
+    carpeta(id: string): Promise<void>
   }
 }
 

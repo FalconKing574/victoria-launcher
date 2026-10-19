@@ -75,6 +75,9 @@ const api: VictoriaApi = {
   servidor: {
     estado: () => ipcRenderer.invoke('servidor:estado')
   },
+  novedades: {
+    lista: () => ipcRenderer.invoke('novedades:lista')
+  },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     save: (patch) => ipcRenderer.invoke('settings:save', patch)
@@ -85,7 +88,14 @@ const api: VictoriaApi = {
     onProgress: (cb) => on('launch:progress', cb),
     onStatus: (cb) => on('launch:status', cb),
     onError: (cb) => on('launch:error', cb),
-    onClosed: (cb) => on('launch:closed', cb)
+    onClosed: (cb) => on('launch:closed', cb),
+    reparar: () => ipcRenderer.invoke('launch:reparar')
+  },
+  registros: {
+    lista: () => ipcRenderer.invoke('registros:lista'),
+    leer: (id) => ipcRenderer.invoke('registros:leer', id),
+    abrir: (id) => ipcRenderer.invoke('registros:abrir', id),
+    carpeta: (id) => ipcRenderer.invoke('registros:carpeta', id)
   }
 }
 

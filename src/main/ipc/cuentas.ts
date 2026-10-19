@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, net, safeStorage, shell } from 'electron'
 import { execFile } from 'child_process'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { totalmem } from 'os'
@@ -7,7 +7,9 @@ import { obtenerHuella } from '../lib/huella'
 import { llamar, ServidorCaido, type AuthManifest, type Respuesta } from '../lib/cuentas-api'
 import { esperarCodigoDiscord } from '../lib/discord-local'
 import { pedirCertificado } from '../lib/certificado-mojang'
-import { fetchManifest } from './sync'
+import { getAuthConfig } from '../lib/auth-config-runtime'
+import { logNetwork } from '../lib/network-log'
+import { ManifestUnavailable } from '../lib/network-error'
 
 /**
  * La cuenta de Victoria, del lado del proceso main.
@@ -27,6 +29,13 @@ import { fetchManifest } from './sync'
 
 let sesionEnMemoria: string | null = null
 let huellaCache: Promise<string> | null = null
+
+const fetchCuentas: typeof fetch = async (url, init) => {
+  try { return await net.fetch(url instanceof URL ? url.href : url, init) } catch (error) {
+    logNetwork('VictoriaAuth', 'request', error)
+    throw error
+  }
+}
 
 function guardarSesion(token: string): void {
   sesionEnMemoria = token
@@ -74,9 +83,9 @@ function huella(): Promise<string> {
 }
 
 async function auth(): Promise<AuthManifest> {
-  const manifest = await fetchManifest()
-  if (!manifest.auth) throw new ServidorCaido()
-  return manifest.auth
+  const configuration = await getAuthConfig()
+  if (!configuration) throw new ServidorCaido()
+  return configuration
 }
 
 /** Guarda la sesión si vino, la saca de la respuesta, y olvida la guardada si el servidor dijo que venció. */
@@ -90,13 +99,13 @@ function recordar(r: Respuesta): Respuesta {
 async function conSesion(op: string, datos: Record<string, unknown> = {}): Promise<Respuesta> {
   const sesion = leerSesion()
   if (!sesion) return { ok: false, error: 'sesion', mensaje: 'Entrá a tu cuenta de Victoria.' }
-  const r = await llamar(await auth(), op, { ...datos, sesion, huella: await huella() })
+  const r = await llamar(await auth(), op, { ...datos, sesion, huella: await huella() }, fetchCuentas)
   if (!r.ok && r.error === 'sesion') borrarSesion()
   return r
 }
 
 async function sinSesion(op: string, datos: Record<string, unknown>): Promise<Respuesta> {
-  return llamar(await auth(), op, { ...datos, huella: await huella() })
+  return llamar(await auth(), op, { ...datos, huella: await huella() }, fetchCuentas)
 }
 
 /** Nunca tira hacia el renderer: un servidor caído es una respuesta más. */
@@ -104,7 +113,8 @@ async function envolver(fn: () => Promise<Respuesta>): Promise<Respuesta> {
   try {
     return recordar(await fn())
   } catch (e) {
-    if (e instanceof ServidorCaido) return { ok: false, error: 'caido', mensaje: e.message }
+    if (e instanceof ServidorCaido || e instanceof ManifestUnavailable) return { ok: false, error: 'caido', mensaje: e.message }
+    logNetwork('cuentas', 'operation', e)
     return { ok: false, error: 'desconocida', mensaje: (e as Error).message }
   }
 }
@@ -117,7 +127,8 @@ export async function pedirValeCuenta(): Promise<Respuesta> {
   try {
     return await conSesion('vale')
   } catch (e) {
-    if (e instanceof ServidorCaido) return { ok: false, error: 'caido', mensaje: e.message }
+    if (e instanceof ServidorCaido || e instanceof ManifestUnavailable) return { ok: false, error: 'caido', mensaje: e.message }
+    logNetwork('cuentas', 'vale', e)
     return { ok: false, error: 'desconocida', mensaje: (e as Error).message }
   }
 }
@@ -173,8 +184,7 @@ export function registerCuentasHandlers(): void {
   )
   ipcMain.handle('cuentas:discord', () =>
     envolver(async () => {
-      const manifest = await fetchManifest()
-      const discord = manifest.auth?.discord
+      const discord = (await auth()).discord
       if (!discord) {
         return { ok: false, error: 'discord_caido', mensaje: 'El launcher no tiene los datos de Discord. Probá en un rato.' }
       }

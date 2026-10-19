@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { UpdaterPhase, UpdaterState } from '../src/preload/api'
 import {
   SPLASH_BUSQUEDA_MAX_MS,
   SPLASH_MINIMO_MS,
   SPLASH_SALTAR_DESCARGA_MS,
   SPLASH_SALTAR_INSTALACION_MS,
+  ARRANQUE_CUENTA_MAX_MS,
+  ARRANQUE_MICROSOFT_MAX_MS,
+  conLimite,
   decidirSplash,
   puedeSaltar
 } from '../src/renderer/src/lib/arranque'
@@ -106,5 +109,48 @@ describe('avisoLauncher', () => {
       texto: 'El antivirus la bloqueó.',
       accion: 'reintentar'
     })
+  })
+})
+
+describe('conLimite: el arranque no espera a la red para siempre', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('devuelve la respuesta si llega a tiempo', async () => {
+    await expect(conLimite(Promise.resolve('ok'), 1000, 'vencio')).resolves.toBe('ok')
+  })
+
+  it('una respuesta que no llega nunca no deja el logo para siempre', async () => {
+    vi.useFakeTimers()
+    // Lo que pasaba: una conexión que no contesta, ni bien ni mal.
+    const nunca = new Promise<string>(() => undefined)
+    const resultado = conLimite(nunca, ARRANQUE_CUENTA_MAX_MS, 'vencio')
+    await vi.advanceTimersByTimeAsync(ARRANQUE_CUENTA_MAX_MS)
+    await expect(resultado).resolves.toBe('vencio')
+  })
+
+  it('un error cuenta como sin respuesta, no como un arranque roto', async () => {
+    await expect(conLimite(Promise.reject(new Error('IPC')), 1000, 'vencio')).resolves.toBe('vencio')
+  })
+
+  it('lo que llega tarde se ignora', async () => {
+    vi.useFakeTimers()
+    let contestar: (v: string) => void = () => undefined
+    const tarde = new Promise<string>((r) => (contestar = r))
+    const resultado = conLimite(tarde, 1000, 'vencio')
+    await vi.advanceTimersByTimeAsync(1000)
+    contestar('tarde')
+    await expect(resultado).resolves.toBe('vencio')
+  })
+
+  it('el peor arranque no pasa de 80 segundos', () => {
+    // Microsoft, después la cuenta, y en el peor caso la cuenta otra vez como
+    // premium: se esperan uno detrás del otro.
+    expect(ARRANQUE_MICROSOFT_MAX_MS + 2 * ARRANQUE_CUENTA_MAX_MS).toBeLessThanOrEqual(80_000)
+    // Y no corta antes que el proceso principal: cada llamada al servidor de
+    // cuentas ya tiene 15 s propios, y un servidor lento pero vivo tiene que
+    // poder contestar.
+    expect(ARRANQUE_CUENTA_MAX_MS).toBeGreaterThan(15_000)
   })
 })

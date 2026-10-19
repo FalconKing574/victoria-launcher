@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { onRequestGet as modpack } from '../web/functions/api/modpack.js'
 import { onRequestGet as normas } from '../web/functions/api/normas.js'
+import { onRequestGet as discord } from '../web/functions/api/discord.js'
 
 /**
  * Qué protege esto.
@@ -72,5 +73,37 @@ describe('/api/normas', () => {
     const r = await normas()
     expect(r.status).toBe(502)
     expect((await r.json()).error).toBeTruthy()
+  })
+})
+
+describe('/api/discord', () => {
+  // Lo que contesta Discord a GET /invites/<código>?with_counts=true, recortado.
+  const invitacion = (miembros, conectados) => ({
+    code: 'HFvsGaxc7G',
+    guild: { id: '1', name: 'Victoria Kingdom' },
+    approximate_member_count: miembros,
+    approximate_presence_count: conectados
+  })
+
+  it('devuelve los miembros y los conectados de la invitación', async () => {
+    manifiesto(invitacion(412, 37))
+    const r = await discord()
+    expect(r.status).toBe(200)
+    expect(await r.json()).toEqual({ miembros: 412, conectados: 37 })
+    expect(fetch.mock.calls[0][0]).toContain('/invites/HFvsGaxc7G?with_counts=true')
+  })
+
+  it('sin las cifras es un error, no un cero', async () => {
+    manifiesto({ code: 'HFvsGaxc7G', guild: { id: '1' } })
+    const r = await discord()
+    expect(r.status).toBe(502)
+    const cuerpo = await r.json()
+    expect(cuerpo.error).toBeTruthy()
+    expect(cuerpo.miembros).toBeUndefined()
+  })
+
+  it('si Discord limita o se cae, un error', async () => {
+    manifiesto({ message: 'You are being rate limited.' }, 429)
+    expect((await discord()).status).toBe(502)
   })
 })

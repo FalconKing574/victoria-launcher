@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { spring } from '../theme/motion'
 
-type Variant = 'primary' | 'ghost' | 'microsoft' | 'jugar'
+type Variant = 'primary' | 'ghost' | 'microsoft' | 'jugar' | 'actualizar'
 
 /**
  * En mayúsculas y sin saltos al pasar el mouse, al estilo del launcher de
@@ -22,6 +22,13 @@ const STYLES: Record<Variant, React.CSSProperties> = {
     color: '#fff',
     fontWeight: 800,
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.35)'
+  },
+  // INSTALAR (primera vez) y ACTUALIZAR, en azul como en Steam.
+  actualizar: {
+    background: 'var(--boton-actualizar)',
+    color: '#fff',
+    fontWeight: 800,
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
   }
 }
 

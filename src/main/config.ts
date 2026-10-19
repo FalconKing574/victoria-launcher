@@ -1,6 +1,11 @@
 export const MC_VERSION = '1.20.1'
 export const FORGE_VERSION = '47.4.0'
 export const FORGE_INSTALLER_URL = `https://maven.minecraftforge.net/net/minecraftforge/forge/${MC_VERSION}-${FORGE_VERSION}/forge-${MC_VERSION}-${FORGE_VERSION}-installer.jar`
+/**
+ * El SHA-1 que publica Forge para ese instalador (`FORGE_INSTALLER_URL + '.sha1'`). Si se cambia
+ * FORGE_VERSION hay que cambiar esto también: con el hash viejo el launcher rechazaría el instalador nuevo.
+ */
+export const FORGE_INSTALLER_SHA1 = 'b73203963ea70aee0c38dc58de1f6d16a766605b'
 
 /**
  * Where the modpack manifest lives, baked in by electron.vite.config.ts.

@@ -27,9 +27,9 @@ const PASOS: PasoRecorrido[] = [
   {
     objetivo: 'jugar',
     seccion: 'play',
-    titulo: 'JUGAR hace todo',
+    titulo: 'Instalar, actualizar y jugar',
     texto:
-      'Instala o repara el modpack, prepara Forge y abre Minecraft ya conectado a Victoria. No hace falta escribir /login: tu cuenta entra sola.'
+      'La primera vez el botón dice INSTALAR y, cuando sale algo nuevo, ACTUALIZAR (en azul). Después dice JUGAR: prepara Forge y abre Minecraft ya conectado a Victoria, sin escribir /login.'
   },
   {
     objetivo: 'play',

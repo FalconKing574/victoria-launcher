@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import Avatar from '../components/Avatar'
 import Icon, { type IconName } from '../components/Icon'
 import Panel from '../components/Panel'
+import Registros from '../components/Registros'
 import Toggle from '../components/Toggle'
 import { screenVariants } from '../theme/motion'
 // Las mismas constantes que usa el proceso principal para decidir la memoria.
@@ -17,6 +18,7 @@ import {
   RAM_RECOMMENDED_MB
 } from '@shared/tuning'
 import type { Settings as SettingsType, SyncCheck, UpdaterState } from '@shared/api'
+import { ENLACES_WEB } from '@shared/web'
 
 const RAM_SLIDER_MIN_MB = 2048
 const RAM_SLIDER_MAX_MB = 16384
@@ -286,9 +288,80 @@ export default function Settings({
             <UpdaterRow />
             <ModpackUpdateRow />
           </Section>
+
+          <Section
+            icon="file"
+            title="Registros"
+            help="Qué pasó al iniciar el juego: para revisarlo o mandárselo al staff."
+          >
+            <Registros />
+          </Section>
+
+          <Section icon="book" title="Ayuda" help="La web de Victoria, en el navegador.">
+            <Ayuda />
+          </Section>
         </div>
       </div>
     </motion.div>
+  )
+}
+
+/**
+ * Lo que está en la web y no en el launcher: cómo se juega (la wiki), las
+ * preguntas de siempre y lo que se acepta al jugar. Abre el navegador.
+ */
+const AYUDA: Array<{ texto: string; detalle: string; url: string }> = [
+  {
+    texto: 'Guía de instalación',
+    detalle: 'Requisitos, antivirus y problemas',
+    url: ENLACES_WEB.guia
+  },
+  { texto: 'Preguntas frecuentes', detalle: 'Lo que todos preguntan', url: ENLACES_WEB.preguntas },
+  { texto: 'Wiki del juego', detalle: 'Banco, terrenos, autos, teléfono', url: ENLACES_WEB.wiki },
+  { texto: 'Normas', detalle: 'Las que aceptaste, y las sanciones', url: ENLACES_WEB.normas },
+  { texto: 'Novedades', detalle: 'Qué cambió en cada versión', url: ENLACES_WEB.novedades },
+  { texto: 'Privacidad', detalle: 'Qué datos usa el launcher', url: ENLACES_WEB.privacidad }
+]
+
+function Ayuda(): JSX.Element {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gap: 8
+      }}
+    >
+      {AYUDA.map((a) => (
+        <button
+          key={a.url}
+          onClick={() => void window.api.window.openExternal(a.url).catch(() => undefined)}
+          title={a.url}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 9,
+            border: '1px solid var(--stroke)',
+            background: 'var(--surface-2)',
+            color: 'var(--text)',
+            textAlign: 'left',
+            transition: 'border-color 0.16s'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--stroke-strong)')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--stroke)')}
+        >
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>{a.texto}</span>
+            <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text-faint)' }}>
+              {a.detalle}
+            </span>
+          </span>
+          <Icon name="external" size={12} />
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -535,8 +608,9 @@ function ModpackUpdateRow(): JSX.Element {
               : unavailable
                 ? 'No se pudo contactar con el servidor del modpack.'
                 : needsUpdate
-                  ? `Hay ${check?.toDownload ?? 0} archivos por descargar` +
-                    (check?.latestVersion ? ` (v${check.latestVersion}).` : '.')
+                  ? check?.installedVersion
+                    ? 'Hay una actualización del modpack.'
+                    : 'Falta instalar el modpack.'
                   : (message ?? 'El modpack está al día.')}
           </div>
 

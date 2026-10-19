@@ -14,6 +14,14 @@ import Modpack from './screens/Modpack'
 import Shaders from './screens/Shaders'
 import Settings from './screens/Settings'
 import type { EstadoCuenta, PremiumSession, RespuestaCuenta, SancionInfo } from '@shared/api'
+import { ARRANQUE_CUENTA_MAX_MS, ARRANQUE_MICROSOFT_MAX_MS, conLimite } from './lib/arranque'
+
+/** Lo que vale una cuenta que no contestó a tiempo: lo mismo que un servidor caído. */
+const SIN_RESPUESTA: RespuestaCuenta = {
+  ok: false,
+  error: 'caido',
+  mensaje: 'El servidor de Victoria no respondió a tiempo.'
+}
 
 /**
  * Las etapas del launcher desde las cuentas de Victoria.
@@ -61,16 +69,26 @@ export default function App(): JSX.Element {
   // Al abrir: primero Microsoft (hace falta para lanzar a un premium), después
   // la sesión de Victoria. Un premium sin sesión de Victoria entra solo con su
   // token de Minecraft; un no premium sin sesión va a la pantalla de cuenta.
+  // Cada espera tiene su tiempo máximo (lib/arranque.ts): mientras dura, el
+  // jugador sólo ve el logo. Si Microsoft no contesta se sigue como sin sesión,
+  // y si la cuenta no contesta, como servidor caído, con «Reintentar».
   const arrancar = useCallback(async (): Promise<void> => {
     setServidorCaido(false)
     const ms =
-      (await window.api.auth.microsoftRestore().catch(() => ({ status: 'expired' }) as const)) ??
-      ({ status: 'none' } as const)
+      (await conLimite(
+        window.api.auth.microsoftRestore().catch(() => ({ status: 'expired' }) as const),
+        ARRANQUE_MICROSOFT_MAX_MS,
+        { status: 'none' } as const
+      )) ?? ({ status: 'none' } as const)
     const sesionMs = ms.status === 'ok' ? ms.session : undefined
 
-    let r = await window.api.cuentas.estado()
+    let r = await conLimite(window.api.cuentas.estado(), ARRANQUE_CUENTA_MAX_MS, SIN_RESPUESTA)
     if (!r.ok && r.error === 'sesion' && sesionMs) {
-      r = await window.api.cuentas.premium(sesionMs.mcToken)
+      r = await conLimite(
+        window.api.cuentas.premium(sesionMs.mcToken),
+        ARRANQUE_CUENTA_MAX_MS,
+        SIN_RESPUESTA
+      )
     }
     if (r.ok && r.cuenta) {
       if (r.cuenta.tipo === 'PREMIUM' && !sesionMs) {
