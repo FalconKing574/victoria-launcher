@@ -80,6 +80,56 @@ async function toSession(xbox: Awaited<ReturnType<Auth['launch']>>): Promise<Pre
   }
 }
 
+/**
+ * El código de error de msmc, sin nada más: msmc lanza el código suelto («error.auth.xsts.userNotFound») o un objeto
+ * `{ response, ts }` cuando una respuesta HTTP vino mal. Nunca un `Error`.
+ */
+export function codigoMsmc(error: unknown): { codigo: string | null; estado: number | null } {
+  if (typeof error === 'string' && /^error\.[A-Za-z0-9.]+$/.test(error)) return { codigo: error, estado: null }
+  if (error && typeof error === 'object') {
+    const e = error as { ts?: unknown; response?: { status?: unknown } }
+    const codigo = typeof e.ts === 'string' && /^error\.[A-Za-z0-9.]+$/.test(e.ts) ? e.ts : null
+    const estado = typeof e.response?.status === 'number' ? e.response.status : null
+    if (codigo || estado) return { codigo, estado }
+  }
+  return { codigo: null, estado: null }
+}
+
+/**
+ * Lo que se le dice al jugador cuando Microsoft, Xbox o Minecraft no lo dejan entrar (23-10-2026). Antes el error de
+ * msmc se pasaba tal cual por el IPC y, como no es un `Error`, la pantalla mostraba «Error invoking remote method
+ * 'auth:microsoft-login': [object Object]», sin decir qué pasó.
+ */
+export function mensajeMicrosoft(error: unknown): string {
+  const { codigo, estado } = codigoMsmc(error)
+  const ref = codigo ? ` (${codigo}${estado ? ` · ${estado}` : ''})` : estado ? ` (HTTP ${estado})` : ''
+  if (estado === 429) return 'Demasiados intentos seguidos. Esperá unos minutos y volvé a probar.' + ref
+  switch (codigo) {
+    case 'error.gui.closed':
+      return 'Se cerró la ventana de Microsoft antes de terminar el inicio de sesión.'
+    case 'error.auth.xsts.userNotFound':
+      return 'Tu cuenta de Microsoft todavía no tiene perfil de Xbox. Entrá una vez a xbox.com con esa cuenta, creá el perfil y volvé a intentar.' + ref
+    case 'error.auth.xsts.child':
+    case 'error.auth.xsts.child.SK':
+      return 'La cuenta es de un menor: un adulto tiene que agregarla a su familia de Microsoft para poder jugar.' + ref
+    case 'error.auth.xsts.bannedCountry':
+      return 'Xbox Live no está disponible en el país de esa cuenta de Microsoft.' + ref
+    case 'error.auth.minecraft.profile':
+      return 'Esa cuenta de Microsoft no tiene Minecraft: Java Edition, o todavía no eligió su nombre en minecraft.net. Si no tenés Minecraft original, usá CREAR CUENTA.' + ref
+    case 'error.auth.minecraft.entitlements':
+      return 'No se pudo comprobar si la cuenta tiene Minecraft. Volvé a intentar en un rato.' + ref
+    case 'error.auth.minecraft.login':
+      return 'Minecraft no aceptó el inicio de sesión de Xbox. Volvé a intentar en un rato.' + ref
+    case 'error.auth.microsoft':
+      return 'Microsoft no aceptó el inicio de sesión. Volvé a intentar.' + ref
+  }
+  if (codigo?.startsWith('error.auth.xboxLive') || codigo?.startsWith('error.auth.xsts')) {
+    return 'Xbox Live no dejó entrar con esa cuenta. Volvé a intentar en un rato.' + ref
+  }
+  if (error instanceof Error && error.message) return error.message
+  return 'No se pudo entrar con Microsoft' + (ref || ' (error desconocido)') + '. Volvé a intentar; si sigue, pasale este mensaje a soporte.'
+}
+
 export async function loginMicrosoft(): Promise<PremiumSession> {
   const auth = new Auth('select_account')
   let stage = 'microsoft_window'
@@ -88,12 +138,14 @@ export async function loginMicrosoft(): Promise<PremiumSession> {
     const xbox = await auth.launch('electron')
     return await toSession(xbox)
   } catch (error) {
-    logNetwork('microsoft', stage, error)
+    // el código de msmc va en la etapa: no es un dato de la cuenta y es lo único que dice qué pasó
+    const { codigo, estado } = codigoMsmc(error)
+    logNetwork('microsoft', [stage, codigo, estado].filter(Boolean).join(':'), error)
     if (isNetworkError(error)) {
       throw new Error('No se pudo completar la conexión con Microsoft, Xbox o Minecraft. Volvé a intentar. Si continúa, compartí conexion-launcher.log con soporte.')
     }
-    if (error === 'error.gui.closed') throw new Error('Se cerró la ventana de Microsoft antes de terminar el inicio de sesión.')
-    throw error
+    // siempre un Error: cualquier otra cosa llega a la pantalla como «[object Object]»
+    throw new Error(mensajeMicrosoft(error))
   }
 }
 

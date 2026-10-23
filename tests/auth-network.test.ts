@@ -35,6 +35,25 @@ describe('los fallos de red no destruyen la sesión de Microsoft', () => {
     await expect(loginMicrosoft()).rejects.toThrow('Microsoft, Xbox o Minecraft')
     expect(mock.log).toHaveBeenCalledWith('microsoft', 'load.auth.xboxLive.1', error)
   })
+  it('un error de msmc como objeto dice qué pasó, no [object Object]', async () => {
+    mock.launch.mockRejectedValue({ ts: 'error.auth.minecraft.profile', response: { status: 404 } })
+    const { loginMicrosoft } = await import('../src/main/ipc/auth')
+    await expect(loginMicrosoft()).rejects.toThrow('no tiene Minecraft: Java Edition')
+    expect(mock.log).toHaveBeenCalledWith('microsoft', 'load.auth.xboxLive.1:error.auth.minecraft.profile:404', expect.anything())
+  })
+  it('una cuenta sin perfil de Xbox (msmc lanza el código suelto)', async () => {
+    mock.launch.mockRejectedValue('error.auth.xsts.userNotFound')
+    const { loginMicrosoft } = await import('../src/main/ipc/auth')
+    await expect(loginMicrosoft()).rejects.toThrow('perfil de Xbox')
+  })
+  it('un objeto desconocido igual da un mensaje legible', async () => {
+    mock.launch.mockRejectedValue({ raro: true })
+    const { loginMicrosoft } = await import('../src/main/ipc/auth')
+    const e = (await loginMicrosoft().catch((x: unknown) => x)) as Error
+    expect(e).toBeInstanceOf(Error)
+    expect(e.message).toContain('No se pudo entrar con Microsoft')
+    expect(e.message).not.toContain('[object Object]')
+  })
   it('cerrar la ventana de Microsoft tiene un aviso propio', async () => {
     mock.launch.mockRejectedValue('error.gui.closed')
     const { loginMicrosoft } = await import('../src/main/ipc/auth')
